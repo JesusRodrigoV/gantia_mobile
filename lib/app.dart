@@ -16,6 +16,7 @@ import 'screens/smart_home_screen.dart';
 class GantiaApp extends ConsumerWidget {
   const GantiaApp({super.key});
 
+  @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeService = ref.watch(themeServiceProvider);
 
@@ -33,12 +34,14 @@ class GantiaApp extends ConsumerWidget {
 class _AuthGate extends ConsumerStatefulWidget {
   const _AuthGate();
 
+  @override
   ConsumerState<_AuthGate> createState() => _AuthGateState();
 }
 
 class _AuthGateState extends ConsumerState<_AuthGate> {
   bool _initialized = false;
 
+  @override
   void initState() {
     super.initState();
     _checkAuth();
@@ -52,6 +55,7 @@ class _AuthGateState extends ConsumerState<_AuthGate> {
     setState(() => _initialized = true);
   }
 
+  @override
   Widget build(BuildContext context) {
     if (!_initialized) return const SizedBox.shrink();
 
@@ -97,6 +101,7 @@ class _MainShell extends StatefulWidget {
     required this.authService,
   });
 
+  @override
   State<_MainShell> createState() => _MainShellState();
 }
 
@@ -109,6 +114,7 @@ class _MainShellState extends State<_MainShell> {
     setState(() {});
   }
 
+  @override
   Widget build(BuildContext context) {
     final pages = <Widget>[
       HomeScreen(

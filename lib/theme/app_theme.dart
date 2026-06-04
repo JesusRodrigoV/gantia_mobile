@@ -87,7 +87,7 @@ class AppTheme {
         hintStyle: TextStyle(
           fontFamily: 'CormorantGaramond',
           fontSize: 14,
-          color: surface400,
+          color: surface500,
         ),
         errorStyle: TextStyle(
           fontFamily: 'CormorantGaramond',

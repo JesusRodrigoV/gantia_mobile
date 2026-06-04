@@ -9,6 +9,7 @@ class SmartHomeScreen extends StatefulWidget {
 
   const SmartHomeScreen({super.key, required this.smartHomeService});
 
+  @override
   State<SmartHomeScreen> createState() => _SmartHomeScreenState();
 }
 
@@ -17,6 +18,7 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
   final _urlCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
 
+  @override
   void dispose() {
     _urlCtrl.dispose();
     _nameCtrl.dispose();
@@ -35,6 +37,7 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
     });
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).brightness == Brightness.dark
@@ -150,8 +153,6 @@ class _LightDevice {
   _LightDevice({
     required this.name,
     required this.url,
-    this.isOn = false,
-    this.brightness = 50,
   });
 }
 
@@ -168,17 +169,20 @@ class _LightDeviceCard extends StatefulWidget {
     required this.onRemove,
   });
 
+  @override
   State<_LightDeviceCard> createState() => _LightDeviceCardState();
 }
 
 class _LightDeviceCardState extends State<_LightDeviceCard> {
   late double _brightness;
 
+  @override
   void initState() {
     super.initState();
     _brightness = widget.device.brightness;
   }
 
+  @override
   Widget build(BuildContext context) {
     return SettingsCard(
       title: widget.device.name,
@@ -207,7 +211,7 @@ class _LightDeviceCardState extends State<_LightDeviceCard> {
                   setState(() => widget.device.isOn = v);
                   widget.onToggle(v);
                 },
-                activeColor: AppColors.primary500,
+                activeTrackColor: AppColors.primary500,
               ),
             ],
           ),
@@ -227,7 +231,7 @@ class _LightDeviceCardState extends State<_LightDeviceCard> {
                       widget.device.brightness = v;
                       widget.onBrightness(v.round());
                     },
-                    activeColor: AppColors.primary500,
+                activeTrackColor: AppColors.primary500,
                     inactiveColor: AppColors.surfaceLight200,
                   ),
                 ),

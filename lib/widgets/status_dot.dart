@@ -63,7 +63,6 @@ class StatusDot extends StatelessWidget {
   List<BoxShadow>? _buildShadow(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final surface0 = isDark ? AppColors.surfaceDark0 : AppColors.surfaceLight0;
-    final surface900 = isDark ? AppColors.surfaceDark900 : AppColors.surfaceLight900;
 
     if (status == ConnectionStatus.disconnected || status == ConnectionStatus.error) {
       return [

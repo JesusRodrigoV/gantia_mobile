@@ -7,6 +7,7 @@ class GestureFlash extends StatefulWidget {
 
   const GestureFlash({super.key, this.event});
 
+  @override
   State<GestureFlash> createState() => _GestureFlashState();
 }
 
@@ -16,6 +17,7 @@ class _GestureFlashState extends State<GestureFlash>
   late Animation<double> _fadeSlide;
   GestureDetectedEvent? _current;
 
+  @override
   void initState() {
     super.initState();
     _controller = AnimationController(
@@ -29,6 +31,7 @@ class _GestureFlashState extends State<GestureFlash>
     }
   }
 
+  @override
   void didUpdateWidget(GestureFlash oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.event != null && widget.event != oldWidget.event) {
@@ -42,11 +45,13 @@ class _GestureFlashState extends State<GestureFlash>
     }
   }
 
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
 
+  @override
   Widget build(BuildContext context) {
     if (_current == null) return const SizedBox.shrink();
 

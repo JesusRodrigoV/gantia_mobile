@@ -21,6 +21,7 @@ class GantiaButton extends StatelessWidget {
     this.padding,
   });
 
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -31,7 +32,7 @@ class GantiaButton extends StatelessWidget {
       case GantiaButtonVariant.primary:
         bgColor = AppColors.primary500;
         fgColor = Colors.white;
-        shadows = null;
+        break;
       case GantiaButtonVariant.danger:
         bgColor = isDark ? AppColors.surfaceDark0 : AppColors.surfaceLight0;
         fgColor = AppColors.red500;

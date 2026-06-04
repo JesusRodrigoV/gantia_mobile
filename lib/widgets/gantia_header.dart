@@ -20,6 +20,7 @@ class GantiaHeader extends StatelessWidget {
     this.scrolled = false,
   });
 
+  @override
   Widget build(BuildContext context) {
     final surface0 = isDarkMode ? AppColors.surfaceDark0 : AppColors.surfaceLight0;
     final surface900 = isDarkMode ? AppColors.surfaceDark900 : AppColors.surfaceLight900;
@@ -133,6 +134,7 @@ class _ModeBadge extends StatelessWidget {
 
   const _ModeBadge({required this.mode});
 
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(

@@ -8,6 +8,7 @@ class LoginScreen extends StatefulWidget {
 
   const LoginScreen({super.key, required this.authService, this.onLoginSuccess});
 
+  @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
@@ -17,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordCtrl = TextEditingController();
   bool _obscurePassword = true;
 
+  @override
   void dispose() {
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
@@ -43,6 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.surfaceLight50,

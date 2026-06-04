@@ -7,7 +7,7 @@ class SmartHomeService extends ChangeNotifier {
 
   SmartHomeService({http.Client? client}) : _client = client ?? http.Client();
 
-  Future<void> lightOn(String url, {Map<String, dynamic>? headers}) async {
+  Future<void> lightOn(String url, {Map<String, String>? headers}) async {
     try {
       await _client.post(
         Uri.parse(url),
@@ -19,7 +19,7 @@ class SmartHomeService extends ChangeNotifier {
     }
   }
 
-  Future<void> lightOff(String url, {Map<String, dynamic>? headers}) async {
+  Future<void> lightOff(String url, {Map<String, String>? headers}) async {
     try {
       await _client.post(
         Uri.parse(url),
@@ -31,7 +31,7 @@ class SmartHomeService extends ChangeNotifier {
     }
   }
 
-  Future<void> setBrightness(String url, int brightness, {Map<String, dynamic>? headers}) async {
+  Future<void> setBrightness(String url, int brightness, {Map<String, String>? headers}) async {
     try {
       await _client.post(
         Uri.parse(url),

@@ -15,6 +15,7 @@ class SettingsCard extends StatelessWidget {
     this.icon,
   });
 
+  @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,

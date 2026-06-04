@@ -22,6 +22,7 @@ class SettingsScreen extends StatefulWidget {
     required this.wsService,
   });
 
+  @override
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
@@ -34,6 +35,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _btScanning = false);
   }
 
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -83,7 +85,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         Switch(
                           value: isDark,
                           onChanged: (_) => widget.themeService.toggleTheme(),
-                          activeColor: AppColors.primary500,
+                          activeThumbColor: AppColors.primary500,
                         ),
                       ],
                     ),

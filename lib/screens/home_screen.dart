@@ -24,6 +24,7 @@ class HomeScreen extends StatefulWidget {
     required this.onLogout,
   });
 
+  @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
@@ -31,12 +32,14 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _scrolled = false;
   final _scrollCtrl = ScrollController();
 
+  @override
   void initState() {
     super.initState();
     widget.wsService.addListener(_onWsChange);
     _scrollCtrl.addListener(_onScroll);
   }
 
+  @override
   void dispose() {
     widget.wsService.removeListener(_onWsChange);
     _scrollCtrl.removeListener(_onScroll);
@@ -50,6 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (s != _scrolled) setState(() => _scrolled = s);
   }
 
+  @override
   Widget build(BuildContext context) {
     final ws = widget.wsService;
 
@@ -225,7 +229,7 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 12),
         // Glove status
         _deviceRow(
-          icon: Icons.hand_gesture,
+          icon: Icons.back_hand,
           label: 'Guante',
           connected: ws.connectionStatus == ConnectionStatus.connected,
         ),
