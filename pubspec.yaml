@@ -1,5 +1,5 @@
 name: gantia_mobile
-description: "A new Flutter project."
+description: "Gantia Workshop — Mobile client"
 publish_to: 'none'
 version: 0.1.0
 
@@ -9,6 +9,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  google_fonts: ^6.2.1
+  web_socket_channel: ^3.0.2
+  http: ^1.2.2
+  shared_preferences: ^2.3.4
+  provider: ^6.1.2
 
 dev_dependencies:
   flutter_test:
@@ -17,3 +22,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/logos/
