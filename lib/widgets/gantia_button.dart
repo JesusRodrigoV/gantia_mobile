@@ -26,7 +26,6 @@ class GantiaButton extends StatelessWidget {
 
     Color bgColor;
     Color fgColor;
-    List<BoxShadow>? shadows;
 
     switch (variant) {
       case GantiaButtonVariant.primary:
@@ -36,33 +35,10 @@ class GantiaButton extends StatelessWidget {
       case GantiaButtonVariant.danger:
         bgColor = isDark ? AppColors.surfaceDark0 : AppColors.surfaceLight0;
         fgColor = AppColors.red500;
-        shadows = [
-          BoxShadow(
-            color: isDark ? AppColors.surfaceDark900 : AppColors.surfaceLight900,
-            blurRadius: 8,
-            offset: const Offset(4, 4),
-          ),
-          BoxShadow(
-            color: isDark ? AppColors.surfaceDark0 : AppColors.surfaceLight0,
-            blurRadius: 8,
-            offset: const Offset(-4, -4),
-          ),
-        ];
+        break;
       case GantiaButtonVariant.default_:
         bgColor = isDark ? AppColors.surfaceDark0 : AppColors.surfaceLight0;
         fgColor = AppColors.primary600;
-        shadows = [
-          BoxShadow(
-            color: isDark ? AppColors.surfaceDark900 : AppColors.surfaceLight900,
-            blurRadius: 8,
-            offset: const Offset(4, 4),
-          ),
-          BoxShadow(
-            color: isDark ? AppColors.surfaceDark0 : AppColors.surfaceLight0,
-            blurRadius: 8,
-            offset: const Offset(-4, -4),
-          ),
-        ];
     }
 
     return SizedBox(

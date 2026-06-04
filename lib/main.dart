@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app.dart';
+import 'providers.dart';
 import 'services/api_service.dart';
 import 'services/auth_service.dart';
 import 'services/ws_service.dart';
@@ -19,13 +20,14 @@ void main() async {
   final smartHomeService = SmartHomeService();
 
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: themeService),
-        ChangeNotifierProvider.value(value: authService),
-        ChangeNotifierProvider.value(value: wsService),
-        ChangeNotifierProvider.value(value: btService),
-        ChangeNotifierProvider.value(value: smartHomeService),
+    ProviderScope(
+      overrides: [
+        apiServiceProvider.overrideWith((_) => apiService),
+        authServiceProvider.overrideWith((_) => authService),
+        themeServiceProvider.overrideWith((_) => themeService),
+        wsServiceProvider.overrideWith((_) => wsService),
+        btServiceProvider.overrideWith((_) => btService),
+        smartHomeServiceProvider.overrideWith((_) => smartHomeService),
       ],
       child: const GantiaApp(),
     ),

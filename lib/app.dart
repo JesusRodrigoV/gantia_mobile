@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'theme/app_theme.dart';
+import 'theme/app_colors.dart';
+import 'providers.dart';
 import 'services/auth_service.dart';
 import 'services/ws_service.dart';
 import 'services/bt_service.dart';
 import 'services/theme_service.dart';
-import 'services/api_service.dart';
 import 'services/smart_home_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/smart_home_screen.dart';
 
-class GantiaApp extends StatelessWidget {
+class GantiaApp extends ConsumerWidget {
   const GantiaApp({super.key});
 
-  Widget build(BuildContext context) {
-    final themeService = context.watch<ThemeService>();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeService = ref.watch(themeServiceProvider);
 
     return MaterialApp(
       title: 'Gantia Mobile',
@@ -29,13 +30,13 @@ class GantiaApp extends StatelessWidget {
   }
 }
 
-class _AuthGate extends StatefulWidget {
+class _AuthGate extends ConsumerStatefulWidget {
   const _AuthGate();
 
-  State<_AuthGate> createState() => _AuthGateState();
+  ConsumerState<_AuthGate> createState() => _AuthGateState();
 }
 
-class _AuthGateState extends State<_AuthGate> {
+class _AuthGateState extends ConsumerState<_AuthGate> {
   bool _initialized = false;
 
   void initState() {
@@ -44,9 +45,9 @@ class _AuthGateState extends State<_AuthGate> {
   }
 
   void _checkAuth() {
-    final auth = context.read<AuthService>();
+    final auth = ref.read(authServiceProvider);
     if (auth.isAuthenticated) {
-      context.read<WsService>().connect();
+      ref.read(wsServiceProvider).connect();
     }
     setState(() => _initialized = true);
   }
@@ -54,22 +55,22 @@ class _AuthGateState extends State<_AuthGate> {
   Widget build(BuildContext context) {
     if (!_initialized) return const SizedBox.shrink();
 
-    final auth = context.watch<AuthService>();
+    final auth = ref.watch(authServiceProvider);
 
     if (!auth.isAuthenticated) {
       return LoginScreen(
         authService: auth,
         onLoginSuccess: () {
-          context.read<WsService>().connect();
+          ref.read(wsServiceProvider).connect();
           setState(() {});
         },
       );
     }
 
-    final ws = context.watch<WsService>();
-    final bt = context.watch<BtService>();
-    final themeService = context.watch<ThemeService>();
-    final smartHome = context.watch<SmartHomeService>();
+    final themeService = ref.watch(themeServiceProvider);
+    final ws = ref.watch(wsServiceProvider);
+    final bt = ref.watch(btServiceProvider);
+    final smartHome = ref.watch(smartHomeServiceProvider);
 
     return _MainShell(
       wsService: ws,
@@ -127,10 +128,7 @@ class _MainShellState extends State<_MainShell> {
     ];
 
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: pages),
       bottomNavigationBar: _buildBottomNav(),
     );
   }
@@ -138,7 +136,6 @@ class _MainShellState extends State<_MainShell> {
   Widget _buildBottomNav() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? AppColors.surfaceDark0 : AppColors.surfaceLight0;
-    final fg = isDark ? AppColors.surfaceDark900 : AppColors.surfaceLight900;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -164,36 +161,25 @@ class _MainShellState extends State<_MainShell> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           selectedItemColor: AppColors.primary500,
-          unselectedItemColor: isDark
-              ? AppColors.surfaceDark500
-              : AppColors.surfaceLight500,
+          unselectedItemColor: isDark ? AppColors.surfaceDark500 : AppColors.surfaceLight500,
           currentIndex: _currentIndex,
           onTap: (i) => setState(() => _currentIndex = i),
           type: BottomNavigationBarType.fixed,
           selectedLabelStyle: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.5,
+            fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5,
           ),
           unselectedLabelStyle: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
+            fontSize: 11, fontWeight: FontWeight.w500,
           ),
           items: const [
             BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard),
-              activeIcon: Icon(Icons.dashboard),
-              label: 'INICIO',
+              icon: Icon(Icons.dashboard), activeIcon: Icon(Icons.dashboard), label: 'INICIO',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.settings_outlined),
-              activeIcon: Icon(Icons.settings),
-              label: 'AJUSTES',
+              icon: Icon(Icons.settings_outlined), activeIcon: Icon(Icons.settings), label: 'AJUSTES',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.lightbulb_outline),
-              activeIcon: Icon(Icons.lightbulb),
-              label: 'SMART HOME',
+              icon: Icon(Icons.lightbulb_outline), activeIcon: Icon(Icons.lightbulb), label: 'SMART HOME',
             ),
           ],
         ),

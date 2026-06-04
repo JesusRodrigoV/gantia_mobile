@@ -65,7 +65,7 @@ class ActionEvent {
   factory ActionEvent.fromJson(Map<String, dynamic> json) {
     if (json['action'] == 'action_triggered') {
       return ActionEvent(
-        action: String(json['action_key'] ?? ''),
+        action: (json['action_key'] as String?) ?? '',
         actionValue: json['action_value'],
       );
     }

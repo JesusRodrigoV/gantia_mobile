@@ -68,13 +68,13 @@ class GantiaHeader extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 10),
-                const Text(
+                Text(
                   'Gantia',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 1,
-                    color: AppColors.surfaceLight800,
+                    color: surface800,
                   ),
                 ),
               ],
