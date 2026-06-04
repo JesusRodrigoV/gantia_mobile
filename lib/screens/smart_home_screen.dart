@@ -147,8 +147,8 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
 class _LightDevice {
   final String name;
   final String url;
-  bool isOn;
-  double brightness;
+  bool isOn = false;
+  double brightness = 50;
 
   _LightDevice({
     required this.name,
@@ -211,7 +211,7 @@ class _LightDeviceCardState extends State<_LightDeviceCard> {
                   setState(() => widget.device.isOn = v);
                   widget.onToggle(v);
                 },
-                activeTrackColor: AppColors.primary500,
+                activeThumbColor: AppColors.primary500,
               ),
             ],
           ),
@@ -231,7 +231,6 @@ class _LightDeviceCardState extends State<_LightDeviceCard> {
                       widget.device.brightness = v;
                       widget.onBrightness(v.round());
                     },
-                activeTrackColor: AppColors.primary500,
                     inactiveColor: AppColors.surfaceLight200,
                   ),
                 ),
