@@ -52,26 +52,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _updateSensitivity(String key, double value) {
-    final svc = ref.read(sensitivityServiceProvider);
-    final current = svc.settings;
-    if (current == null) return;
-
-    final updated = SensitivitySettings(
-      swipeThreshold: key == 'swipe_threshold' ? value : current.swipeThreshold,
-      swipeDominance: key == 'swipe_dominance' ? value : current.swipeDominance,
-      swipeCooldown: key == 'swipe_cooldown' ? value : current.swipeCooldown,
-      postureHoldTime: key == 'posture_hold_time' ? value : current.postureHoldTime,
-      mouseSpeed: key == 'mouse_speed' ? value : current.mouseSpeed,
-      mouseDeadZone: key == 'mouse_dead_zone' ? value : current.mouseDeadZone,
-      doubleTapWindow: key == 'double_tap_window' ? value : current.doubleTapWindow,
-      tiltThreshold: key == 'tilt_threshold' ? value : current.tiltThreshold,
-      tiltCooldown: key == 'tilt_cooldown' ? value : current.tiltCooldown,
-    );
-
     _sensTimers[key]?.cancel();
     _sensTimers[key] = Timer(const Duration(milliseconds: 300), () {
       _sensTimers.remove(key);
-      svc.updateSettings({key: value});
+      ref.read(sensitivityServiceProvider).updateSettings({key: value});
     });
   }
 
@@ -366,7 +350,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _buildMouseConfig(svc) {
+  Widget _buildMouseConfig(MouseConfigService svc) {
     final cfg = svc.config;
     final invertRoll = cfg?['invert_roll'] == true;
     final invertPitch = cfg?['invert_pitch'] == true;
@@ -417,7 +401,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _buildModeSelector(gloveState) {
+  Widget _buildModeSelector(GloveState gloveState) {
     return Row(
       children: [
         const Text(
