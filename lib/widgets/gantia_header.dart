@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_colors.dart';
 import '../theme/context_extensions.dart';
 import '../theme/shadows.dart';
+import '../theme/spacing.dart';
 import '../providers.dart';
+import 'gantia_scramble_text.dart';
 import 'status_dot.dart';
 
 class GantiaHeader extends ConsumerWidget {
@@ -23,7 +25,7 @@ class GantiaHeader extends ConsumerWidget {
     final isDarkMode = themeService.isDarkMode;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.xs),
       decoration: BoxDecoration(
         color: context.surface0,
         borderRadius: BorderRadius.circular(25),
@@ -38,7 +40,7 @@ class GantiaHeader extends ConsumerWidget {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.sm),
         child: Row(
           children: [
             Row(
@@ -62,9 +64,8 @@ class GantiaHeader extends ConsumerWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
-                Text(
-                  'Gantia',
+                const SizedBox(width: Spacing.sm),
+                GantiaScrambleText(
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -81,7 +82,7 @@ class GantiaHeader extends ConsumerWidget {
               status: gloveState.connectionStatus,
               flowing: gloveState.dataFlowing,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: Spacing.xs),
 
             if (gloveState.dataFlowing)
               _ModeBadge(mode: gloveState.currentMode),

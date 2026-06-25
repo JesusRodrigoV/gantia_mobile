@@ -117,7 +117,7 @@ class _MainShellState extends ConsumerState<_MainShell> {
           onTap: (i) => setState(() => _currentIndex = i),
           type: BottomNavigationBarType.fixed,
           selectedLabelStyle: const TextStyle(
-            fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5,
+            fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 1,
           ),
           unselectedLabelStyle: const TextStyle(
             fontSize: 11, fontWeight: FontWeight.w500,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../theme/context_extensions.dart';
+import '../theme/shadows.dart';
 
 class SettingsCard extends StatelessWidget {
   final String title;
@@ -21,26 +23,9 @@ class SettingsCard extends StatelessWidget {
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark
-            ? AppColors.surfaceDark50
-            : AppColors.surfaceLight50,
+        color: context.surface50,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? AppColors.surfaceDark900
-                : AppColors.surfaceLight900,
-            blurRadius: 8,
-            offset: const Offset(4, 4),
-          ),
-          BoxShadow(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? AppColors.surfaceDark0
-                : AppColors.surfaceLight0,
-            blurRadius: 8,
-            offset: const Offset(-4, -4),
-          ),
-        ],
+        boxShadow: GantiaShadows.elevated(context.surface900, context.surface0),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -55,7 +40,7 @@ class SettingsCard extends StatelessWidget {
                 ],
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.08,
@@ -68,9 +53,9 @@ class SettingsCard extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 description!,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  color: AppColors.surfaceLight500,
+                  color: context.surface500,
                 ),
               ),
             ],

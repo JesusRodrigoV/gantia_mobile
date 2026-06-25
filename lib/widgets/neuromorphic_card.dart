@@ -15,7 +15,7 @@ class NeuromorphicCard extends StatelessWidget {
     super.key,
     required this.child,
     this.padding,
-    this.showAccentLine = true,
+    this.showAccentLine = false,
     this.borderRadius = 16,
     this.margin,
     this.backgroundColor,

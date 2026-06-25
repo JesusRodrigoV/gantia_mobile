@@ -105,7 +105,7 @@ class AppTheme {
           fontSize: 12,
           fontWeight: FontWeight.w600,
           color: surface500,
-          letterSpacing: 1.5,
+          letterSpacing: 1,
         ),
         hintStyle: TextStyle(
           fontFamily: 'CormorantGaramond',

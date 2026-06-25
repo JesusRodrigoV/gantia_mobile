@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/context_extensions.dart';
+import '../theme/shadows.dart';
+import '../theme/spacing.dart';
+import '../widgets/gantia_scramble_text.dart';
 
 class LoginScreen extends StatefulWidget {
   final AuthService authService;
@@ -52,7 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: context.surface50,
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(Spacing.lg),
           child: Container(
             width: 420,
             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 50),
@@ -80,9 +83,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   width: 64,
                   height: 64,
                 ),
-                const SizedBox(height: 20),
-                Text(
-                  'Gantia',
+                const SizedBox(height: Spacing.lg),
+                GantiaScrambleText(
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -90,7 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: context.surface900,
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: Spacing.xxxl),
 
                 Form(
                   key: _formKey,
@@ -106,7 +108,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: Spacing.xl),
                       _buildField(
                         label: 'Contraseña',
                         controller: _passwordCtrl,
@@ -124,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                         ),
                       ),
-                      const SizedBox(height: 34),
+                      const SizedBox(height: Spacing.xxxl - 6),
                       SizedBox(
                         width: double.infinity,
                         child: ListenableBuilder(
@@ -187,27 +189,16 @@ class _LoginScreenState extends State<LoginScreen> {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            letterSpacing: 1.5,
+            letterSpacing: 1,
             color: context.surface500,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: Spacing.xs),
         Container(
           decoration: BoxDecoration(
             color: context.surface50,
             borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: context.surface900.withAlpha(15),
-                blurRadius: 4,
-                offset: const Offset(2, 2),
-              ),
-              BoxShadow(
-                color: context.surface0.withAlpha(204),
-                blurRadius: 4,
-                offset: const Offset(-2, -2),
-              ),
-            ],
+            boxShadow: GantiaShadows.insetSm(context.surface900, context.surface0),
           ),
           child: TextFormField(
             controller: controller,
@@ -220,7 +211,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             decoration: InputDecoration(
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              contentPadding: const EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.sm + 2),
               suffixIcon: suffix,
             ),
           ),

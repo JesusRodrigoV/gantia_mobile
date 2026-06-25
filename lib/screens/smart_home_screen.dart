@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../providers.dart';
 import '../theme/app_colors.dart';
 import '../theme/context_extensions.dart';
+import '../theme/spacing.dart';
 import '../widgets/settings_card.dart';
 import '../widgets/gantia_button.dart';
 
@@ -73,11 +74,11 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              padding: const EdgeInsets.fromLTRB(Spacing.md, Spacing.md, Spacing.md, Spacing.xs),
               child: Row(
                 children: [
                   const Icon(Icons.lightbulb, color: AppColors.primary500, size: 28),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: Spacing.xs),
                   const Text(
                     'Hogar Inteligente',
                     style: TextStyle(
@@ -91,7 +92,7 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
             ),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
                 children: [
                   SettingsCard(
                     icon: Icons.add,
@@ -105,7 +106,7 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
                             hintText: 'Ej: Luz Escritorio',
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: Spacing.xs),
                         TextField(
                           controller: _urlCtrl,
                           decoration: const InputDecoration(
@@ -113,14 +114,14 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
                             hintText: 'http://192.168.1.100/api/light',
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: Spacing.sm),
                         GantiaButton(
                           label: 'Agregar',
                           icon: Icons.add,
                           variant: GantiaButtonVariant.primary,
                           onPressed: _addDevice,
                           minWidth: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
                         ),
                       ],
                     ),
@@ -128,7 +129,7 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
 
                   if (_devices.isEmpty)
                     const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 40),
+                      padding: EdgeInsets.symmetric(vertical: Spacing.xxxl),
                       child: Center(
                         child: Text(
                           'Sin dispositivos configurados',
@@ -251,7 +252,7 @@ class _LightDeviceCardState extends State<_LightDeviceCard> {
                     color: widget.device.isOn ? AppColors.warning500 : AppColors.surfaceLight400,
                     size: 24,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: Spacing.xs),
                   Text(
                     widget.device.url,
                     style: const TextStyle(fontSize: 11, color: AppColors.surfaceLight500),
@@ -269,7 +270,7 @@ class _LightDeviceCardState extends State<_LightDeviceCard> {
             ],
           ),
           if (widget.device.isOn) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: Spacing.sm),
             Row(
               children: [
                 const Icon(Icons.brightness_low, size: 16, color: AppColors.surfaceLight500),

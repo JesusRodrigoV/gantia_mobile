@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers.dart';
 import '../theme/app_colors.dart';
 import '../theme/context_extensions.dart';
+import '../theme/spacing.dart';
 import '../widgets/settings_card.dart';
 import '../widgets/gantia_button.dart';
 import '../models/gesture_config_model.dart';
@@ -40,11 +41,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              padding: const EdgeInsets.fromLTRB(Spacing.md, Spacing.md, Spacing.md, Spacing.xs),
               child: Row(
                 children: [
                   const Icon(Icons.settings, color: AppColors.primary500, size: 28),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: Spacing.xs),
                   const Text(
                     'Ajustes',
                     style: TextStyle(
@@ -58,7 +59,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
                 children: [
                   SettingsCard(
                     icon: Icons.palette,
@@ -92,9 +93,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       children: [
                         if (btService.isConnected)
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.only(bottom: Spacing.sm),
                             child: Container(
-                              padding: const EdgeInsets.all(12),
+                              padding: const EdgeInsets.all(Spacing.sm),
                               decoration: BoxDecoration(
                                 color: AppColors.primary500.withAlpha(15),
                                 borderRadius: BorderRadius.circular(10),
@@ -103,7 +104,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 children: [
                                   const Icon(Icons.bluetooth_connected,
                                       color: AppColors.primary500, size: 20),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: Spacing.xs),
                                   Expanded(
                                     child: Text(
                                       btService.connectedDevice ?? 'Conectado',
@@ -130,7 +131,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           onPressed: _btScanning ? null : _scanBt,
                         ),
                         if (btService.availableDevices.isNotEmpty) ...[
-                          const SizedBox(height: 8),
+                          const SizedBox(height: Spacing.xs),
                           ...btService.availableDevices.map(
                             (d) => ListTile(
                               dense: true,
@@ -190,7 +191,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: Spacing.sm),
                   GantiaButton(
                     label: 'Cerrar sesión',
                     icon: Icons.logout,
@@ -219,7 +220,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       }
                     },
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: Spacing.xxl),
                 ],
               ),
             ),

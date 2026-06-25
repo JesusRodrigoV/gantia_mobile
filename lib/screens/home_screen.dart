@@ -4,6 +4,7 @@ import '../services/glove_state.dart';
 import '../providers.dart';
 import '../theme/app_colors.dart';
 import '../theme/context_extensions.dart';
+import '../theme/spacing.dart';
 import '../widgets/neuromorphic_card.dart';
 import '../widgets/gantia_header.dart';
 import '../widgets/gesture_flash.dart';
@@ -58,21 +59,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Expanded(
               child: SingleChildScrollView(
                 controller: _scrollCtrl,
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(Spacing.md),
                 child: Column(
                   children: [
                     Center(child: GestureFlash(event: gloveState.gestureDetected)),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: Spacing.md),
 
                     NeuromorphicCard(
                       showAccentLine: false,
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(Spacing.md),
                       child: _buildConnectionStatus(gloveState),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: Spacing.md),
 
                     NeuromorphicCard(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(Spacing.md),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -81,19 +82,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
-                              letterSpacing: 1.2,
+                              letterSpacing: 0.8,
                               color: AppColors.primary600,
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: Spacing.sm),
                           ActionLog(actions: ref.watch(actionLogProvider).recentActions),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: Spacing.md),
 
                     NeuromorphicCard(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(Spacing.md),
                       child: _buildDeviceInfo(gloveState),
                     ),
                   ],
@@ -114,7 +115,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Row(
           children: [
             StatusDot(status: gloveState.connectionStatus, flowing: gloveState.dataFlowing),
-            const SizedBox(width: 12),
+            const SizedBox(width: Spacing.sm),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,7 +141,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             if (gloveState.dataFlowing)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: Spacing.xs, vertical: Spacing.xxs),
                 decoration: BoxDecoration(
                   color: AppColors.primary500.withAlpha(20),
                   borderRadius: BorderRadius.circular(20),
@@ -149,7 +150,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.flash_on, size: 12, color: AppColors.primary500),
-                    SizedBox(width: 4),
+                    SizedBox(width: Spacing.xxs),
                     Text(
                       'ACTIVO',
                       style: TextStyle(
@@ -164,9 +165,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ],
         ),
         if (gloveState.waitingForDevice) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: Spacing.sm),
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            padding: const EdgeInsets.symmetric(vertical: Spacing.xs, horizontal: Spacing.md),
             decoration: BoxDecoration(
               color: AppColors.primary500.withAlpha(10),
               borderRadius: BorderRadius.circular(8),
@@ -179,7 +180,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   height: 12,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
-                SizedBox(width: 8),
+                SizedBox(width: Spacing.xs),
                 Text(
                   'Conectado al servidor — esperando guante...',
                   style: TextStyle(fontSize: 12, color: AppColors.surfaceLight500),
@@ -206,7 +207,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             color: AppColors.primary600,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: Spacing.sm),
         _deviceRow(
           icon: Icons.back_hand,
           label: 'Guante',
@@ -230,7 +231,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     String? detail,
   }) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(Spacing.sm),
       decoration: BoxDecoration(
         color: context.surface100,
         borderRadius: BorderRadius.circular(10),
@@ -238,9 +239,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: Row(
         children: [
           StatusDotSmall(active: connected),
-          const SizedBox(width: 12),
+          const SizedBox(width: Spacing.sm),
           Icon(icon, size: 20, color: AppColors.primary500),
-          const SizedBox(width: 8),
+          const SizedBox(width: Spacing.xs),
           Text(
             label,
             style: const TextStyle(
