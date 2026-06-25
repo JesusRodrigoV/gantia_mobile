@@ -4,9 +4,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'app.dart';
 import 'config.dart';
 import 'providers.dart';
-import 'services/api_service.dart';
-import 'services/auth_service.dart';
-import 'services/theme_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

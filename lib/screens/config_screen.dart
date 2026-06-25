@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/action_message.dart';
 import '../models/calibration_model.dart';
 import '../models/gesture_config_model.dart';
-import '../models/learning_model.dart';
 import '../providers.dart';
 import '../theme/app_colors.dart';
 import '../theme/context_extensions.dart';
@@ -173,7 +172,7 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: allContexts.length,
-        separatorBuilder: (_, __) => const SizedBox(width: Spacing.xs),
+        separatorBuilder: (_, _) => const SizedBox(width: Spacing.xs),
         itemBuilder: (context, i) {
           final c = allContexts[i];
           final selected = _selectedContext == c;
@@ -366,7 +365,7 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
     final contextCtrl =
         ValueNotifier<String>(existing?.context ?? 'GLOBAL');
 
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: context.surface0,
@@ -742,7 +741,7 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
     _calibMin = null;
     _calibMax = null;
 
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (ctx) {
         return StatefulBuilder(
@@ -836,7 +835,7 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
                             onPressed: telemetry == null
                                 ? null
                                 : () => setDialogState(() {
-                                      _calibMin = telemetry!.flexIndex;
+                                      _calibMin = telemetry.flexIndex;
                                       _calibSensor = 'flex_index';
                                     }),
                           ),
@@ -850,7 +849,7 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
                             onPressed: telemetry == null
                                 ? null
                                 : () => setDialogState(() {
-                                      _calibMax = telemetry!.flexIndex;
+                                      _calibMax = telemetry.flexIndex;
                                       _calibSensor = 'flex_index';
                                     }),
                           ),
@@ -976,9 +975,9 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
           const SizedBox(height: 6),
           if (telemetry != null) ...[
             _telemetryRow('Índice', '${telemetry.flexIndex}',
-                '${getFlexStateLabel(telemetry.indexState)}'),
+                getFlexStateLabel(telemetry.indexState)),
             _telemetryRow('Medio', '${telemetry.flexMiddle}',
-                '${getFlexStateLabel(telemetry.middleState)}'),
+                getFlexStateLabel(telemetry.middleState)),
             _telemetryRow(
               'Acel',
               '${telemetry.accelX.toStringAsFixed(1)}, '
@@ -1131,7 +1130,7 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
 
     if (!mounted) return;
 
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: context.surface0,
@@ -1192,7 +1191,7 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
   void _showImportDialog(GestureConfigService service) {
     _importTextController.clear();
 
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: context.surface0,
@@ -1251,6 +1250,7 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
             onPressed: () async {
               final text = _importTextController.text.trim();
               if (text.isEmpty) return;
+              final messenger = ScaffoldMessenger.of(context);
 
               try {
                 final decoded = jsonDecode(text);
@@ -1265,7 +1265,7 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
               } catch (e) {
                 Navigator.of(ctx).pop();
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  messenger.showSnackBar(
                     SnackBar(
                       content: Text('Error al importar: ${e.toString()}'),
                       backgroundColor: AppColors.red500,

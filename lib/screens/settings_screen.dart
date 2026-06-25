@@ -9,7 +9,7 @@ import '../widgets/settings_card.dart';
 import '../widgets/gantia_button.dart';
 import '../models/gesture_config_model.dart';
 import '../models/sensitivity_model.dart';
-import '../services/target_service.dart';
+
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -37,7 +37,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   void dispose() {
-    for (final t in _sensTimers.values) t.cancel();
+    for (final t in _sensTimers.values) {
+      t.cancel();
+    }
     _sensTimers.clear();
     super.dispose();
   }
