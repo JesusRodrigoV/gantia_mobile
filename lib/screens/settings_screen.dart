@@ -1,43 +1,34 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
-import '../services/theme_service.dart';
-import '../services/bt_service.dart';
-import '../services/ws_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers.dart';
 import '../theme/app_colors.dart';
 import '../widgets/settings_card.dart';
 import '../widgets/gantia_button.dart';
 import '../models/gesture_config_model.dart';
 
-class SettingsScreen extends StatefulWidget {
-  final AuthService authService;
-  final ThemeService themeService;
-  final BtService btService;
-  final WsService wsService;
-
-  const SettingsScreen({
-    super.key,
-    required this.authService,
-    required this.themeService,
-    required this.btService,
-    required this.wsService,
-  });
+class SettingsScreen extends ConsumerStatefulWidget {
+  const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _btScanning = false;
 
   void _scanBt() async {
     setState(() => _btScanning = true);
-    await widget.btService.scanDevices();
+    await ref.read(btServiceProvider).scanDevices();
     setState(() => _btScanning = false);
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final authService = ref.watch(authServiceProvider);
+    final themeService = ref.watch(themeServiceProvider);
+    final btService = ref.watch(btServiceProvider);
+    final gloveState = ref.watch(gloveStateProvider);
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.surfaceDark50 : AppColors.surfaceLight50,
@@ -66,7 +57,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
-                  // Theme
                   SettingsCard(
                     icon: Icons.palette,
                     title: 'Apariencia',
@@ -84,21 +74,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                         Switch(
                           value: isDark,
-                          onChanged: (_) => widget.themeService.toggleTheme(),
+                          onChanged: (_) => themeService.toggleTheme(),
                           activeThumbColor: AppColors.primary500,
                         ),
                       ],
                     ),
                   ),
 
-                  // Bluetooth
                   SettingsCard(
                     icon: Icons.bluetooth,
                     title: 'Parlante Bluetooth',
                     description: 'Conectá un parlante Bluetooth para control de audio',
                     child: Column(
                       children: [
-                        if (widget.btService.isConnected)
+                        if (btService.isConnected)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 12),
                             child: Container(
@@ -114,7 +103,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      widget.btService.connectedDevice ?? 'Conectado',
+                                      btService.connectedDevice ?? 'Conectado',
                                       style: const TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
@@ -125,7 +114,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   GantiaButton(
                                     label: 'Desconectar',
                                     variant: GantiaButtonVariant.danger,
-                                    onPressed: () => widget.btService.disconnect(),
+                                    onPressed: () => btService.disconnect(),
                                   ),
                                 ],
                               ),
@@ -137,15 +126,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           isLoading: _btScanning,
                           onPressed: _btScanning ? null : _scanBt,
                         ),
-                        if (widget.btService.availableDevices.isNotEmpty) ...[
+                        if (btService.availableDevices.isNotEmpty) ...[
                           const SizedBox(height: 8),
-                          ...widget.btService.availableDevices.map(
+                          ...btService.availableDevices.map(
                             (d) => ListTile(
                               dense: true,
                               title: Text(d, style: const TextStyle(fontSize: 13)),
                               trailing: GantiaButton(
                                 label: 'Conectar',
-                                onPressed: () => widget.btService.connect(d),
+                                onPressed: () => btService.connect(d),
                               ),
                             ),
                           ),
@@ -154,7 +143,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
 
-                  // Mode / Target
                   SettingsCard(
                     icon: Icons.share,
                     title: 'Contexto y Destino',
@@ -168,8 +156,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                             const Spacer(),
                             DropdownButton<String>(
-                              value: contexts.contains(widget.wsService.currentMode)
-                                  ? widget.wsService.currentMode
+                              value: contexts.contains(gloveState.currentMode)
+                                  ? gloveState.currentMode
                                   : 'GLOBAL',
                               underline: const SizedBox(),
                               items: contexts
@@ -179,7 +167,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       ))
                                   .toList(),
                               onChanged: (v) {
-                                if (v != null) setState(() {});
+                                if (v != null) {
+                                  ref.read(gloveStateProvider).changeMode(v);
+                                }
                               },
                             ),
                           ],
@@ -188,7 +178,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
 
-                  // About
                   SettingsCard(
                     icon: Icons.info,
                     title: 'Acerca de',

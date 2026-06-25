@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../services/ws_service.dart';
-import '../services/bt_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../services/glove_state.dart';
+import '../providers.dart';
 import '../theme/app_colors.dart';
 import '../widgets/neuromorphic_card.dart';
 import '../widgets/gantia_header.dart';
@@ -8,46 +9,30 @@ import '../widgets/gesture_flash.dart';
 import '../widgets/action_log.dart';
 import '../widgets/status_dot.dart';
 
-class HomeScreen extends StatefulWidget {
-  final WsService wsService;
-  final BtService btService;
-  final bool isDarkMode;
-  final VoidCallback onThemeToggle;
-  final VoidCallback onLogout;
-
-  const HomeScreen({
-    super.key,
-    required this.wsService,
-    required this.btService,
-    required this.isDarkMode,
-    required this.onThemeToggle,
-    required this.onLogout,
-  });
+class HomeScreen extends ConsumerStatefulWidget {
+  const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _scrolled = false;
   final _scrollCtrl = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    widget.wsService.addListener(_onWsChange);
     _scrollCtrl.addListener(_onScroll);
   }
 
   @override
   void dispose() {
-    widget.wsService.removeListener(_onWsChange);
     _scrollCtrl.removeListener(_onScroll);
     _scrollCtrl.dispose();
     super.dispose();
   }
 
-  void _onWsChange() => setState(() {});
   void _onScroll() {
     final s = _scrollCtrl.offset > 20;
     if (s != _scrolled) setState(() => _scrolled = s);
@@ -55,21 +40,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final ws = widget.wsService;
+    final gloveState = ref.watch(gloveStateProvider);
+    final themeService = ref.watch(themeServiceProvider);
+    final isDark = themeService.isDarkMode;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).brightness == Brightness.dark
+      backgroundColor: isDark
           ? AppColors.surfaceDark50
           : AppColors.surfaceLight50,
       body: SafeArea(
         child: Column(
           children: [
             GantiaHeader(
-              wsService: ws,
-              isDarkMode: widget.isDarkMode,
-              onThemeToggle: widget.onThemeToggle,
-              onLogout: widget.onLogout,
               scrolled: _scrolled,
+              onLogout: () {
+                ref.read(authServiceProvider).logout();
+                ref.read(wsClientProvider).disconnect();
+              },
             ),
             Expanded(
               child: SingleChildScrollView(
@@ -77,19 +64,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    // Gesture Flash overlay
-                    Center(child: GestureFlash(event: ws.gestureDetected)),
+                    Center(child: GestureFlash(event: gloveState.gestureDetected)),
                     const SizedBox(height: 16),
 
-                    // Connection status card
                     NeuromorphicCard(
                       showAccentLine: false,
                       padding: const EdgeInsets.all(16),
-                      child: _buildConnectionStatus(ws),
+                      child: _buildConnectionStatus(gloveState),
                     ),
                     const SizedBox(height: 16),
 
-                    // Recent actions
                     NeuromorphicCard(
                       padding: const EdgeInsets.all(16),
                       child: Column(
@@ -105,16 +89,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          ActionLog(actions: ws.recentActions),
+                          ActionLog(actions: ref.watch(actionLogProvider).recentActions),
                         ],
                       ),
                     ),
                     const SizedBox(height: 16),
 
-                    // Device info
                     NeuromorphicCard(
                       padding: const EdgeInsets.all(16),
-                      child: _buildDeviceInfo(ws),
+                      child: _buildDeviceInfo(gloveState),
                     ),
                   ],
                 ),
@@ -126,14 +109,14 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildConnectionStatus(WsService ws) {
-    final statusText = _statusLabel(ws);
+  Widget _buildConnectionStatus(GloveState gloveState) {
+    final statusText = _statusLabel(gloveState);
 
     return Column(
       children: [
         Row(
           children: [
-            StatusDot(status: ws.connectionStatus, flowing: ws.dataFlowing),
+            StatusDot(status: gloveState.connectionStatus, flowing: gloveState.dataFlowing),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -147,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: AppColors.surfaceLight700,
                     ),
                   ),
-                  if (ws.telemetry != null)
+                  if (gloveState.telemetry != null)
                     Text(
                       'Datos recibiendo',
                       style: TextStyle(
@@ -158,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-            if (ws.dataFlowing)
+            if (gloveState.dataFlowing)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
@@ -183,7 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
           ],
         ),
-        if (ws.waitingForDevice) ...[
+        if (gloveState.waitingForDevice) ...[
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -212,8 +195,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildDeviceInfo(WsService ws) {
-    final bt = widget.btService;
+  Widget _buildDeviceInfo(GloveState gloveState) {
+    final bt = ref.watch(btServiceProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -227,14 +210,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        // Glove status
         _deviceRow(
           icon: Icons.back_hand,
           label: 'Guante',
-          connected: ws.connectionStatus == ConnectionStatus.connected,
+          connected: gloveState.connectionStatus == ConnectionStatus.connected,
         ),
         const SizedBox(height: 8),
-        // BT Speaker
         _deviceRow(
           icon: Icons.bluetooth_audio,
           label: 'Parlante BT',
@@ -287,11 +268,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  String _statusLabel(WsService ws) {
-    switch (ws.connectionStatus) {
+  String _statusLabel(GloveState gloveState) {
+    switch (gloveState.connectionStatus) {
       case ConnectionStatus.connected:
-        if (ws.dataFlowing) return 'Guante conectado — recibiendo datos';
-        if (ws.waitingForDevice) return 'Conectado al servidor — esperando guante';
+        if (gloveState.dataFlowing) return 'Guante conectado — recibiendo datos';
+        if (gloveState.waitingForDevice) return 'Conectado al servidor — esperando guante';
         return 'Conectado — sin datos';
       case ConnectionStatus.connecting:
         return 'Conectando al servidor...';

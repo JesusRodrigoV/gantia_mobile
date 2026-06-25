@@ -1,27 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_colors.dart';
 import '../theme/shadows.dart';
-import '../services/ws_service.dart';
+import '../providers.dart';
 import 'status_dot.dart';
 
-class GantiaHeader extends StatelessWidget {
-  final WsService wsService;
-  final bool isDarkMode;
-  final VoidCallback onThemeToggle;
-  final VoidCallback onLogout;
+class GantiaHeader extends ConsumerWidget {
   final bool scrolled;
+  final VoidCallback onLogout;
 
   const GantiaHeader({
     super.key,
-    required this.wsService,
-    required this.isDarkMode,
-    required this.onThemeToggle,
-    required this.onLogout,
     this.scrolled = false,
+    required this.onLogout,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeService = ref.watch(themeServiceProvider);
+    final gloveState = ref.watch(gloveStateProvider);
+    final isDarkMode = themeService.isDarkMode;
+
     final surface0 = isDarkMode ? AppColors.surfaceDark0 : AppColors.surfaceLight0;
     final surface900 = isDarkMode ? AppColors.surfaceDark900 : AppColors.surfaceLight900;
     final surface800 = isDarkMode ? AppColors.surfaceDark800 : AppColors.surfaceLight800;
@@ -46,7 +45,6 @@ class GantiaHeader extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            // Logo + Brand
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -83,20 +81,17 @@ class GantiaHeader extends StatelessWidget {
 
             const Spacer(),
 
-            // Connection status
             StatusDot(
-              status: wsService.connectionStatus,
-              flowing: wsService.dataFlowing,
+              status: gloveState.connectionStatus,
+              flowing: gloveState.dataFlowing,
             ),
             const SizedBox(width: 8),
 
-            // Mode badge
-            if (wsService.dataFlowing)
-              _ModeBadge(mode: wsService.currentMode),
+            if (gloveState.dataFlowing)
+              _ModeBadge(mode: gloveState.currentMode),
 
-            // Theme toggle
             IconButton(
-              onPressed: onThemeToggle,
+              onPressed: themeService.toggleTheme,
               icon: Icon(
                 isDarkMode ? Icons.light_mode : Icons.dark_mode,
                 size: 20,
@@ -104,19 +99,16 @@ class GantiaHeader extends StatelessWidget {
               ),
               style: IconButton.styleFrom(
                 backgroundColor: surface0,
-                elevation: 4,
                 padding: const EdgeInsets.all(8),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               ),
             ),
 
-            // Logout
             IconButton(
               onPressed: onLogout,
               icon: Icon(Icons.logout, size: 20, color: surface600),
               style: IconButton.styleFrom(
                 backgroundColor: surface0,
-                elevation: 4,
                 padding: const EdgeInsets.all(8),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               ),

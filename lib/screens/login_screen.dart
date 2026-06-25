@@ -74,24 +74,10 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Logo
-                Container(
+                Image.asset(
+                  'assets/logos/logo.webp',
                   width: 64,
                   height: 64,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary500,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'G',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 32,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
                 ),
                 const SizedBox(height: 20),
                 const Text(
@@ -105,7 +91,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 40),
 
-                // Form
                 Form(
                   key: _formKey,
                   child: Column(
@@ -229,7 +214,6 @@ class _LoginScreenState extends State<LoginScreen> {
             keyboardType: keyboardType,
             validator: validator,
             style: const TextStyle(
-              fontFamily: 'CormorantGaramond',
               fontSize: 15,
               color: AppColors.surfaceLight800,
             ),

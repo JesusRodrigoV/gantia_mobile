@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
-import '../services/smart_home_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers.dart';
 import '../theme/app_colors.dart';
 import '../widgets/settings_card.dart';
 import '../widgets/gantia_button.dart';
 
-class SmartHomeScreen extends StatefulWidget {
-  final SmartHomeService smartHomeService;
-
-  const SmartHomeScreen({super.key, required this.smartHomeService});
+class SmartHomeScreen extends ConsumerStatefulWidget {
+  const SmartHomeScreen({super.key});
 
   @override
-  State<SmartHomeScreen> createState() => _SmartHomeScreenState();
+  ConsumerState<SmartHomeScreen> createState() => _SmartHomeScreenState();
 }
 
-class _SmartHomeScreenState extends State<SmartHomeScreen> {
+class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
   final List<_LightDevice> _devices = [];
   final _urlCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
@@ -39,6 +38,8 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final smartHomeService = ref.watch(smartHomeServiceProvider);
+
     return Scaffold(
       backgroundColor: Theme.of(context).brightness == Brightness.dark
           ? AppColors.surfaceDark50
@@ -68,7 +69,6 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
-                  // Add device
                   SettingsCard(
                     icon: Icons.add,
                     title: 'Agregar Dispositivo',
@@ -102,7 +102,6 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
                     ),
                   ),
 
-                  // Device list
                   if (_devices.isEmpty)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 40),
@@ -123,13 +122,13 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
                             device: entry.value,
                             onToggle: (on) {
                               if (on) {
-                                widget.smartHomeService.lightOn(entry.value.url);
+                                smartHomeService.lightOn(entry.value.url);
                               } else {
-                                widget.smartHomeService.lightOff(entry.value.url);
+                                smartHomeService.lightOff(entry.value.url);
                               }
                             },
                             onBrightness: (value) {
-                              widget.smartHomeService.setBrightness(entry.value.url, value);
+                              smartHomeService.setBrightness(entry.value.url, value);
                             },
                             onRemove: () => setState(() => _devices.removeAt(entry.key)),
                           ),

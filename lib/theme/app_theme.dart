@@ -5,23 +5,47 @@ import 'app_colors.dart';
 class AppTheme {
   AppTheme._();
 
-  static ThemeData light() => _base(AppColors.lightScheme(), AppColors.surfaceLight0, AppColors.surfaceLight50, AppColors.surfaceLight100, AppColors.surfaceLight200, AppColors.surfaceLight300, AppColors.surfaceLight500, AppColors.surfaceLight600, AppColors.surfaceLight700, AppColors.surfaceLight800, AppColors.surfaceLight900);
+  static ThemeData light() => _base(
+    colorScheme: AppColors.lightScheme(),
+    surface0: AppColors.surfaceLight0,
+    surface50: AppColors.surfaceLight50,
+    surface100: AppColors.surfaceLight100,
+    surface200: AppColors.surfaceLight200,
+    surface300: AppColors.surfaceLight300,
+    surface500: AppColors.surfaceLight500,
+    surface600: AppColors.surfaceLight600,
+    surface700: AppColors.surfaceLight700,
+    surface800: AppColors.surfaceLight800,
+    surface900: AppColors.surfaceLight900,
+  );
 
-  static ThemeData dark() => _base(AppColors.darkScheme(), AppColors.surfaceDark0, AppColors.surfaceDark50, AppColors.surfaceDark100, AppColors.surfaceDark200, AppColors.surfaceDark300, AppColors.surfaceDark500, AppColors.surfaceDark600, AppColors.surfaceDark700, AppColors.surfaceDark800, AppColors.surfaceDark900);
+  static ThemeData dark() => _base(
+    colorScheme: AppColors.darkScheme(),
+    surface0: AppColors.surfaceDark0,
+    surface50: AppColors.surfaceDark50,
+    surface100: AppColors.surfaceDark100,
+    surface200: AppColors.surfaceDark200,
+    surface300: AppColors.surfaceDark300,
+    surface500: AppColors.surfaceDark500,
+    surface600: AppColors.surfaceDark600,
+    surface700: AppColors.surfaceDark700,
+    surface800: AppColors.surfaceDark800,
+    surface900: AppColors.surfaceDark900,
+  );
 
-  static ThemeData _base(
-    ColorScheme scheme,
-    Color surface0,
-    Color surface50,
-    Color surface100,
-    Color surface200,
-    Color surface300,
-    Color surface500,
-    Color surface600,
-    Color surface700,
-    Color surface800,
-    Color surface900,
-  ) {
+  static ThemeData _base({
+    required ColorScheme colorScheme,
+    required Color surface0,
+    required Color surface50,
+    required Color surface100,
+    required Color surface200,
+    required Color surface300,
+    required Color surface500,
+    required Color surface600,
+    required Color surface700,
+    required Color surface800,
+    required Color surface900,
+  }) {
     final fontUi = GoogleFonts.cormorantGaramondTextTheme();
     final fontLabel = GoogleFonts.notoSansTextTheme();
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/ws_service.dart';
+import '../services/glove_state.dart';
 import '../theme/app_colors.dart';
 
 class StatusDot extends StatelessWidget {
