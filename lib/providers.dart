@@ -7,6 +7,13 @@ import 'services/action_log.dart';
 import 'services/bt_service.dart';
 import 'services/theme_service.dart';
 import 'services/smart_home_service.dart';
+import 'services/gesture_config_service.dart';
+import 'services/calibration_service.dart';
+import 'services/sensitivity_service.dart';
+import 'services/mouse_config_service.dart';
+import 'services/learning_service.dart';
+import 'services/history_service.dart';
+import 'services/target_service.dart';
 import 'config.dart';
 
 final apiServiceProvider = Provider<ApiService>((ref) {
@@ -44,4 +51,39 @@ final btServiceProvider = ChangeNotifierProvider<BtService>((ref) {
 
 final smartHomeServiceProvider = ChangeNotifierProvider<SmartHomeService>((ref) {
   return SmartHomeService();
+});
+
+final gestureConfigServiceProvider = ChangeNotifierProvider<GestureConfigService>((ref) {
+  final api = ref.watch(apiServiceProvider);
+  return GestureConfigService(api);
+});
+
+final calibrationServiceProvider = ChangeNotifierProvider<CalibrationService>((ref) {
+  final api = ref.watch(apiServiceProvider);
+  return CalibrationService(api);
+});
+
+final sensitivityServiceProvider = ChangeNotifierProvider<SensitivityService>((ref) {
+  final api = ref.watch(apiServiceProvider);
+  return SensitivityService(api);
+});
+
+final mouseConfigServiceProvider = ChangeNotifierProvider<MouseConfigService>((ref) {
+  final api = ref.watch(apiServiceProvider);
+  return MouseConfigService(api);
+});
+
+final learningServiceProvider = ChangeNotifierProvider<LearningService>((ref) {
+  final api = ref.watch(apiServiceProvider);
+  return LearningService(api);
+});
+
+final historyServiceProvider = ChangeNotifierProvider<HistoryService>((ref) {
+  final api = ref.watch(apiServiceProvider);
+  return HistoryService(api);
+});
+
+final targetServiceProvider = ChangeNotifierProvider<TargetService>((ref) {
+  final api = ref.watch(apiServiceProvider);
+  return TargetService(api);
 });

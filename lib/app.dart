@@ -5,9 +5,12 @@ import 'theme/app_colors.dart';
 import 'theme/context_extensions.dart';
 import 'providers.dart';
 import 'screens/login_screen.dart';
+import 'screens/register_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/smart_home_screen.dart';
+import 'screens/config_screen.dart';
+import 'screens/history_screen.dart';
 
 class GantiaApp extends ConsumerWidget {
   const GantiaApp({super.key});
@@ -35,6 +38,8 @@ class _AuthGate extends ConsumerStatefulWidget {
 }
 
 class _AuthGateState extends ConsumerState<_AuthGate> {
+  bool _showRegister = false;
+
   @override
   void initState() {
     super.initState();
@@ -49,10 +54,25 @@ class _AuthGateState extends ConsumerState<_AuthGate> {
     final auth = ref.watch(authServiceProvider);
 
     if (!auth.isAuthenticated) {
+      if (_showRegister) {
+        return RegisterScreen(
+          authService: auth,
+          onRegisterSuccess: () {
+            setState(() => _showRegister = false);
+          },
+          onBackToLogin: () {
+            setState(() => _showRegister = false);
+          },
+        );
+      }
+
       return LoginScreen(
         authService: auth,
         onLoginSuccess: () {
           ref.read(wsClientProvider).connect();
+        },
+        onRegisterTap: () {
+          setState(() => _showRegister = true);
         },
       );
     }
@@ -75,6 +95,8 @@ class _MainShellState extends ConsumerState<_MainShell> {
   Widget build(BuildContext context) {
     final pages = <Widget>[
       const HomeScreen(),
+      const ConfigScreen(),
+      const HistoryScreen(),
       const SettingsScreen(),
       const SmartHomeScreen(),
     ];
@@ -117,20 +139,39 @@ class _MainShellState extends ConsumerState<_MainShell> {
           onTap: (i) => setState(() => _currentIndex = i),
           type: BottomNavigationBarType.fixed,
           selectedLabelStyle: const TextStyle(
-            fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 1,
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
           ),
           unselectedLabelStyle: const TextStyle(
-            fontSize: 11, fontWeight: FontWeight.w500,
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
           ),
           items: const [
             BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard), activeIcon: Icon(Icons.dashboard), label: 'INICIO',
+              icon: Icon(Icons.dashboard_outlined),
+              activeIcon: Icon(Icons.dashboard),
+              label: 'INICIO',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.settings_outlined), activeIcon: Icon(Icons.settings), label: 'AJUSTES',
+              icon: Icon(Icons.tune_outlined),
+              activeIcon: Icon(Icons.tune),
+              label: 'GESTOS',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.lightbulb_outline), activeIcon: Icon(Icons.lightbulb), label: 'SMART HOME',
+              icon: Icon(Icons.history_outlined),
+              activeIcon: Icon(Icons.history),
+              label: 'HISTORIAL',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.settings_outlined),
+              activeIcon: Icon(Icons.settings),
+              label: 'AJUSTES',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.lightbulb_outline),
+              activeIcon: Icon(Icons.lightbulb),
+              label: 'SMART HOME',
             ),
           ],
         ),

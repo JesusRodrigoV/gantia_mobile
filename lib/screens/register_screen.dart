@@ -6,44 +6,58 @@ import '../theme/shadows.dart';
 import '../theme/spacing.dart';
 import '../widgets/gantia_scramble_text.dart';
 
-class LoginScreen extends StatefulWidget {
+class RegisterScreen extends StatefulWidget {
   final AuthService authService;
-  final VoidCallback? onLoginSuccess;
-  final VoidCallback? onRegisterTap;
+  final VoidCallback? onRegisterSuccess;
+  final VoidCallback? onBackToLogin;
 
-  const LoginScreen({super.key, required this.authService, this.onLoginSuccess, this.onRegisterTap});
+  const RegisterScreen({
+    super.key,
+    required this.authService,
+    this.onRegisterSuccess,
+    this.onBackToLogin,
+  });
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
+  final _confirmCtrl = TextEditingController();
   bool _obscurePassword = true;
+  bool _obscureConfirm = true;
 
   @override
   void dispose() {
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
+    _confirmCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final success = await widget.authService.login(
+    final success = await widget.authService.register(
       _emailCtrl.text.trim(),
       _passwordCtrl.text,
     );
 
     if (success && mounted) {
-      widget.onLoginSuccess?.call();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Registro exitoso — ahora iniciá sesión'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      widget.onRegisterSuccess?.call();
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(widget.authService.error ?? 'Error al iniciar sesión'),
+          content: Text(widget.authService.error ?? 'Error al registrarse'),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -93,6 +107,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: context.surface900,
                   ),
                 ),
+                const SizedBox(height: Spacing.sm),
+                Text(
+                  'CREAR CUENTA',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 2,
+                    color: context.surface500,
+                  ),
+                ),
                 const SizedBox(height: Spacing.xxxl),
 
                 Form(
@@ -116,15 +140,35 @@ class _LoginScreenState extends State<LoginScreen> {
                         obscure: _obscurePassword,
                         validator: (v) {
                           if (v == null || v.isEmpty) return 'Contraseña requerida';
+                          if (v.length < 6) return 'Mínimo 6 caracteres';
                           return null;
                         },
                         suffix: IconButton(
                           icon: Icon(
                             _obscurePassword ? Icons.visibility_off : Icons.visibility,
                             size: 18,
-            color: context.surface500,
+                            color: context.surface500,
                           ),
                           onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                        ),
+                      ),
+                      const SizedBox(height: Spacing.xl),
+                      _buildField(
+                        label: 'Confirmar Contraseña',
+                        controller: _confirmCtrl,
+                        obscure: _obscureConfirm,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'Confirmá la contraseña';
+                          if (v != _passwordCtrl.text) return 'Las contraseñas no coinciden';
+                          return null;
+                        },
+                        suffix: IconButton(
+                          icon: Icon(
+                            _obscureConfirm ? Icons.visibility_off : Icons.visibility,
+                            size: 18,
+                            color: context.surface500,
+                          ),
+                          onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
                         ),
                       ),
                       const SizedBox(height: Spacing.xxxl - 6),
@@ -152,7 +196,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       child: CircularProgressIndicator(strokeWidth: 2),
                                     )
                                   : const Text(
-                                      'INGRESAR',
+                                      'CREAR CUENTA',
                                       style: TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w700,
@@ -163,10 +207,21 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                         ),
                       ),
+                      const SizedBox(height: Spacing.lg),
+                      TextButton(
+                        onPressed: widget.onBackToLogin,
+                        child: Text(
+                          '¿Ya tenés cuenta? Iniciá sesión',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: context.surface500,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
