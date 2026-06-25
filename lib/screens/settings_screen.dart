@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers.dart';
 import '../theme/app_colors.dart';
+import '../theme/context_extensions.dart';
 import '../widgets/settings_card.dart';
 import '../widgets/gantia_button.dart';
 import '../models/gesture_config_model.dart';
@@ -18,20 +19,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   void _scanBt() async {
     setState(() => _btScanning = true);
-    await ref.read(btServiceProvider).scanDevices();
-    setState(() => _btScanning = false);
+    try {
+      await ref.read(btServiceProvider).scanDevices();
+    } finally {
+      setState(() => _btScanning = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final authService = ref.watch(authServiceProvider);
     final themeService = ref.watch(themeServiceProvider);
     final btService = ref.watch(btServiceProvider);
     final gloveState = ref.watch(gloveStateProvider);
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.surfaceDark50 : AppColors.surfaceLight50,
+      backgroundColor: context.surface50,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,7 +68,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          isDark ? 'Modo Oscuro' : 'Modo Claro',
+                          themeService.isDarkMode ? 'Modo Oscuro' : 'Modo Claro',
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,

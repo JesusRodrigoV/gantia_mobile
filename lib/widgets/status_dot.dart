@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/glove_state.dart';
 import '../theme/app_colors.dart';
+import '../theme/context_extensions.dart';
 
 class StatusDot extends StatelessWidget {
   final ConnectionStatus status;
@@ -61,9 +62,6 @@ class StatusDot extends StatelessWidget {
       ];
 
   List<BoxShadow>? _buildShadow(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surface0 = isDark ? AppColors.surfaceDark0 : AppColors.surfaceLight0;
-
     if (status == ConnectionStatus.disconnected || status == ConnectionStatus.error) {
       return [
         const BoxShadow(
@@ -74,7 +72,7 @@ class StatusDot extends StatelessWidget {
         BoxShadow(
           offset: const Offset(-2, -2),
           blurRadius: 4,
-          color: surface0.withAlpha(204),
+          color: context.surface0.withAlpha(204),
         ),
       ];
     }

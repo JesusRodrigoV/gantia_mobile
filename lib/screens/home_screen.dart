@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/glove_state.dart';
 import '../providers.dart';
 import '../theme/app_colors.dart';
+import '../theme/context_extensions.dart';
 import '../widgets/neuromorphic_card.dart';
 import '../widgets/gantia_header.dart';
 import '../widgets/gesture_flash.dart';
@@ -45,16 +46,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final isDark = themeService.isDarkMode;
 
     return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.surfaceDark50
-          : AppColors.surfaceLight50,
+      backgroundColor: context.surface50,
       body: SafeArea(
         child: Column(
           children: [
             GantiaHeader(
               scrolled: _scrolled,
-              onLogout: () {
-                ref.read(authServiceProvider).logout();
+              onLogout: () async {
+                await ref.read(authServiceProvider).logout();
                 ref.read(wsClientProvider).disconnect();
               },
             ),
@@ -235,9 +234,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark
-            ? AppColors.surfaceDark100
-            : AppColors.surfaceLight100,
+        color: context.surface100,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(

@@ -1,7 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../providers.dart';
 import '../theme/app_colors.dart';
+import '../theme/context_extensions.dart';
 import '../widgets/settings_card.dart';
 import '../widgets/gantia_button.dart';
 
@@ -18,10 +21,32 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
   final _nameCtrl = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    _loadDevices();
+  }
+
+  @override
   void dispose() {
     _urlCtrl.dispose();
     _nameCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadDevices() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('smart_home_devices');
+    if (raw == null) return;
+    final list = jsonDecode(raw) as List<dynamic>;
+    setState(() {
+      _devices.addAll(list.map((e) => _LightDevice.fromJson(e as Map<String, dynamic>)));
+    });
+  }
+
+  Future<void> _saveDevices() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = jsonEncode(_devices.map((d) => d.toJson()).toList());
+    await prefs.setString('smart_home_devices', raw);
   }
 
   void _addDevice() {
@@ -34,6 +59,7 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
       _urlCtrl.clear();
       _nameCtrl.clear();
     });
+    _saveDevices();
   }
 
   @override
@@ -41,9 +67,7 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
     final smartHomeService = ref.watch(smartHomeServiceProvider);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).brightness == Brightness.dark
-          ? AppColors.surfaceDark50
-          : AppColors.surfaceLight50,
+      backgroundColor: context.surface50,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -55,7 +79,7 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
                   const Icon(Icons.lightbulb, color: AppColors.primary500, size: 28),
                   const SizedBox(width: 8),
                   const Text(
-                    'Smart Home',
+                    'Hogar Inteligente',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w700,
@@ -121,6 +145,8 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
                           (entry) => _LightDeviceCard(
                             device: entry.value,
                             onToggle: (on) {
+                              setState(() {});
+                              _saveDevices();
                               if (on) {
                                 smartHomeService.lightOn(entry.value.url);
                               } else {
@@ -128,9 +154,13 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
                               }
                             },
                             onBrightness: (value) {
+                              setState(() => _saveDevices());
                               smartHomeService.setBrightness(entry.value.url, value);
                             },
-                            onRemove: () => setState(() => _devices.removeAt(entry.key)),
+                            onRemove: () {
+                              setState(() => _devices.removeAt(entry.key));
+                              _saveDevices();
+                            },
                           ),
                         ),
                 ],
@@ -146,13 +176,29 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
 class _LightDevice {
   final String name;
   final String url;
-  bool isOn = false;
-  double brightness = 50;
+  bool isOn;
+  double brightness;
 
   _LightDevice({
     required this.name,
     required this.url,
+    this.isOn = false,
+    this.brightness = 50,
   });
+
+  factory _LightDevice.fromJson(Map<String, dynamic> json) => _LightDevice(
+        name: json['name'] as String? ?? '',
+        url: json['url'] as String? ?? '',
+        isOn: json['isOn'] as bool? ?? false,
+        brightness: (json['brightness'] as num?)?.toDouble() ?? 50,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'url': url,
+        'isOn': isOn,
+        'brightness': brightness,
+      };
 }
 
 class _LightDeviceCard extends StatefulWidget {
@@ -179,6 +225,14 @@ class _LightDeviceCardState extends State<_LightDeviceCard> {
   void initState() {
     super.initState();
     _brightness = widget.device.brightness;
+  }
+
+  @override
+  void didUpdateWidget(_LightDeviceCard old) {
+    super.didUpdateWidget(old);
+    if (widget.device != old.device) {
+      _brightness = widget.device.brightness;
+    }
   }
 
   @override

@@ -18,12 +18,7 @@ class WsClient {
       StreamController<Map<String, dynamic>>.broadcast();
 
   Stream<Map<String, dynamic>> get messages => _controller.stream;
-  bool get isConnected => _channel != null;
-
-  String get _fullWsUrl {
-    final token = _authService.token ?? '';
-    return '$_wsUrl/ws/dashboard?token=$token';
-  }
+  bool get isConnected => _channel != null && _channel!.closeCode == null;
 
   void connect() {
     if (_disposed) return;
@@ -38,9 +33,8 @@ class WsClient {
   }
 
   void send(Map<String, dynamic> data) {
-    try {
-      _channel?.sink.add(jsonEncode(data));
-    } catch (_) {}
+    if (!isConnected) return;
+    _channel!.sink.add(jsonEncode(data));
   }
 
   void _establishConnection() {
@@ -54,7 +48,7 @@ class WsClient {
     _controller.add({'\$type': 'connecting'});
 
     try {
-      _channel = WebSocketChannel.connect(Uri.parse(_fullWsUrl));
+      _channel = WebSocketChannel.connect(Uri.parse('$_wsUrl/ws/dashboard'));
 
       _channel!.stream.listen(
         (data) {
@@ -76,7 +70,10 @@ class WsClient {
         cancelOnError: false,
       );
 
-      _controller.add({'\$type': 'connected'});
+      _channel!.sink.add(jsonEncode({
+        '\$type': 'auth',
+        'token': token,
+      }));
     } catch (_) {
       _controller.add({'\$type': 'error'});
       _scheduleReconnect();

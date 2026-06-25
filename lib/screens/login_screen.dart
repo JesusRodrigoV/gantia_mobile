@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/context_extensions.dart';
 
 class LoginScreen extends StatefulWidget {
   final AuthService authService;
@@ -48,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.surfaceLight50,
+      backgroundColor: context.surface50,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -56,16 +57,16 @@ class _LoginScreenState extends State<LoginScreen> {
             width: 420,
             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 50),
             decoration: BoxDecoration(
-              color: AppColors.surfaceLight0,
+              color: context.surface0,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.surfaceLight900.withAlpha(15),
+                  color: context.surface900.withAlpha(15),
                   blurRadius: 16,
                   offset: const Offset(8, 8),
                 ),
                 BoxShadow(
-                  color: Colors.white.withAlpha(204),
+                  color: context.surface0.withAlpha(204),
                   blurRadius: 16,
                   offset: const Offset(-8, -8),
                 ),
@@ -80,13 +81,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   height: 64,
                 ),
                 const SizedBox(height: 20),
-                const Text(
+                Text(
                   'Gantia',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 3,
-                    color: AppColors.surfaceLight900,
+                    color: context.surface900,
                   ),
                 ),
                 const SizedBox(height: 40),
@@ -118,7 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           icon: Icon(
                             _obscurePassword ? Icons.visibility_off : Icons.visibility,
                             size: 18,
-                            color: AppColors.surfaceLight500,
+            color: context.surface500,
                           ),
                           onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                         ),
@@ -132,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             return ElevatedButton(
                               onPressed: widget.authService.isLoading ? null : _submit,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.surfaceLight0,
+                                backgroundColor: context.surface0,
                                 foregroundColor: AppColors.primary600,
                                 elevation: 0,
                                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -183,26 +184,26 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         Text(
           label.toUpperCase(),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
             letterSpacing: 1.5,
-            color: AppColors.surfaceLight500,
+            color: context.surface500,
           ),
         ),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: AppColors.surfaceLight50,
+            color: context.surface50,
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: AppColors.surfaceLight900.withAlpha(15),
+                color: context.surface900.withAlpha(15),
                 blurRadius: 4,
                 offset: const Offset(2, 2),
               ),
               BoxShadow(
-                color: Colors.white.withAlpha(204),
+                color: context.surface0.withAlpha(204),
                 blurRadius: 4,
                 offset: const Offset(-2, -2),
               ),
@@ -213,9 +214,9 @@ class _LoginScreenState extends State<LoginScreen> {
             obscureText: obscure,
             keyboardType: keyboardType,
             validator: validator,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
-              color: AppColors.surfaceLight800,
+              color: context.surface800,
             ),
             decoration: InputDecoration(
               border: InputBorder.none,

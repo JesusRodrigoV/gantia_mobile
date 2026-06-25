@@ -1,15 +1,3 @@
-class AuthRequest {
-  final String email;
-  final String password;
-
-  const AuthRequest({required this.email, required this.password});
-
-  Map<String, dynamic> toJson() => {
-        'email': email,
-        'password': password,
-      };
-}
-
 class AuthResponse {
   final String accessToken;
   final String tokenType;
@@ -22,10 +10,18 @@ class AuthResponse {
   });
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
+    final token = json['access_token'] as String?;
+    if (token == null || token.isEmpty) {
+      throw const FormatException('Missing access_token in auth response');
+    }
+    final userJson = json['user'];
+    if (userJson == null || userJson is! Map<String, dynamic>) {
+      throw const FormatException('Missing user in auth response');
+    }
     return AuthResponse(
-      accessToken: json['access_token'] as String? ?? '',
+      accessToken: token,
       tokenType: json['token_type'] as String? ?? 'bearer',
-      user: User.fromJson(json['user'] as Map<String, dynamic>? ?? {}),
+      user: User.fromJson(userJson),
     );
   }
 }
@@ -37,8 +33,12 @@ class User {
   const User({required this.id, required this.email});
 
   factory User.fromJson(Map<String, dynamic> json) {
+    final id = json['id'] as String?;
+    if (id == null || id.isEmpty) {
+      throw const FormatException('Missing id in user response');
+    }
     return User(
-      id: json['id'] as String? ?? '',
+      id: id,
       email: json['email'] as String? ?? '',
     );
   }

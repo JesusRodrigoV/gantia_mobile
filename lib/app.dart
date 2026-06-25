@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'theme/app_theme.dart';
 import 'theme/app_colors.dart';
+import 'theme/context_extensions.dart';
 import 'providers.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
@@ -91,8 +92,7 @@ class _MainShellState extends ConsumerState<_MainShell> {
   }
 
   Widget _buildBottomNav() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? AppColors.surfaceDark0 : AppColors.surfaceLight0;
+    final bg = context.surface0;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -101,12 +101,12 @@ class _MainShellState extends ConsumerState<_MainShell> {
         borderRadius: BorderRadius.circular(25),
         boxShadow: [
           BoxShadow(
-            color: isDark ? AppColors.surfaceDark900 : AppColors.surfaceLight900,
+            color: context.surface900.withAlpha(15),
             blurRadius: 16,
             offset: const Offset(8, 8),
           ),
           BoxShadow(
-            color: isDark ? AppColors.surfaceDark0 : AppColors.surfaceLight0,
+            color: context.surface0.withAlpha(204),
             blurRadius: 16,
             offset: const Offset(-8, -8),
           ),
@@ -118,7 +118,7 @@ class _MainShellState extends ConsumerState<_MainShell> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           selectedItemColor: AppColors.primary500,
-          unselectedItemColor: isDark ? AppColors.surfaceDark500 : AppColors.surfaceLight500,
+          unselectedItemColor: context.surface500,
           currentIndex: _currentIndex,
           onTap: (i) => setState(() => _currentIndex = i),
           type: BottomNavigationBarType.fixed,

@@ -7,39 +7,34 @@ class SmartHomeService extends ChangeNotifier {
 
   SmartHomeService({http.Client? client}) : _client = client ?? http.Client();
 
-  Future<void> lightOn(String url, {Map<String, String>? headers}) async {
+  Future<void> _sendCommand(String url, Map<String, Object?> body, {Map<String, String>? headers}) async {
     try {
       await _client.post(
         Uri.parse(url),
         headers: headers ?? {'Content-Type': 'application/json'},
-        body: jsonEncode({'command': 'on'}),
+        body: jsonEncode(body),
       );
     } catch (e) {
-      debugPrint('[SmartHome] lightOn error: $e');
+      debugPrint('[SmartHome] error: $e');
     }
+  }
+
+  Future<void> lightOn(String url, {Map<String, String>? headers}) async {
+    await _sendCommand(url, {'command': 'on'}, headers: headers);
   }
 
   Future<void> lightOff(String url, {Map<String, String>? headers}) async {
-    try {
-      await _client.post(
-        Uri.parse(url),
-        headers: headers ?? {'Content-Type': 'application/json'},
-        body: jsonEncode({'command': 'off'}),
-      );
-    } catch (e) {
-      debugPrint('[SmartHome] lightOff error: $e');
-    }
+    await _sendCommand(url, {'command': 'off'}, headers: headers);
   }
 
   Future<void> setBrightness(String url, int brightness, {Map<String, String>? headers}) async {
-    try {
-      await _client.post(
-        Uri.parse(url),
-        headers: headers ?? {'Content-Type': 'application/json'},
-        body: jsonEncode({'command': 'brightness', 'value': brightness.clamp(0, 100)}),
-      );
-    } catch (e) {
-      debugPrint('[SmartHome] setBrightness error: $e');
-    }
+    await _sendCommand(url, {
+      'command': 'brightness',
+      'value': brightness.clamp(0, 100),
+    }, headers: headers);
+  }
+
+  void dispose() {
+    _client.close();
   }
 }

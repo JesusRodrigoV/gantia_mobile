@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_colors.dart';
+import '../theme/context_extensions.dart';
 import '../theme/shadows.dart';
 import '../providers.dart';
 import 'status_dot.dart';
@@ -21,18 +22,13 @@ class GantiaHeader extends ConsumerWidget {
     final gloveState = ref.watch(gloveStateProvider);
     final isDarkMode = themeService.isDarkMode;
 
-    final surface0 = isDarkMode ? AppColors.surfaceDark0 : AppColors.surfaceLight0;
-    final surface900 = isDarkMode ? AppColors.surfaceDark900 : AppColors.surfaceLight900;
-    final surface800 = isDarkMode ? AppColors.surfaceDark800 : AppColors.surfaceLight800;
-    final surface600 = isDarkMode ? AppColors.surfaceDark600 : AppColors.surfaceLight600;
-
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: surface0,
+        color: context.surface0,
         borderRadius: BorderRadius.circular(25),
         boxShadow: [
-          ...GantiaShadows.elevated(surface900, surface0),
+          ...GantiaShadows.elevated(context.surface900, context.surface0),
           if (scrolled)
             BoxShadow(
               color: AppColors.primary500.withAlpha(20),
@@ -73,7 +69,7 @@ class GantiaHeader extends ConsumerWidget {
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 1,
-                    color: surface800,
+                    color: context.surface800,
                   ),
                 ),
               ],
@@ -95,10 +91,10 @@ class GantiaHeader extends ConsumerWidget {
               icon: Icon(
                 isDarkMode ? Icons.light_mode : Icons.dark_mode,
                 size: 20,
-                color: surface600,
+                color: context.surface600,
               ),
               style: IconButton.styleFrom(
-                backgroundColor: surface0,
+                backgroundColor: context.surface0,
                 padding: const EdgeInsets.all(8),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               ),
@@ -106,9 +102,9 @@ class GantiaHeader extends ConsumerWidget {
 
             IconButton(
               onPressed: onLogout,
-              icon: Icon(Icons.logout, size: 20, color: surface600),
+              icon: Icon(Icons.logout, size: 20, color: context.surface600),
               style: IconButton.styleFrom(
-                backgroundColor: surface0,
+                backgroundColor: context.surface0,
                 padding: const EdgeInsets.all(8),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               ),
@@ -128,21 +124,20 @@ class _ModeBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(right: 8),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark100 : AppColors.surfaceLight100,
+        color: context.surface100,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: isDark ? AppColors.surfaceDark900 : AppColors.surfaceLight900,
+            color: context.surface900.withAlpha(15),
             blurRadius: 4,
             offset: const Offset(2, 2),
           ),
           BoxShadow(
-            color: isDark ? AppColors.surfaceDark0 : AppColors.surfaceLight0,
+            color: context.surface0.withAlpha(204),
             blurRadius: 4,
             offset: const Offset(-2, -2),
           ),

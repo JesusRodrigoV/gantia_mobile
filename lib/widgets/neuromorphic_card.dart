@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../theme/context_extensions.dart';
 import '../theme/shadows.dart';
 
 class NeuromorphicCard extends StatelessWidget {
@@ -22,18 +23,14 @@ class NeuromorphicCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final surface900 = isDark ? AppColors.surfaceDark900 : AppColors.surfaceLight900;
-    final surface0 = isDark ? AppColors.surfaceDark0 : AppColors.surfaceLight0;
-    final bg = backgroundColor ?? (isDark ? AppColors.surfaceDark50 : AppColors.surfaceLight50);
+    final bg = backgroundColor ?? context.surface50;
 
     return Container(
       margin: margin,
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(borderRadius),
-        boxShadow: GantiaShadows.inset(surface900, surface0),
+        boxShadow: GantiaShadows.inset(context.surface900, context.surface0),
       ),
       child: Stack(
         children: [
@@ -79,15 +76,11 @@ class NeuromorphicCardInset extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surface900 = isDark ? AppColors.surfaceDark900 : AppColors.surfaceLight900;
-    final surface0 = isDark ? AppColors.surfaceDark0 : AppColors.surfaceLight0;
-
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark100 : AppColors.surfaceLight100,
+        color: context.surface100,
         borderRadius: BorderRadius.circular(borderRadius),
-        boxShadow: GantiaShadows.insetSm(surface900, surface0),
+        boxShadow: GantiaShadows.insetSm(context.surface900, context.surface0),
       ),
       child: Padding(
         padding: padding ?? const EdgeInsets.all(12),

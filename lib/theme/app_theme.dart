@@ -47,7 +47,7 @@ class AppTheme {
     required Color surface900,
   }) {
     final fontUi = GoogleFonts.cormorantGaramondTextTheme();
-    final fontLabel = GoogleFonts.notoSansTextTheme();
+    final labelSmall = GoogleFonts.notoSansTextTheme().labelSmall;
 
     return ThemeData(
       useMaterial3: true,
@@ -68,7 +68,7 @@ class AppTheme {
         bodySmall: fontUi.bodySmall?.copyWith(color: surface700),
         labelLarge: fontUi.labelLarge?.copyWith(color: surface800),
         labelMedium: fontUi.labelMedium?.copyWith(color: surface600),
-        labelSmall: fontLabel.labelSmall?.copyWith(color: surface500),
+        labelSmall: labelSmall?.copyWith(color: surface500),
       ),
       cardTheme: CardThemeData(
         color: surface50,

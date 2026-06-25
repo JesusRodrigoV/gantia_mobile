@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../theme/context_extensions.dart';
 
 class GantiaButton extends StatelessWidget {
   final String label;
@@ -23,8 +24,6 @@ class GantiaButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     Color bgColor;
     Color fgColor;
 
@@ -34,11 +33,11 @@ class GantiaButton extends StatelessWidget {
         fgColor = Colors.white;
         break;
       case GantiaButtonVariant.danger:
-        bgColor = isDark ? AppColors.surfaceDark0 : AppColors.surfaceLight0;
+        bgColor = context.surface0;
         fgColor = AppColors.red500;
         break;
       case GantiaButtonVariant.default_:
-        bgColor = isDark ? AppColors.surfaceDark0 : AppColors.surfaceLight0;
+        bgColor = context.surface0;
         fgColor = AppColors.primary600;
     }
 
@@ -49,10 +48,8 @@ class GantiaButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: bgColor,
           foregroundColor: fgColor,
-          elevation: 0,
           padding: padding ?? const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          shadowColor: Colors.transparent,
         ),
         child: isLoading
             ? const SizedBox(

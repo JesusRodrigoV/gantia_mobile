@@ -54,6 +54,7 @@ class GloveState extends ChangeNotifier {
         case 'connected':
           _connectionStatus = ConnectionStatus.connected;
           _waitingForDevice = false;
+          _cancelWaitingTimer();
           _waitingTimer = Timer(
             Duration(milliseconds: _waitingTimeoutMs),
             () {
@@ -132,9 +133,9 @@ class GloveState extends ChangeNotifier {
   }
 
   void _scheduleTelemetryUpdate(GloveTelemetry data) {
+    _telemetry = data;
     final now = DateTime.now().millisecondsSinceEpoch;
     if (now - _lastTelemetryUpdate >= _telemetryThrottleMs) {
-      _telemetry = data;
       _lastTelemetryUpdate = now;
       notifyListeners();
     }

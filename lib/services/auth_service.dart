@@ -30,6 +30,7 @@ class AuthService extends ChangeNotifier {
     final service = AuthService(api);
     if (token != null) {
       service._token = token;
+      service._api.setToken(token);
     }
     return service;
   }
@@ -47,6 +48,7 @@ class AuthService extends ChangeNotifier {
       final response = AuthResponse.fromJson(data as Map<String, dynamic>);
       _token = response.accessToken;
       _user = response.user;
+      _api.setToken(_token);
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', _token!);
@@ -54,6 +56,16 @@ class AuthService extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return true;
+    } on UnauthorizedException {
+      _error = 'Credenciales inválidas';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } on NetworkException {
+      _error = 'No se pudo conectar al servidor';
+      _isLoading = false;
+      notifyListeners();
+      return false;
     } catch (e) {
       _error = e.toString();
       _isLoading = false;
@@ -75,6 +87,16 @@ class AuthService extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return true;
+    } on UnauthorizedException {
+      _error = 'Credenciales inválidas';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } on NetworkException {
+      _error = 'No se pudo conectar al servidor';
+      _isLoading = false;
+      notifyListeners();
+      return false;
     } catch (e) {
       _error = e.toString();
       _isLoading = false;
@@ -84,8 +106,12 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    try {
+      await _api.post('/auth/logout');
+    } catch (_) {}
     _token = null;
     _user = null;
+    _api.setToken(null);
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
     notifyListeners();
