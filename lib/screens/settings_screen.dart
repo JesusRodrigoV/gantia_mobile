@@ -76,7 +76,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ),
                         ),
                         Switch(
-                          value: isDark,
+                          value: themeService.isDarkMode,
                           onChanged: (_) => themeService.toggleTheme(),
                           activeThumbColor: AppColors.primary500,
                         ),

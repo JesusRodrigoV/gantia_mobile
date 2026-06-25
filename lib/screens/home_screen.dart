@@ -42,8 +42,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final gloveState = ref.watch(gloveStateProvider);
-    final themeService = ref.watch(themeServiceProvider);
-    final isDark = themeService.isDarkMode;
 
     return Scaffold(
       backgroundColor: context.surface50,

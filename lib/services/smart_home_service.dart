@@ -34,7 +34,9 @@ class SmartHomeService extends ChangeNotifier {
     }, headers: headers);
   }
 
+  @override
   void dispose() {
     _client.close();
+    super.dispose();
   }
 }

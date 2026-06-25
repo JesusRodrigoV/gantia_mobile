@@ -71,12 +71,6 @@ class _MainShell extends ConsumerStatefulWidget {
 class _MainShellState extends ConsumerState<_MainShell> {
   int _currentIndex = 0;
 
-  void _logout() {
-    ref.read(authServiceProvider).logout();
-    ref.read(wsClientProvider).disconnect();
-    setState(() {});
-  }
-
   @override
   Widget build(BuildContext context) {
     final pages = <Widget>[
