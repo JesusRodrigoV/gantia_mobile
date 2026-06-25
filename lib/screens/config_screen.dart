@@ -1251,6 +1251,7 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
               final text = _importTextController.text.trim();
               if (text.isEmpty) return;
               final messenger = ScaffoldMessenger.of(context);
+              final nav = Navigator.of(ctx);
 
               try {
                 final decoded = jsonDecode(text);
@@ -1260,10 +1261,10 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
                 } else {
                   configs = [decoded as Map<String, dynamic>];
                 }
-                Navigator.of(ctx).pop();
+                nav.pop();
                 await service.importConfigs(configs);
               } catch (e) {
-                Navigator.of(ctx).pop();
+                nav.pop();
                 if (mounted) {
                   messenger.showSnackBar(
                     SnackBar(
