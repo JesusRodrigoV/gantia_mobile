@@ -51,7 +51,7 @@ class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
-      colorScheme: scheme,
+      colorScheme: colorScheme,
       scaffoldBackgroundColor: surface50,
       textTheme: TextTheme(
         displayLarge: fontUi.displayLarge?.copyWith(color: surface800),

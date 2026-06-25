@@ -187,6 +187,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                   ),
 
+                  const SizedBox(height: 12),
+                  GantiaButton(
+                    label: 'Cerrar sesión',
+                    icon: Icons.logout,
+                    variant: GantiaButtonVariant.danger,
+                    onPressed: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('Cerrar sesión'),
+                          content: const Text('¿Estás seguro de que querés cerrar sesión?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(ctx).pop(false),
+                              child: const Text('Cancelar'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(ctx).pop(true),
+                              child: const Text('Cerrar sesión'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirm == true) {
+                        await authService.logout();
+                        ref.read(wsClientProvider).disconnect();
+                      }
+                    },
+                  ),
                   const SizedBox(height: 32),
                 ],
               ),

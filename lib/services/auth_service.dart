@@ -44,7 +44,7 @@ class AuthService extends ChangeNotifier {
         'email': email,
         'password': password,
       });
-      final response = AuthResponse.fromJson(data);
+      final response = AuthResponse.fromJson(data as Map<String, dynamic>);
       _token = response.accessToken;
       _user = response.user;
 
