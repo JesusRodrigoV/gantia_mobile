@@ -14,6 +14,7 @@ import 'services/mouse_config_service.dart';
 import 'services/learning_service.dart';
 import 'services/history_service.dart';
 import 'services/target_service.dart';
+import 'services/recording_service.dart';
 import 'config.dart';
 
 export 'services/api_service.dart';
@@ -31,6 +32,7 @@ export 'services/mouse_config_service.dart';
 export 'services/learning_service.dart';
 export 'services/history_service.dart';
 export 'services/target_service.dart';
+export 'services/recording_service.dart';
 
 final apiServiceProvider = Provider<ApiService>((ref) {
   return ApiService(baseUrl: AppConfig.apiUrl);
@@ -102,4 +104,9 @@ final historyServiceProvider = ChangeNotifierProvider<HistoryService>((ref) {
 final targetServiceProvider = ChangeNotifierProvider<TargetService>((ref) {
   final api = ref.watch(apiServiceProvider);
   return TargetService(api);
+});
+
+final recordingServiceProvider = ChangeNotifierProvider<RecordingService>((ref) {
+  final client = ref.watch(wsClientProvider);
+  return RecordingService(client);
 });

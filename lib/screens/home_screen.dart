@@ -96,6 +96,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       padding: const EdgeInsets.all(Spacing.md),
                       child: _buildDeviceInfo(gloveState),
                     ),
+                    if (gloveState.telemetry?.hasHealth == true) ...[
+                      const SizedBox(height: Spacing.md),
+                      NeuromorphicCard(
+                        padding: const EdgeInsets.all(Spacing.md),
+                        child: _buildHealthPanel(gloveState),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -263,6 +270,101 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  Widget _buildHealthPanel(GloveState gloveState) {
+    final t = gloveState.telemetry!;
+    final rssi = t.rssi ?? -100;
+    final temp = t.tempMpu ?? 0;
+    final bars = rssi >= -50
+        ? 5
+        : rssi >= -60
+            ? 4
+            : rssi >= -70
+                ? 3
+                : rssi >= -80
+                    ? 2
+                    : 1;
+    final totalSec = (t.uptimeMs ?? 0) ~/ 1000;
+    final hrs = totalSec ~/ 3600;
+    final min = (totalSec % 3600) ~/ 60;
+    final sec = totalSec % 60;
+    final uptimeStr =
+        hrs > 0 ? '${hrs}h ${min}m' : min > 0 ? '${min}m ${sec}s' : '${sec}s';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'SALUD DEL GUANTE',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.2,
+            color: AppColors.primary600,
+          ),
+        ),
+        const SizedBox(height: Spacing.sm),
+        Row(
+          children: [
+            _healthBadge(Icons.wifi, 'WiFi', '$rssi dBm'),
+            const SizedBox(width: Spacing.sm),
+            _healthBadge(Icons.thermostat, 'Temp', '${temp.toStringAsFixed(1)}°C'),
+            const SizedBox(width: Spacing.sm),
+            _healthBadge(Icons.timer, 'Activo', uptimeStr),
+          ],
+        ),
+        const SizedBox(height: Spacing.xs),
+        Row(
+          children: List.generate(5, (i) {
+            final active = i < bars;
+            return Container(
+              width: 8,
+              height: 4.0 + i * 3.0,
+              margin: const EdgeInsets.only(right: 3),
+              decoration: BoxDecoration(
+                color: active ? AppColors.primary500 : AppColors.surfaceLight300,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
+  Widget _healthBadge(IconData icon, String label, String value) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(Spacing.sm),
+        decoration: BoxDecoration(
+          color: context.surface100,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: 18, color: AppColors.primary500),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: AppColors.surfaceLight700,
+              ),
+            ),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w600,
+                color: AppColors.surfaceLight400,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   String _statusLabel(GloveState gloveState) {
     switch (gloveState.connectionStatus) {
       case ConnectionStatus.connected:
@@ -271,6 +373,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         return 'Conectado — sin datos';
       case ConnectionStatus.connecting:
         return 'Conectando al servidor...';
+      case ConnectionStatus.reconnecting:
+        return 'Reconectando (${gloveState.retryAttempt}/${gloveState.maxRetries})...';
       case ConnectionStatus.disconnected:
         return 'Sin conexión';
       case ConnectionStatus.error:

@@ -10,6 +10,9 @@ class GloveTelemetry {
   final double gyroX;
   final double gyroY;
   final double gyroZ;
+  final int? rssi;
+  final double? tempMpu;
+  final int? uptimeMs;
 
   const GloveTelemetry({
     required this.buttonPressed,
@@ -23,6 +26,9 @@ class GloveTelemetry {
     required this.gyroX,
     required this.gyroY,
     required this.gyroZ,
+    this.rssi,
+    this.tempMpu,
+    this.uptimeMs,
   });
 
   factory GloveTelemetry.fromJson(Map<String, dynamic> json) {
@@ -38,6 +44,9 @@ class GloveTelemetry {
       gyroX: (json['gyro_x'] as num?)?.toDouble() ?? 0.0,
       gyroY: (json['gyro_y'] as num?)?.toDouble() ?? 0.0,
       gyroZ: (json['gyro_z'] as num?)?.toDouble() ?? 0.0,
+      rssi: (json['rssi'] as num?)?.toInt(),
+      tempMpu: (json['temp_mpu'] as num?)?.toDouble(),
+      uptimeMs: (json['uptime_ms'] as num?)?.toInt(),
     );
   }
 
@@ -53,7 +62,13 @@ class GloveTelemetry {
         'gyro_x': gyroX,
         'gyro_y': gyroY,
         'gyro_z': gyroZ,
+        if (rssi != null) 'rssi': rssi,
+        if (tempMpu != null) 'temp_mpu': tempMpu,
+        if (uptimeMs != null) 'uptime_ms': uptimeMs,
       };
+
+  /// Whether this telemetry includes health data (Feature #8)
+  bool get hasHealth => rssi != null;
 }
 
 class ActionEvent {

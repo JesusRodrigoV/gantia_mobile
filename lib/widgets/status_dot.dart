@@ -47,6 +47,8 @@ class StatusDot extends StatelessWidget {
         return AppColors.primary500;
       case ConnectionStatus.connecting:
         return AppColors.primary300;
+      case ConnectionStatus.reconnecting:
+        return AppColors.warning400;
       case ConnectionStatus.disconnected:
       case ConnectionStatus.error:
         return AppColors.surfaceLight300;

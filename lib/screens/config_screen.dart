@@ -11,6 +11,7 @@ import '../theme/app_colors.dart';
 import '../theme/context_extensions.dart';
 import '../theme/spacing.dart';
 import '../widgets/gantia_button.dart';
+import '../widgets/macro_step_editor.dart';
 import '../widgets/neuromorphic_card.dart';
 import '../widgets/settings_card.dart';
 import '../widgets/skeleton_card.dart';
@@ -39,6 +40,17 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
   int? _calibMax;
   String? _calibSensor;
 
+  // --- Absolute pointer state ---
+  bool? _absCalibrationExists; // null = unknown
+  bool _absCalibSaving = false;
+  bool _absCalibWizardOpen = false;
+  int _absCalibStep = 0; // 0=start, 1-4=corners, 5=review
+  final Map<String, Map<String, double>?> _absCalibCorners = {
+    'tl': null, 'tr': null, 'bl': null, 'br': null,
+  };
+  int _absScreenWidth = 1920;
+  int _absScreenHeight = 1080;
+
   // --- Import/Export ---
   final _importTextController = TextEditingController();
 
@@ -48,7 +60,18 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(gestureConfigServiceProvider).getAll();
       ref.read(calibrationServiceProvider).getAll();
+      _checkAbsCalibration();
     });
+  }
+
+  Future<void> _checkAbsCalibration() async {
+    try {
+      final api = ref.read(apiServiceProvider);
+      await api.get('/absolute-pointer/calibration');
+      if (mounted) setState(() => _absCalibrationExists = true);
+    } catch (_) {
+      if (mounted) setState(() => _absCalibrationExists = false);
+    }
   }
 
   @override
@@ -84,16 +107,19 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
                   // 2. Calibration
                   _buildCalibrationSection(calibrationService),
 
-                  // 3. Test Mode
+                  // 3. Absolute Pointer
+                  _buildAbsolutePointerSection(),
+
+                  // 4. Test Mode
                   _buildTestModeSection(),
 
-                  // 4. Import / Export
+                  // 5. Import / Export
                   _buildImportExportSection(gcService),
 
-                  // 5. Sync & Reset
+                  // 6. Sync & Reset
                   _buildSyncResetSection(gcService),
 
-                  // 6. Learn Wizard
+                  // 7. Learn Wizard
                   _buildLearnSection(learningService),
 
                   const SizedBox(height: Spacing.xxl),
@@ -249,7 +275,9 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${getMovementLabel(config.movement)} / ${getOrientationLabel(config.orientation)}',
+                  config.movement == 'COMPOSITE'
+                      ? 'Compuesto: ${config.actionKey}'
+                      : '${getMovementLabel(config.movement)} / ${getOrientationLabel(config.orientation)}',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -275,11 +303,15 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        getActionLabel(config.actionKey),
+                        config.movement == 'COMPOSITE'
+                            ? 'COMPUESTO'
+                            : getActionLabel(config.actionKey),
                         style: const TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.primary600,
+                          color: config.movement == 'COMPOSITE'
+                              ? AppColors.amber600
+                              : AppColors.primary600,
                         ),
                       ),
                     ),
@@ -365,6 +397,59 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
     final contextCtrl =
         ValueNotifier<String>(existing?.context ?? 'GLOBAL');
 
+    // Composite editing state
+    final compositeStep1Movement = ValueNotifier<String>('SWIPE_RIGHT');
+    final compositeStep1Index = ValueNotifier<int>(2);
+    final compositeStep1Middle = ValueNotifier<int>(2);
+    final compositeStep2Movement = ValueNotifier<String>('TWIST');
+    final compositeStep2Index = ValueNotifier<int>(2);
+    final compositeStep2Middle = ValueNotifier<int>(2);
+    final compositeActionKeyCtrl = ValueNotifier<String>('next_track');
+
+    // Macro / sequence editing state
+    final macroStepsNotifier = ValueNotifier<List<MacroStep>>([]);
+    final macroRepeatNotifier = ValueNotifier<int>(1);
+    final macroIsRecordingNotifier = ValueNotifier<bool>(false);
+    final recordingService = ref.read(recordingServiceProvider);
+
+    // Hydrate sequence state from existing config
+    if (existing?.actionKey == 'sequence' && existing?.actionValue != null) {
+      final rawValue = existing!.actionValue!;
+      // Try JSON format first
+      try {
+        final parsed = jsonDecode(rawValue);
+        if (parsed is Map<String, dynamic>) {
+          final macroData = MacroData.fromJson(parsed);
+          macroStepsNotifier.value = macroData.steps;
+          macroRepeatNotifier.value = macroData.repeat;
+        } else if (parsed is List) {
+          // Legacy JSON array format
+          macroStepsNotifier.value = parsed
+              .map((e) => MacroStep.fromJson(e as Map<String, dynamic>))
+              .toList();
+        }
+      } catch (_) {
+        // Pipe-separated string (legacy)
+        macroStepsNotifier.value = parsePipeToSteps(rawValue);
+      }
+    }
+
+    // Hydrate composite state from existing config
+    if (existing?.movement == 'COMPOSITE' && existing?.actionValue != null) {
+      try {
+        final steps = jsonDecode(existing!.actionValue!) as List;
+        if (steps.length >= 2) {
+          compositeStep1Movement.value = steps[0]['movement'] ?? 'SWIPE_RIGHT';
+          compositeStep1Index.value = (steps[0]['index_state'] as num?)?.toInt() ?? 2;
+          compositeStep1Middle.value = (steps[0]['middle_state'] as num?)?.toInt() ?? 2;
+          compositeStep2Movement.value = steps[1]['movement'] ?? 'TWIST';
+          compositeStep2Index.value = (steps[1]['index_state'] as num?)?.toInt() ?? 2;
+          compositeStep2Middle.value = (steps[1]['middle_state'] as num?)?.toInt() ?? 2;
+        }
+      } catch (_) {}
+      compositeActionKeyCtrl.value = existing.actionKey;
+    }
+
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -388,55 +473,235 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
                 labelFn: getMovementLabel,
               ),
               const SizedBox(height: Spacing.sm),
-              _buildDropdown(
-                label: 'Orientación',
-                value: orientationCtrl,
-                items: orientations,
-                labelFn: getOrientationLabel,
-              ),
-              const SizedBox(height: Spacing.sm),
-              _buildIntDropdown(
-                label: 'Estado Índice',
-                value: indexStateCtrl,
-                items: flexStates,
-                labelFn: getFlexStateLabel,
-              ),
-              const SizedBox(height: Spacing.sm),
-              _buildIntDropdown(
-                label: 'Estado Medio',
-                value: middleStateCtrl,
-                items: flexStates,
-                labelFn: getFlexStateLabel,
-              ),
-              const SizedBox(height: Spacing.sm),
-              _buildDropdown(
-                label: 'Acción',
-                value: actionKeyCtrl,
-                items: actions,
-                labelFn: getActionLabel,
-              ),
-              const SizedBox(height: Spacing.sm),
-              TextField(
-                controller: actionValueCtrl,
-                decoration: InputDecoration(
-                  labelText: 'Valor (opcional)',
-                  labelStyle: TextStyle(color: context.surface500),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: context.surface200),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: context.surface200),
-                  ),
-                  filled: true,
-                  fillColor: context.surface0,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                ),
-                style: TextStyle(fontSize: 14, color: context.surface700),
+
+              // Composite editor or single-gesture form (reacts to movement selection)
+              ValueListenableBuilder<String>(
+                valueListenable: movementCtrl,
+                builder: (context, movement, _) {
+                  if (movement == 'COMPOSITE') {
+                    return _buildCompositeEditor(
+                      step1Movement: compositeStep1Movement,
+                      step1Index: compositeStep1Index,
+                      step1Middle: compositeStep1Middle,
+                      step2Movement: compositeStep2Movement,
+                      step2Index: compositeStep2Index,
+                      step2Middle: compositeStep2Middle,
+                      compositeActionKey: compositeActionKeyCtrl,
+                    );
+                  }
+                  return Column(
+                    children: [
+                      _buildDropdown(
+                        label: 'Orientación',
+                        value: orientationCtrl,
+                        items: orientations,
+                        labelFn: getOrientationLabel,
+                      ),
+                      const SizedBox(height: Spacing.sm),
+                      _buildIntDropdown(
+                        label: 'Estado Índice',
+                        value: indexStateCtrl,
+                        items: flexStates,
+                        labelFn: getFlexStateLabel,
+                      ),
+                      const SizedBox(height: Spacing.sm),
+                      _buildIntDropdown(
+                        label: 'Estado Medio',
+                        value: middleStateCtrl,
+                        items: flexStates,
+                        labelFn: getFlexStateLabel,
+                      ),
+                      const SizedBox(height: Spacing.sm),
+                      _buildDropdown(
+                        label: 'Acción',
+                        value: actionKeyCtrl,
+                        items: actions,
+                        labelFn: getActionLabel,
+                      ),
+                      const SizedBox(height: Spacing.sm),
+                      if (actionKeyCtrl.value == 'hotkey') ...[
+                        ValueListenableBuilder<TextEditingValue>(
+                          valueListenable: actionValueCtrl,
+                          builder: (context, val, _) {
+                            final keys = val.text.isNotEmpty
+                                ? val.text.split(',')
+                                : <String>[];
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (keys.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 4),
+                                    child: Wrap(
+                                      spacing: 4,
+                                      runSpacing: 4,
+                                      children: keys.map((k) => Chip(
+                                        label: Text(
+                                          k.trim(),
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.primary600,
+                                          ),
+                                        ),
+                                        materialTapTargetSize:
+                                            MaterialTapTargetSize.shrinkWrap,
+                                        visualDensity: VisualDensity.compact,
+                                        backgroundColor:
+                                            AppColors.primary500.withAlpha(20),
+                                        side: BorderSide.none,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                      )).toList(),
+                                    ),
+                                  )
+                                else
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 4),
+                                    child: Text(
+                                      'Teclas separadas por coma',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: context.surface400,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                  ),
+                                TextField(
+                                  controller: actionValueCtrl,
+                                  decoration: InputDecoration(
+                                    labelText: 'Combinación (separada por coma)',
+                                    labelStyle:
+                                        TextStyle(color: context.surface500),
+                                    hintText: 'ctrl,shift,esc',
+                                    hintStyle:
+                                        TextStyle(color: context.surface400),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide:
+                                          BorderSide(color: context.surface200),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide:
+                                          BorderSide(color: context.surface200),
+                                    ),
+                                    filled: true,
+                                    fillColor: context.surface0,
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 10,
+                                    ),
+                                  ),
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: context.surface700,
+                                  ),
+                                ),
+                                const SizedBox(height: Spacing.sm),
+                                Text(
+                                  'Predefinidos:',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: context.surface500,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Wrap(
+                                  spacing: 4,
+                                  runSpacing: 4,
+                                  children: [
+                                    _hotkeyPresetChip(
+                                      'Ctrl+C', 'ctrl,c', actionValueCtrl),
+                                    _hotkeyPresetChip(
+                                      'Ctrl+V', 'ctrl,v', actionValueCtrl),
+                                    _hotkeyPresetChip(
+                                      'Ctrl+X', 'ctrl,x', actionValueCtrl),
+                                    _hotkeyPresetChip(
+                                      'Ctrl+Z', 'ctrl,z', actionValueCtrl),
+                                    _hotkeyPresetChip(
+                                      'Win+D', 'win,d', actionValueCtrl),
+                                    _hotkeyPresetChip(
+                                      'Alt+Tab', 'alt,tab', actionValueCtrl),
+                                    _hotkeyPresetChip(
+                                      'Win+E', 'win,e', actionValueCtrl),
+                                    _hotkeyPresetChip('Ctrl+Shift+Esc',
+                                        'ctrl,shift,esc', actionValueCtrl),
+                                    _hotkeyPresetChip(
+                                      'F5', 'f5', actionValueCtrl),
+                                    _hotkeyPresetChip(
+                                      'F11', 'f11', actionValueCtrl),
+                                    _hotkeyPresetChip(
+                                      'Win+R', 'win,r', actionValueCtrl),
+                                    _hotkeyPresetChip('Ctrl+Alt+Del',
+                                        'ctrl,alt,delete', actionValueCtrl),
+                                  ],
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ] else ...[
+                        ValueListenableBuilder<String>(
+                          valueListenable: actionKeyCtrl,
+                          builder: (context, actionKey, _) {
+                            if (actionKey == 'sequence') {
+                              return MacroStepEditor(
+                                steps: macroStepsNotifier,
+                                repeat: macroRepeatNotifier,
+                                isRecording: macroIsRecordingNotifier,
+                                onToggleRecording: () {
+                                  if (macroIsRecordingNotifier.value) {
+                                    macroIsRecordingNotifier.value = false;
+                                    final captured =
+                                        recordingService.stop();
+                                    if (captured.isNotEmpty) {
+                                      macroStepsNotifier.value = [
+                                        ...macroStepsNotifier.value,
+                                        ...captured,
+                                      ];
+                                    }
+                                  } else {
+                                    recordingService.start();
+                                    macroIsRecordingNotifier.value = true;
+                                  }
+                                },
+                              );
+                            }
+                            return TextField(
+                              controller: actionValueCtrl,
+                              decoration: InputDecoration(
+                                labelText: 'Valor (opcional)',
+                                labelStyle:
+                                    TextStyle(color: context.surface500),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide:
+                                      BorderSide(color: context.surface200),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide:
+                                      BorderSide(color: context.surface200),
+                                ),
+                                filled: true,
+                                fillColor: context.surface0,
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
+                              ),
+                              style: TextStyle(
+                                  fontSize: 14, color: context.surface700),
+                            );
+                          },
+                        ),
+                      ],
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: Spacing.sm),
               _buildDropdown(
@@ -461,16 +726,46 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
             variant: GantiaButtonVariant.primary,
             onPressed: () async {
               Navigator.of(ctx).pop();
-              final data = {
-                'movement': movementCtrl.value,
-                'orientation': orientationCtrl.value,
-                'index_state': indexStateCtrl.value,
-                'middle_state': middleStateCtrl.value,
-                'action_key': actionKeyCtrl.value,
-                'action_value':
-                    actionValueCtrl.text.isNotEmpty ? actionValueCtrl.text : null,
-                'context': contextCtrl.value,
-              };
+              bool isComposite = movementCtrl.value == 'COMPOSITE';
+              final data = isComposite
+                  ? <String, dynamic>{
+                      'movement': 'COMPOSITE',
+                      'orientation': 'ANY',
+                      'index_state': 0,
+                      'middle_state': 0,
+                      'action_key': compositeActionKeyCtrl.value,
+                      'action_value': jsonEncode([
+                        {
+                          'movement': compositeStep1Movement.value,
+                          'index_state': compositeStep1Index.value,
+                          'middle_state': compositeStep1Middle.value,
+                          'orientation': 'ANY',
+                        },
+                        {
+                          'movement': compositeStep2Movement.value,
+                          'index_state': compositeStep2Index.value,
+                          'middle_state': compositeStep2Middle.value,
+                          'orientation': 'ANY',
+                        },
+                      ]),
+                      'context': contextCtrl.value,
+                    }
+                  : <String, dynamic>{
+                      'movement': movementCtrl.value,
+                      'orientation': orientationCtrl.value,
+                      'index_state': indexStateCtrl.value,
+                      'middle_state': middleStateCtrl.value,
+                      'action_key': actionKeyCtrl.value,
+                      'action_value': actionKeyCtrl.value == 'sequence'
+                          ? jsonEncode(MacroData(
+                                  steps: macroStepsNotifier.value,
+                                  repeat: macroRepeatNotifier.value)
+                              .toJson())
+                          : actionValueCtrl.text.isNotEmpty
+                              ? actionValueCtrl.text
+                              : null,
+                      'context': contextCtrl.value,
+                    };
 
               if (isEditing) {
                 await ref
@@ -597,6 +892,118 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildCompositeEditor({
+    required ValueNotifier<String> step1Movement,
+    required ValueNotifier<int> step1Index,
+    required ValueNotifier<int> step1Middle,
+    required ValueNotifier<String> step2Movement,
+    required ValueNotifier<int> step2Index,
+    required ValueNotifier<int> step2Middle,
+    required ValueNotifier<String> compositeActionKey,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Step 1
+        Text(
+          'Paso 1',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: context.surface600,
+          ),
+        ),
+        const SizedBox(height: 4),
+        _buildDropdown(
+          label: 'Movimiento',
+          value: step1Movement,
+          items: movements.where((m) => m != 'COMPOSITE').toList(),
+          labelFn: getMovementLabel,
+        ),
+        const SizedBox(height: Spacing.xs),
+        Row(
+          children: [
+            Expanded(
+              child: _buildIntDropdown(
+                label: 'Índice',
+                value: step1Index,
+                items: flexStates,
+                labelFn: getFlexStateLabel,
+              ),
+            ),
+            const SizedBox(width: Spacing.sm),
+            Expanded(
+              child: _buildIntDropdown(
+                label: 'Medio',
+                value: step1Middle,
+                items: flexStates,
+                labelFn: getFlexStateLabel,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: Spacing.sm),
+
+        // Arrow
+        Center(
+          child: Text(
+            '⬇ luego',
+            style: TextStyle(fontSize: 12, color: context.surface400),
+          ),
+        ),
+        const SizedBox(height: Spacing.sm),
+
+        // Step 2
+        Text(
+          'Paso 2',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: context.surface600,
+          ),
+        ),
+        const SizedBox(height: 4),
+        _buildDropdown(
+          label: 'Movimiento',
+          value: step2Movement,
+          items: movements.where((m) => m != 'COMPOSITE').toList(),
+          labelFn: getMovementLabel,
+        ),
+        const SizedBox(height: Spacing.xs),
+        Row(
+          children: [
+            Expanded(
+              child: _buildIntDropdown(
+                label: 'Índice',
+                value: step2Index,
+                items: flexStates,
+                labelFn: getFlexStateLabel,
+              ),
+            ),
+            const SizedBox(width: Spacing.sm),
+            Expanded(
+              child: _buildIntDropdown(
+                label: 'Medio',
+                value: step2Middle,
+                items: flexStates,
+                labelFn: getFlexStateLabel,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: Spacing.sm),
+
+        // Composite action key
+        _buildDropdown(
+          label: 'Acción compuesta',
+          value: compositeActionKey,
+          items: actions,
+          labelFn: getActionLabel,
+        ),
+      ],
     );
   }
 
@@ -912,7 +1319,481 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
   }
 
   // ====================================================================
-  // 3 — TEST MODE
+  // 3 — ABSOLUTE POINTER
+  // ====================================================================
+
+  Widget _buildAbsolutePointerSection() {
+    final glove = ref.watch(gloveStateProvider);
+    final absEnabled = glove.absolutePointerEnabled;
+
+    return SettingsCard(
+      icon: Icons.my_location,
+      title: 'Puntero Absoluto',
+      description: 'Mapea inclinación de mano a posición en pantalla',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Status badge
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                _absCalibrationExists == null
+                    ? 'Verificando...'
+                    : _absCalibrationExists!
+                        ? 'Calibrado'
+                        : 'No calibrado',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: _absCalibrationExists == null
+                      ? context.surface500
+                      : _absCalibrationExists!
+                          ? AppColors.green500
+                          : AppColors.amber600,
+                ),
+              ),
+              // Toggle switch
+              Switch(
+                value: absEnabled,
+                onChanged: _absCalibrationExists == true
+                    ? (v) {
+                        glove.sendToggleAbsolutePointer(v);
+                      }
+                    : null,
+                activeColor: AppColors.primary500,
+              ),
+            ],
+          ),
+
+          if (_absCalibrationExists == false) ...[
+            const SizedBox(height: Spacing.xs),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(Spacing.sm),
+              decoration: BoxDecoration(
+                color: AppColors.amber500.withAlpha(15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline,
+                      size: 16, color: AppColors.amber600),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Se requiere calibración antes de usar puntero absoluto',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppColors.amber700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          const SizedBox(height: Spacing.sm),
+
+          // Description
+          Text(
+            'En modo PRESENTATION, la inclinación de la mano se mapea a '
+            'posición absoluta del cursor. Sin deriva, sin yaw.',
+            style: TextStyle(fontSize: 11, color: context.surface500),
+          ),
+
+          const SizedBox(height: Spacing.sm),
+
+          // Calibrate button
+          SizedBox(
+            width: double.infinity,
+            child: GantiaButton(
+              label: _absCalibrationExists == true
+                  ? 'Recalibrar'
+                  : 'Iniciar Calibración',
+              icon: Icons.sensors,
+              variant: GantiaButtonVariant.primary,
+              onPressed: _showAbsCalibrationWizard,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // — Absolute Pointer Calibration Wizard
+  void _showAbsCalibrationWizard() {
+    setState(() {
+      _absCalibWizardOpen = true;
+      _absCalibStep = 0;
+      _absCalibCorners.updateAll((k, v) => null);
+    });
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final telemetry = ref.read(gloveStateProvider).telemetry;
+
+            // Compute live pitch/roll from telemetry
+            double livePitch = 0;
+            double liveRoll = 0;
+            if (telemetry != null) {
+              final g = (telemetry.accelX * telemetry.accelX +
+                      telemetry.accelY * telemetry.accelY +
+                      telemetry.accelZ * telemetry.accelZ)
+                  .clamp(0.01, double.infinity);
+              final gNorm = g > 0.1 ? g : 1.0;
+              livePitch = -(telemetry.accelX / gNorm);
+              liveRoll = telemetry.accelY / gNorm;
+            }
+
+            const cornerSteps = [
+              ('tl', 'Sup. Izquierda', 'Incliná arriba-izquierda', Icons.arrow_upward),
+              ('tr', 'Sup. Derecha', 'Incliná arriba-derecha', Icons.arrow_forward),
+              ('bl', 'Inf. Izquierda', 'Incliná abajo-izquierda', Icons.arrow_back),
+              ('br', 'Inf. Derecha', 'Incliná abajo-derecha', Icons.arrow_downward),
+            ];
+
+            return AlertDialog(
+              backgroundColor: context.surface0,
+              title: const Text(
+                'Calibración Puntero Absoluto',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.surfaceLight700,
+                ),
+              ),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // START STEP
+                      if (_absCalibStep == 0) ...[
+                        const Text(
+                          'Este asistente te guiará para calibrar las 4 esquinas. '
+                          'Incliná tu mano hacia cada esquina y presioná el botón para registrar.',
+                          style: TextStyle(fontSize: 12, color: AppColors.surfaceLight500),
+                        ),
+                        const SizedBox(height: Spacing.md),
+                        SizedBox(
+                          width: double.infinity,
+                          child: GantiaButton(
+                            label: 'Comenzar Calibración',
+                            icon: Icons.play_arrow,
+                            variant: GantiaButtonVariant.primary,
+                            onPressed: () => setDialogState(() => _absCalibStep = 1),
+                          ),
+                        ),
+                      ],
+
+                      // CAPTURE STEPS (1-4)
+                      if (_absCalibStep >= 1 && _absCalibStep <= 4) ...[
+                        Text(
+                          'Paso $_absCalibStep de 4',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary500,
+                          ),
+                        ),
+                        const SizedBox(height: Spacing.xs),
+                        Text(
+                          cornerSteps[_absCalibStep - 1].$2,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: context.surface700,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          cornerSteps[_absCalibStep - 1].$3,
+                          style: TextStyle(fontSize: 12, color: context.surface500),
+                        ),
+                        const SizedBox(height: Spacing.sm),
+
+                        if (telemetry == null)
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(Spacing.sm),
+                            decoration: BoxDecoration(
+                              color: AppColors.amber500.withAlpha(15),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.bluetooth_disabled,
+                                    size: 16, color: AppColors.amber600),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Esperando datos del guante...',
+                                  style: TextStyle(
+                                      fontSize: 11, color: AppColors.amber700),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                        const SizedBox(height: Spacing.sm),
+
+                        // Live pitch/roll display
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(Spacing.sm),
+                          decoration: BoxDecoration(
+                            color: context.surface100,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              _absReadingColumn(
+                                  'Pitch', livePitch.toStringAsFixed(2)),
+                              _absReadingColumn(
+                                  'Roll', liveRoll.toStringAsFixed(2)),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: Spacing.sm),
+
+                        SizedBox(
+                          width: double.infinity,
+                          child: GantiaButton(
+                            label:
+                                'Capturar ${cornerSteps[_absCalibStep - 1].$2}',
+                            icon: Icons.check,
+                            variant: GantiaButtonVariant.primary,
+                            onPressed: telemetry == null
+                                ? null
+                                : () {
+                                    final key = cornerSteps[_absCalibStep - 1].$1;
+                                    _absCalibCorners[key] = {
+                                      'pitch': livePitch,
+                                      'roll': liveRoll,
+                                    };
+                                    if (_absCalibStep >= 4) {
+                                      setDialogState(() => _absCalibStep = 5);
+                                    } else {
+                                      setDialogState(
+                                          () => _absCalibStep++);
+                                    }
+                                  },
+                          ),
+                        ),
+                      ],
+
+                      // REVIEW STEP (5)
+                      if (_absCalibStep == 5) ...[
+                        const Text(
+                          'Calibración Completa',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.green600,
+                          ),
+                        ),
+                        const SizedBox(height: Spacing.sm),
+                        ...cornerSteps.map((step) {
+                          final key = step.$1;
+                          final data = _absCalibCorners[key];
+                          return Container(
+                            width: double.infinity,
+                            margin: const EdgeInsets.only(bottom: 4),
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: context.surface100,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  step.$2,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: context.surface700,
+                                  ),
+                                ),
+                                if (data != null)
+                                  Text(
+                                    'P: ${data['pitch']!.toStringAsFixed(1)} '
+                                    'R: ${data['roll']!.toStringAsFixed(1)}',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: context.surface500,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          );
+                        }),
+                        const SizedBox(height: Spacing.sm),
+
+                        // Screen size
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _absSizeField(
+                                'Ancho (px)',
+                                _absScreenWidth,
+                                (v) => _absScreenWidth = v,
+                              ),
+                            ),
+                            const SizedBox(width: Spacing.sm),
+                            Expanded(
+                              child: _absSizeField(
+                                'Alto (px)',
+                                _absScreenHeight,
+                                (v) => _absScreenHeight = v,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: Spacing.sm),
+
+                        SizedBox(
+                          width: double.infinity,
+                          child: GantiaButton(
+                            label: _absCalibSaving
+                                ? 'Guardando...'
+                                : 'Guardar Calibración',
+                            icon: Icons.save,
+                            variant: GantiaButtonVariant.primary,
+                            onPressed: _absCalibSaving
+                                ? null
+                                : () => _saveAbsCalibration(ctx),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text(
+                    'Cancelar',
+                    style: TextStyle(color: context.surface500),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    ).then((_) {
+      setState(() => _absCalibWizardOpen = false);
+    });
+  }
+
+  Widget _absReadingColumn(String label, String value) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: context.surface500,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+            color: AppColors.primary500,
+            fontFeatures: [FontFeature.tabularFigures()],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _absSizeField(
+    String label,
+    int value,
+    void Function(int) onChanged,
+  ) {
+    return TextField(
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: context.surface500),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: context.surface200),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        isDense: true,
+      ),
+      keyboardType: TextInputType.number,
+      controller: TextEditingController(text: value.toString()),
+      style: TextStyle(fontSize: 13, color: context.surface700),
+      onChanged: (v) {
+        final parsed = int.tryParse(v);
+        if (parsed != null && parsed > 0) onChanged(parsed);
+      },
+    );
+  }
+
+  Future<void> _saveAbsCalibration(BuildContext dialogContext) async {
+    setState(() => _absCalibSaving = true);
+
+    try {
+      final api = ref.read(apiServiceProvider);
+      final corners = <String, dynamic>{};
+      for (final entry in _absCalibCorners.entries) {
+        if (entry.value != null) {
+          corners[entry.key] = entry.value;
+        } else {
+          corners[entry.key] = {'pitch': 0, 'roll': 0};
+        }
+      }
+
+      await api.put('/absolute-pointer/calibration', body: {
+        'corners': corners,
+        'screen_width': _absScreenWidth,
+        'screen_height': _absScreenHeight,
+      });
+
+      if (mounted) {
+        setState(() {
+          _absCalibrationExists = true;
+          _absCalibSaving = false;
+        });
+        Navigator.of(dialogContext).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Calibración guardada')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _absCalibSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al guardar: $e'),
+            backgroundColor: AppColors.red500,
+          ),
+        );
+      }
+    }
+  }
+
+  // ====================================================================
+  // 4 — TEST MODE
   // ====================================================================
 
   Widget _buildTestModeSection() {
@@ -1261,10 +2142,9 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
                 } else {
                   configs = [decoded as Map<String, dynamic>];
                 }
-                nav.pop();
                 await service.importConfigs(configs);
-              } catch (e) {
                 nav.pop();
+              } catch (e) {
                 if (mounted) {
                   messenger.showSnackBar(
                     SnackBar(
@@ -1770,5 +2650,30 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
       _learnInProgress = true;
       _learnStep = 0;
     });
+  }
+
+  Widget _hotkeyPresetChip(
+    String label,
+    String value,
+    TextEditingController ctrl,
+  ) {
+    return ActionChip(
+      label: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: AppColors.primary600,
+        ),
+      ),
+      onPressed: () => ctrl.text = value,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: VisualDensity.compact,
+      backgroundColor: AppColors.primary500.withAlpha(12),
+      side: BorderSide.none,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(6),
+      ),
+    );
   }
 }

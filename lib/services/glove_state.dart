@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../models/action_message.dart';
 import 'ws_client.dart';
 
-enum ConnectionStatus { disconnected, connecting, connected, error }
+enum ConnectionStatus { disconnected, connecting, connected, reconnecting, error }
 
 class GloveState extends ChangeNotifier {
   final WsClient _client;
@@ -30,6 +30,14 @@ class GloveState extends ChangeNotifier {
   bool _mouseModeActive = false;
   bool get mouseModeActive => _mouseModeActive;
 
+  bool _absolutePointerEnabled = false;
+  bool get absolutePointerEnabled => _absolutePointerEnabled;
+
+  int _retryAttempt = 0;
+  int _maxRetries = 10;
+  int get retryAttempt => _retryAttempt;
+  int get maxRetries => _maxRetries;
+
   int _lastTelemetryUpdate = 0;
   Timer? _dataTimer;
   Timer? _waitingTimer;
@@ -53,6 +61,7 @@ class GloveState extends ChangeNotifier {
           return;
         case 'connected':
           _connectionStatus = ConnectionStatus.connected;
+          _retryAttempt = 0;
           _waitingForDevice = false;
           _cancelWaitingTimer();
           _waitingTimer = Timer(
@@ -64,6 +73,12 @@ class GloveState extends ChangeNotifier {
               }
             },
           );
+          notifyListeners();
+          return;
+        case 'reconnecting':
+          _connectionStatus = ConnectionStatus.reconnecting;
+          _retryAttempt = data['attempt'] ?? 0;
+          _maxRetries = data['maxRetries'] ?? 10;
           notifyListeners();
           return;
         case 'disconnected':
@@ -108,12 +123,24 @@ class GloveState extends ChangeNotifier {
       return;
     }
 
+    // Absolute pointer status message
+    if (data['type'] == 'absolute_pointer_status') {
+      _absolutePointerEnabled = data['enabled'] == true;
+      _cancelWaitingTimer();
+      notifyListeners();
+      return;
+    }
+
     if (isTelemetryData(data)) {
       _scheduleTelemetryUpdate(GloveTelemetry.fromJson(data));
       _cancelWaitingTimer();
       _waitingForDevice = false;
       _resetDataTimeout();
     }
+  }
+
+  void sendToggleAbsolutePointer(bool enabled) {
+    _client.send({'type': 'toggle_absolute_pointer', 'enabled': enabled});
   }
 
   void changeMode(String mode) {

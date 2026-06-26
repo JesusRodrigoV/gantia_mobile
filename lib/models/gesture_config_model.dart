@@ -13,6 +13,7 @@ const List<String> movements = [
   'SWIPE_LEFT',
   'SWIPE_RIGHT',
   'TWIST',
+  'COMPOSITE',
 ];
 
 const List<String> orientations = [
@@ -33,6 +34,11 @@ const List<String> actions = [
   'play_pause',
   'next',
   'prev',
+  'next_track',
+  'prev_track',
+  'volume_max',
+  'volume_min',
+  'hard_mute',
   'scroll_up',
   'scroll_down',
   'back',
@@ -53,6 +59,9 @@ const List<String> actions = [
   'execute_cmd',
   'sequence',
   'delay',
+  'mouse_move',
+  'scroll',
+  'mouse_mode',
 ];
 
 const Map<String, String> contextLabels = {
@@ -72,6 +81,7 @@ const Map<String, String> movementLabels = {
   'SWIPE_LEFT': 'Izquierda ←',
   'SWIPE_RIGHT': 'Derecha →',
   'TWIST': 'Giro',
+  'COMPOSITE': 'Compuesto',
 };
 
 String getMovementLabel(String m) => movementLabels[m] ?? m;
@@ -94,6 +104,57 @@ const Map<int, String> flexStateLabelsConfig = {
 };
 
 String getFlexStateLabel(int s) => flexStateLabelsConfig[s] ?? s.toString();
+
+class MacroStep {
+  final String action;
+  final String? value;
+
+  const MacroStep({required this.action, this.value});
+
+  factory MacroStep.fromJson(Map<String, dynamic> json) {
+    return MacroStep(
+      action: json['action'] as String? ?? '',
+      value: json['value'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{'action': action};
+    if (value != null) {
+      map['value'] = value;
+    }
+    return map;
+  }
+}
+
+class MacroData {
+  final List<MacroStep> steps;
+  final int repeat;
+
+  const MacroData({required this.steps, this.repeat = 1});
+
+  factory MacroData.fromJson(Map<String, dynamic> json) {
+    final stepsList = (json['steps'] as List<dynamic>?)
+            ?.map((e) =>
+                MacroStep.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        [];
+    return MacroData(
+      steps: stepsList,
+      repeat: (json['repeat'] as num?)?.toInt() ?? 1,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{
+      'steps': steps.map((s) => s.toJson()).toList(),
+    };
+    if (repeat != 1) {
+      map['repeat'] = repeat;
+    }
+    return map;
+  }
+}
 
 class GestureConfig {
   final String id;

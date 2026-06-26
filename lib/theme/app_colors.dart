@@ -52,8 +52,11 @@ class AppColors {
   static const Color warning600 = Color(0xFFca8a04);
   static const Color cyan500 = Color(0xFF06b6d4);
   static const Color cyan600 = Color(0xFF0891b2);
+  static const Color green500 = Color(0xFF22c55e);
+  static const Color green600 = Color(0xFF16a34a);
   static const Color amber500 = Color(0xFFf59e0b);
   static const Color amber600 = Color(0xFFd97706);
+  static const Color amber700 = Color(0xFFb45309);
   static const Color purple500 = Color(0xFFa855f7);
   static const Color purple600 = Color(0xFF9333ea);
 
