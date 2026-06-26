@@ -35,10 +35,7 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
   bool _learnInProgress = false;
   String? _learnActionKey;
 
-  // --- Calibration state ---
-  int? _calibMin;
-  int? _calibMax;
-  String? _calibSensor;
+  // --- Calibration dialog state (scoped, not mutated from outside) ---
 
   // --- Absolute pointer state ---
   bool? _absCalibrationExists; // null = unknown
@@ -1143,17 +1140,15 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
   }
 
   void _showCalibrationWizard(CalibrationService service) {
-    _calibSensor = null;
-    _calibMin = null;
-    _calibMax = null;
+    final calibMin = ValueNotifier<int?>(null);
+    final calibMax = ValueNotifier<int?>(null);
+    final calibSensor = ValueNotifier<String?>(null);
 
     showDialog<void>(
       context: context,
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            // Read telemetry once at dialog open; live updates require
-            // closing and reopening the dialog.
             final telemetry = ref.read(gloveStateProvider).telemetry;
 
             return AlertDialog(
@@ -1183,7 +1178,6 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
                     ),
                     const SizedBox(height: Spacing.sm),
 
-                    // Live flex values
                     if (telemetry != null) ...[
                       Text(
                         'Valores actuales:',
@@ -1199,8 +1193,7 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
                       const SizedBox(height: Spacing.sm),
                     ],
 
-                    // Captured values
-                    if (_calibMin != null || _calibMax != null) ...[
+                    if (calibMin.value != null || calibMax.value != null) ...[
                       Container(
                         padding: const EdgeInsets.all(Spacing.sm),
                         decoration: BoxDecoration(
@@ -1213,11 +1206,11 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
                                 size: 16, color: AppColors.primary500),
                             const SizedBox(width: 6),
                             Text(
-                              _calibMin != null && _calibMax != null
-                                  ? 'Mín: $_calibMin  Máx: $_calibMax'
-                                  : _calibMin != null
-                                      ? 'Mínimo capturado: $_calibMin'
-                                      : 'Máximo capturado: $_calibMax',
+                              calibMin.value != null && calibMax.value != null
+                                  ? 'Mín: ${calibMin.value}  Máx: ${calibMax.value}'
+                                  : calibMin.value != null
+                                      ? 'Mínimo capturado: ${calibMin.value}'
+                                      : 'Máximo capturado: ${calibMax.value}',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -1230,7 +1223,6 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
                       const SizedBox(height: Spacing.sm),
                     ],
 
-                    // Action buttons
                     Row(
                       children: [
                         Expanded(
@@ -1241,8 +1233,8 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
                             onPressed: telemetry == null
                                 ? null
                                 : () => setDialogState(() {
-                                      _calibMin = telemetry.flexIndex;
-                                      _calibSensor = 'flex_index';
+                                      calibMin.value = telemetry.flexIndex;
+                                      calibSensor.value = 'flex_index';
                                     }),
                           ),
                         ),
@@ -1255,8 +1247,8 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
                             onPressed: telemetry == null
                                 ? null
                                 : () => setDialogState(() {
-                                      _calibMax = telemetry.flexIndex;
-                                      _calibSensor = 'flex_index';
+                                      calibMax.value = telemetry.flexIndex;
+                                      calibSensor.value = 'flex_index';
                                     }),
                           ),
                         ),
@@ -1276,14 +1268,14 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
                 GantiaButton(
                   label: 'Guardar',
                   variant: GantiaButtonVariant.primary,
-                  onPressed: _calibMin == null || _calibMax == null
+                  onPressed: calibMin.value == null || calibMax.value == null
                       ? null
                       : () async {
                           Navigator.of(ctx).pop();
                           await service.update(
-                            _calibSensor!,
-                            minValue: _calibMin!.toDouble(),
-                            maxValue: _calibMax!.toDouble(),
+                            calibSensor.value!,
+                            minValue: calibMin.value!.toDouble(),
+                            maxValue: calibMax.value!.toDouble(),
                           );
                         },
                 ),

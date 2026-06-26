@@ -146,7 +146,7 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
                           (entry) => _LightDeviceCard(
                             device: entry.value,
                             onToggle: (on) {
-                              setState(() {});
+                              setState(() => _updateDevice(entry.key, isOn: on));
                               _saveDevices();
                               if (on) {
                                 smartHomeService.lightOn(entry.value.url);
@@ -155,7 +155,8 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
                               }
                             },
                             onBrightness: (value) {
-                              setState(() => _saveDevices());
+                              setState(() => _updateDevice(entry.key, brightness: value.toDouble()));
+                              _saveDevices();
                               smartHomeService.setBrightness(entry.value.url, value);
                             },
                             onRemove: () {
@@ -172,15 +173,25 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
       ),
     );
   }
+
+  void _updateDevice(int index, {bool? isOn, double? brightness}) {
+    final d = _devices[index];
+    _devices[index] = _LightDevice(
+      name: d.name,
+      url: d.url,
+      isOn: isOn ?? d.isOn,
+      brightness: brightness ?? d.brightness,
+    );
+  }
 }
 
 class _LightDevice {
   final String name;
   final String url;
-  bool isOn;
-  double brightness;
+  final bool isOn;
+  final double brightness;
 
-  _LightDevice({
+  const _LightDevice({
     required this.name,
     required this.url,
     this.isOn = false,
@@ -238,8 +249,9 @@ class _LightDeviceCardState extends State<_LightDeviceCard> {
 
   @override
   Widget build(BuildContext context) {
+    final device = widget.device;
     return SettingsCard(
-      title: widget.device.name,
+      title: device.name,
       child: Column(
         children: [
           Row(
@@ -248,28 +260,25 @@ class _LightDeviceCardState extends State<_LightDeviceCard> {
               Row(
                 children: [
                   Icon(
-                    widget.device.isOn ? Icons.lightbulb : Icons.lightbulb_outline,
-                    color: widget.device.isOn ? AppColors.warning500 : AppColors.surfaceLight400,
+                    device.isOn ? Icons.lightbulb : Icons.lightbulb_outline,
+                    color: device.isOn ? AppColors.warning500 : AppColors.surfaceLight400,
                     size: 24,
                   ),
                   const SizedBox(width: Spacing.xs),
                   Text(
-                    widget.device.url,
+                    device.url,
                     style: const TextStyle(fontSize: 11, color: AppColors.surfaceLight500),
                   ),
                 ],
               ),
               Switch(
-                value: widget.device.isOn,
-                onChanged: (v) {
-                  setState(() => widget.device.isOn = v);
-                  widget.onToggle(v);
-                },
+                value: device.isOn,
+                onChanged: (v) => widget.onToggle(v),
                 activeThumbColor: AppColors.primary500,
               ),
             ],
           ),
-          if (widget.device.isOn) ...[
+          if (device.isOn) ...[
             const SizedBox(height: Spacing.sm),
             Row(
               children: [
@@ -281,10 +290,7 @@ class _LightDeviceCardState extends State<_LightDeviceCard> {
                     max: 100,
                     divisions: 100,
                     onChanged: (v) => setState(() => _brightness = v),
-                    onChangeEnd: (v) {
-                      widget.device.brightness = v;
-                      widget.onBrightness(v.round());
-                    },
+                    onChangeEnd: (v) => widget.onBrightness(v.round()),
                     inactiveColor: AppColors.surfaceLight200,
                   ),
                 ),

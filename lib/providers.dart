@@ -111,3 +111,9 @@ final recordingServiceProvider = ChangeNotifierProvider<RecordingService>((ref) 
   final client = ref.watch(wsClientProvider);
   return RecordingService(client);
 });
+
+// ── Navigation ──
+
+final showRegisterProvider = StateProvider<bool>((ref) => false);
+
+final bottomNavIndexProvider = StateProvider<int>((ref) => 0);

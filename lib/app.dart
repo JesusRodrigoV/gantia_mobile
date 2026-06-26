@@ -38,8 +38,6 @@ class _AuthGate extends ConsumerStatefulWidget {
 }
 
 class _AuthGateState extends ConsumerState<_AuthGate> {
-  bool _showRegister = false;
-
   @override
   void initState() {
     super.initState();
@@ -52,16 +50,17 @@ class _AuthGateState extends ConsumerState<_AuthGate> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authServiceProvider);
+    final showRegister = ref.watch(showRegisterProvider);
 
     if (!auth.isAuthenticated) {
-      if (_showRegister) {
+      if (showRegister) {
         return RegisterScreen(
           authService: auth,
           onRegisterSuccess: () {
-            setState(() => _showRegister = false);
+            ref.read(showRegisterProvider.notifier).state = false;
           },
           onBackToLogin: () {
-            setState(() => _showRegister = false);
+            ref.read(showRegisterProvider.notifier).state = false;
           },
         );
       }
@@ -72,7 +71,7 @@ class _AuthGateState extends ConsumerState<_AuthGate> {
           ref.read(wsClientProvider).connect();
         },
         onRegisterTap: () {
-          setState(() => _showRegister = true);
+          ref.read(showRegisterProvider.notifier).state = true;
         },
       );
     }
@@ -89,10 +88,9 @@ class _MainShell extends ConsumerStatefulWidget {
 }
 
 class _MainShellState extends ConsumerState<_MainShell> {
-  int _currentIndex = 0;
-
   @override
   Widget build(BuildContext context) {
+    final currentIndex = ref.watch(bottomNavIndexProvider);
     final pages = <Widget>[
       const HomeScreen(),
       const ConfigScreen(),
@@ -102,12 +100,12 @@ class _MainShellState extends ConsumerState<_MainShell> {
     ];
 
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: pages),
-      bottomNavigationBar: _buildBottomNav(),
+      body: IndexedStack(index: currentIndex, children: pages),
+      bottomNavigationBar: _buildBottomNav(currentIndex),
     );
   }
 
-  Widget _buildBottomNav() {
+  Widget _buildBottomNav(int currentIndex) {
     final bg = context.surface0;
 
     return Container(
@@ -135,8 +133,8 @@ class _MainShellState extends ConsumerState<_MainShell> {
           elevation: 0,
           selectedItemColor: AppColors.primary500,
           unselectedItemColor: context.surface500,
-          currentIndex: _currentIndex,
-          onTap: (i) => setState(() => _currentIndex = i),
+          currentIndex: currentIndex,
+          onTap: (i) => ref.read(bottomNavIndexProvider.notifier).state = i,
           type: BottomNavigationBarType.fixed,
           selectedLabelStyle: const TextStyle(
             fontSize: 10,

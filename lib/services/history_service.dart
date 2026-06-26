@@ -43,10 +43,13 @@ class HistoryService extends ChangeNotifier with ApiServiceMixin {
     })) ?? [];
   }
 
-  Future<List<HistoryActionEntry>> getActionsHistory({int? limit}) async {
+  Future<List<HistoryActionEntry>> getActionsHistory({int? limit, int? offset}) async {
     return (await execute(() async {
-      final path =
-          limit != null ? '/actions/history?limit=$limit' : '/actions/history';
+      final params = <String, String>{};
+      if (limit != null) params['limit'] = limit.toString();
+      if (offset != null) params['offset'] = offset.toString();
+      final query = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
+      final path = '/actions/history${query.isNotEmpty ? '?$query' : ''}';
 
       final data = await _api.get(path);
       final list = (data as List)

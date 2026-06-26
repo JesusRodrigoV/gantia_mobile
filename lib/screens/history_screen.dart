@@ -16,19 +16,53 @@ class HistoryScreen extends ConsumerStatefulWidget {
 }
 
 class _HistoryScreenState extends ConsumerState<HistoryScreen> {
-  int _currentLimit = 50;
+  static const int _pageSize = 50;
+
+  final List<HistoryActionEntry> _allEntries = [];
+  int _offset = 0;
+  bool _allLoaded = false;
 
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      ref.read(historyServiceProvider).getActionsHistory(limit: _currentLimit);
-    });
+    Future.microtask(_fetch);
+  }
+
+  Future<void> _fetch() async {
+    try {
+      final result = await ref.read(historyServiceProvider).getActionsHistory(
+        limit: _pageSize,
+        offset: _offset,
+      );
+      if (!mounted) return;
+      setState(() {
+        _allEntries.addAll(result);
+        _allLoaded = result.length < _pageSize;
+        _offset += result.length;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al actualizar: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _refresh() async {
     try {
-      await ref.read(historyServiceProvider).getActionsHistory(limit: _currentLimit);
+      final result = await ref.read(historyServiceProvider).getActionsHistory(
+        limit: _pageSize,
+        offset: 0,
+      );
+      if (!mounted) return;
+      setState(() {
+        _allEntries
+          ..clear()
+          ..addAll(result);
+        _allLoaded = result.length < _pageSize;
+        _offset = result.length;
+      });
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -39,8 +73,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   }
 
   void _loadMore() {
-    setState(() => _currentLimit += 50);
-    ref.read(historyServiceProvider).getActionsHistory(limit: _currentLimit);
+    if (!_allLoaded) _fetch();
   }
 
   String _formatTimestamp(int seconds) {
@@ -86,11 +119,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final historyService = ref.watch(historyServiceProvider);
-    final entries = historyService.actions;
     final isLoading = historyService.isLoading;
     final error = historyService.error;
-    final hasMore = entries.length >= _currentLimit;
-    final isEmpty = entries.isEmpty && !isLoading && error == null;
+    final isEmpty = _allEntries.isEmpty && !isLoading && error == null;
+    final hasMore = !_allLoaded && !isLoading;
 
     return Scaffold(
       backgroundColor: context.surface50,
@@ -118,7 +150,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               ),
             ),
             Expanded(
-              child: _buildContent(entries, isLoading, error, isEmpty, hasMore),
+              child: _buildContent(_allEntries, isLoading, error, isEmpty, hasMore),
             ),
           ],
         ),
@@ -241,7 +273,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               label: 'Reintentar',
               icon: Icons.refresh,
               onPressed: () {
-                ref.read(historyServiceProvider).getActionsHistory(limit: _currentLimit);
+                _offset = 0;
+                _allEntries.clear();
+                _allLoaded = false;
+                _fetch();
               },
             ),
           ],
