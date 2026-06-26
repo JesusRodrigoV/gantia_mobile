@@ -101,9 +101,12 @@ class _GantiaScrambleTextState extends State<GantiaScrambleText>
 
   @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _opacity,
-      child: Text(_displayText, style: widget.style),
+    return ExcludeSemantics(
+      excluding: _displayText != widget.text,
+      child: FadeTransition(
+        opacity: _opacity,
+        child: Text(_displayText, style: widget.style),
+      ),
     );
   }
 }

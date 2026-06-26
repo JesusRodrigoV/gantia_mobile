@@ -458,14 +458,17 @@ String _valueLabel(String action) {
 
 Widget _smallIconButton(IconData icon, String tooltip, VoidCallback onPressed,
     {Color? color}) {
-  return Material(
-    color: Colors.transparent,
-    child: InkWell(
-      borderRadius: BorderRadius.circular(4),
-      onTap: onPressed,
-      child: Padding(
-        padding: const EdgeInsets.all(4),
-        child: Icon(icon, size: 16, color: color),
+  return Tooltip(
+    message: tooltip,
+    child: Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(4),
+        onTap: onPressed,
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: Icon(icon, size: 16, color: color),
+        ),
       ),
     ),
   );

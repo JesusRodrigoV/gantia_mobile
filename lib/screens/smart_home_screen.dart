@@ -303,13 +303,12 @@ class _LightDeviceCardState extends State<_LightDeviceCard> {
           ],
           Align(
             alignment: Alignment.centerRight,
-            child: TextButton.icon(
+            child: GantiaButton(
+              label: 'Eliminar',
+              icon: Icons.delete,
+              variant: GantiaButtonVariant.danger,
               onPressed: widget.onRemove,
-              icon: const Icon(Icons.delete, size: 16, color: AppColors.red500),
-              label: const Text(
-                'Eliminar',
-                style: TextStyle(fontSize: 12, color: AppColors.red500),
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             ),
           ),
         ],

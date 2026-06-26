@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
+import '../theme/context_extensions.dart';
+import '../theme/shadows.dart';
 import '../models/action_message.dart';
 
 class GestureFlash extends StatefulWidget {
@@ -73,6 +75,10 @@ class _GestureFlashState extends State<GestureFlash>
     return isDark ? AppColors.surfaceDark800 : AppColors.surfaceLight800;
   }
 
+  bool _getIsDark(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_current == null) return const SizedBox.shrink();
@@ -104,59 +110,54 @@ class _GestureFlashState extends State<GestureFlash>
   }
 
   Widget _buildCard(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          decoration: BoxDecoration(
-            color: _bgColor(context),
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(15),
-                blurRadius: 16,
-                offset: const Offset(8, 8),
-              ),
-              BoxShadow(
-                color: Colors.white.withAlpha(60),
-                blurRadius: 16,
-                offset: const Offset(-8, -8),
-              ),
-            ],
+    final isDark = _getIsDark(context);
+    final surface900 = isDark ? AppColors.surfaceDark900 : AppColors.surfaceLight900;
+    final surface0 = isDark ? AppColors.surfaceDark0 : AppColors.surfaceLight0;
+
+    return Semantics(
+      label: 'Gesto detectado: ${_current!.gesture} → ${getActionLabel(_current!.action)}',
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            decoration: BoxDecoration(
+              color: _bgColor(context),
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: GantiaShadows.elevated(surface900, surface0),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _current!.gesture,
+                  style: GoogleFonts.cormorantGaramond(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 20,
+                    color: _textColor(context),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '\u2192',
+                  style: GoogleFonts.notoSans(
+                    fontWeight: FontWeight.w400,
+                    fontSize: 18,
+                    color: _textColor(context).withAlpha(150),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  getActionLabel(_current!.action),
+                  style: GoogleFonts.notoSans(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: _textColor(context),
+                  ),
+                ),
+              ],
+            ),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                _current!.gesture,
-                style: GoogleFonts.cormorantGaramond(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 20,
-                  color: _textColor(context),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '\u2192',
-                style: GoogleFonts.notoSans(
-                  fontWeight: FontWeight.w400,
-                  fontSize: 18,
-                  color: _textColor(context).withAlpha(150),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                getActionLabel(_current!.action),
-                style: GoogleFonts.notoSans(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                  color: _textColor(context),
-                ),
-              ),
-            ],
-          ),
-        ),
         Positioned(
           top: 0,
           left: 0,
@@ -192,6 +193,7 @@ class _GestureFlashState extends State<GestureFlash>
           ),
         ),
       ],
+      ),
     );
   }
 }

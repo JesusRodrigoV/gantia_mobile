@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/context_extensions.dart';
+import '../theme/shadows.dart';
 
 class GantiaButton extends StatelessWidget {
   final String label;
@@ -10,6 +11,7 @@ class GantiaButton extends StatelessWidget {
   final bool isLoading;
   final double? minWidth;
   final EdgeInsetsGeometry? padding;
+  final bool expanded;
 
   const GantiaButton({
     super.key,
@@ -20,6 +22,7 @@ class GantiaButton extends StatelessWidget {
     this.isLoading = false,
     this.minWidth,
     this.padding,
+    this.expanded = false,
   });
 
   @override
@@ -41,21 +44,26 @@ class GantiaButton extends StatelessWidget {
         fgColor = AppColors.primary600;
     }
 
-    return SizedBox(
-      width: minWidth,
+    final button = SizedBox(
+      width: expanded ? double.infinity : minWidth,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: bgColor,
           foregroundColor: fgColor,
+          elevation: 0,
+          shadowColor: Colors.transparent,
           padding: padding ?? const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         child: isLoading
-            ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
+            ? Semantics(
+                label: 'Cargando',
+                child: const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
               )
             : Row(
                 mainAxisSize: MainAxisSize.min,
@@ -69,13 +77,28 @@ class GantiaButton extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      letterSpacing: 0.5,
+                      letterSpacing: 1,
                     ),
                   ),
                 ],
               ),
       ),
     );
+
+    if (variant == GantiaButtonVariant.primary) {
+      return Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: GantiaShadows.elevated(
+            context.surface900,
+            context.surface0,
+          ),
+        ),
+        child: button,
+      );
+    }
+
+    return button;
   }
 }
 
