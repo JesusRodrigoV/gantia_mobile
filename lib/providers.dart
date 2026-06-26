@@ -39,11 +39,12 @@ final apiServiceProvider = Provider<ApiService>((ref) {
 });
 
 final authServiceProvider = ChangeNotifierProvider<AuthService>((ref) {
-  throw UnimplementedError('Override in main — async init');
+  final api = ref.watch(apiServiceProvider);
+  return AuthService(api);
 });
 
 final themeServiceProvider = ChangeNotifierProvider<ThemeService>((ref) {
-  throw UnimplementedError('Override in main — async init');
+  return ThemeService();
 });
 
 final wsClientProvider = Provider<WsClient>((ref) {

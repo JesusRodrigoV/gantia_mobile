@@ -5,6 +5,8 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'auth_service.dart';
 import '../utils/jwt_utils.dart';
 
+enum _ConnectionAttemptState { idle, connecting }
+
 class WsClient {
   final AuthService _authService;
   final String _wsUrl;
@@ -16,6 +18,7 @@ class WsClient {
   static const Duration maxReconnectDelay = Duration(seconds: 30);
   static const Duration pingInterval = Duration(seconds: 30);
   static const Duration pongTimeoutDuration = Duration(seconds: 10);
+  static const Duration connectionTimeout = Duration(seconds: 10);
 
   WebSocketChannel? _channel;
   Timer? _reconnectTimer;
@@ -24,7 +27,8 @@ class WsClient {
   int _reconnectAttempts = 0;
   Timer? _pingTimer;
   Timer? _pongTimer;
-  bool _isConnecting = false;
+  Timer? _connectionTimer;
+  _ConnectionAttemptState _connectionAttemptState = _ConnectionAttemptState.idle;
 
   final StreamController<Map<String, dynamic>> _controller =
       StreamController<Map<String, dynamic>>.broadcast();
@@ -50,33 +54,25 @@ class WsClient {
     _channel!.sink.add(jsonEncode(data));
   }
 
-  void _checkToken() {
-    final token = _authService.token;
-    if (token == null || token.isEmpty || !_authService.isAuthenticated) {
-      _authService.logout();
-      return;
-    }
-
-    if (isTokenExpired(token)) {
-      _authService.logout();
-      return;
-    }
-
-    _establishConnection();
-  }
-
   void _establishConnection() {
-    if (_isConnecting) return;
-    _isConnecting = true;
+    if (_connectionAttemptState == _ConnectionAttemptState.connecting) return;
+    _connectionAttemptState = _ConnectionAttemptState.connecting;
 
     final token = _authService.token;
     if (token == null || token.isEmpty || !_authService.isAuthenticated) {
       _authService.logout();
-      _isConnecting = false;
+      _finishAttempt();
       return;
     }
 
     _clearReconnectTimer();
+    _connectionTimer = Timer(connectionTimeout, () {
+      _controller.add({'\$type': 'error'});
+      _closeChannel();
+      _finishAttempt();
+      if (_shouldBeConnected) _scheduleReconnect();
+    });
+
     _controller.add({'\$type': 'connecting'});
 
     try {
@@ -98,6 +94,7 @@ class WsClient {
             }
 
             if (parsed['\$type'] == 'auth_ok') {
+              _connectionTimer?.cancel();
               _resetRetryState();
             }
 
@@ -105,12 +102,12 @@ class WsClient {
           } catch (_) {}
         },
         onError: (_) {
-          _isConnecting = false;
+          _finishAttempt();
           _controller.add({'\$type': 'error'});
           if (_shouldBeConnected) _scheduleReconnect();
         },
         onDone: () {
-          _isConnecting = false;
+          _finishAttempt();
           _clearPingTimer();
           _controller.add({'\$type': 'disconnected'});
           if (_shouldBeConnected && _authService.isAuthenticated) {
@@ -125,10 +122,16 @@ class WsClient {
         'token': token,
       }));
     } catch (_) {
-      _isConnecting = false;
+      _finishAttempt();
       _controller.add({'\$type': 'error'});
       if (_shouldBeConnected) _scheduleReconnect();
     }
+  }
+
+  void _finishAttempt() {
+    _connectionAttemptState = _ConnectionAttemptState.idle;
+    _connectionTimer?.cancel();
+    _connectionTimer = null;
   }
 
   void _scheduleReconnect() {
@@ -152,12 +155,14 @@ class WsClient {
             pow(2, _reconnectAttempts - 1))
         .toInt();
     final cappedMs = min(delayMs, maxReconnectDelay.inMilliseconds);
-    _reconnectTimer = Timer(Duration(milliseconds: cappedMs), _checkToken);
+    _reconnectTimer = Timer(Duration(milliseconds: cappedMs), () {
+      _establishConnection();
+    });
   }
 
   void _resetRetryState() {
     _reconnectAttempts = 0;
-    _isConnecting = false;
+    _finishAttempt();
     _controller.add({'\$type': 'connected'});
     _startPingTimer();
   }
@@ -201,6 +206,7 @@ class WsClient {
     _shouldBeConnected = false;
     _clearReconnectTimer();
     _clearPingTimer();
+    _finishAttempt();
     _closeChannel();
     _controller.close();
   }

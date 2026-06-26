@@ -1,16 +1,15 @@
 import 'package:flutter/foundation.dart';
 import '../models/history_model.dart';
 import 'api_service.dart';
+import 'api_mixin.dart';
 
-class HistoryService extends ChangeNotifier {
+class HistoryService extends ChangeNotifier with ApiServiceMixin {
   final ApiService _api;
 
   List<HistoryReading> _readings = [];
   List<HistoryActionEntry> _actions = [];
   int _totalReadings = 0;
   int _totalActions = 0;
-  bool _isLoading = false;
-  String? _error;
 
   HistoryService(this._api);
 
@@ -18,19 +17,13 @@ class HistoryService extends ChangeNotifier {
   List<HistoryActionEntry> get actions => _actions;
   int get totalReadings => _totalReadings;
   int get totalActions => _totalActions;
-  bool get isLoading => _isLoading;
-  String? get error => _error;
 
   Future<List<HistoryReading>> getReadingsHistory({
     DateTime? since,
     DateTime? until,
     int? limit,
   }) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
+    return (await execute(() async {
       final params = <String, String>{};
       if (since != null) params['since'] = since.toIso8601String();
       if (until != null) params['until'] = until.toIso8601String();
@@ -46,33 +39,12 @@ class HistoryService extends ChangeNotifier {
           .map((e) => HistoryReading.fromJson(e as Map<String, dynamic>))
           .toList();
       _totalReadings = (data['total'] as num?)?.toInt() ?? _readings.length;
-      _isLoading = false;
-      notifyListeners();
       return _readings;
-    } on UnauthorizedException {
-      _error = 'No autorizado';
-      _isLoading = false;
-      notifyListeners();
-      return [];
-    } on NetworkException {
-      _error = 'No se pudo conectar al servidor';
-      _isLoading = false;
-      notifyListeners();
-      return [];
-    } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
-      return [];
-    }
+    })) ?? [];
   }
 
   Future<List<HistoryActionEntry>> getActionsHistory({int? limit}) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
+    return (await execute(() async {
       final path =
           limit != null ? '/actions/history?limit=$limit' : '/actions/history';
 
@@ -82,24 +54,7 @@ class HistoryService extends ChangeNotifier {
           .toList();
       _actions = list;
       _totalActions = list.length;
-      _isLoading = false;
-      notifyListeners();
       return list;
-    } on UnauthorizedException {
-      _error = 'No autorizado';
-      _isLoading = false;
-      notifyListeners();
-      return [];
-    } on NetworkException {
-      _error = 'No se pudo conectar al servidor';
-      _isLoading = false;
-      notifyListeners();
-      return [];
-    } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
-      return [];
-    }
+    })) ?? [];
   }
 }

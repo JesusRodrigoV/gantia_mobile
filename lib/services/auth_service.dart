@@ -3,21 +3,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/auth_model.dart';
 import '../utils/jwt_utils.dart';
 import 'api_service.dart';
+import 'api_mixin.dart';
 
-class AuthService extends ChangeNotifier {
+class AuthService extends ChangeNotifier with ApiServiceMixin {
   final ApiService _api;
 
   String? _token;
   User? _user;
-  bool _isLoading = false;
-  String? _error;
 
   AuthService(this._api);
 
   String? get token => _token;
   User? get user => _user;
-  bool get isLoading => _isLoading;
-  String? get error => _error;
 
   bool get isAuthenticated =>
       _token != null &&
@@ -36,84 +33,51 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<bool> login(String email, String password) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+    final result = await execute<Map<String, dynamic>>(
+      () async {
+        final data = await _api.post('/auth/login', body: {
+          'email': email,
+          'password': password,
+        });
+        final response = AuthResponse.fromJson(data as Map<String, dynamic>);
+        _token = response.accessToken;
+        _user = response.user;
+        _api.setToken(_token);
 
-    try {
-      final data = await _api.post('/auth/login', body: {
-        'email': email,
-        'password': password,
-      });
-      final response = AuthResponse.fromJson(data as Map<String, dynamic>);
-      _token = response.accessToken;
-      _user = response.user;
-      _api.setToken(_token);
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('token', _token!);
-
-      _isLoading = false;
-      notifyListeners();
-      return true;
-    } on UnauthorizedException {
-      _error = 'Credenciales inválidas';
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    } on NetworkException {
-      _error = 'No se pudo conectar al servidor';
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    }
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', _token!);
+        return data;
+      },
+      unauthorizedMessage: 'Credenciales inválidas',
+    );
+    return result != null;
   }
 
   Future<bool> register(String email, String password) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      await _api.post('/auth/register', body: {
-        'email': email,
-        'password': password,
-      });
-      _isLoading = false;
-      notifyListeners();
-      return true;
-    } on UnauthorizedException {
-      _error = 'Credenciales inválidas';
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    } on NetworkException {
-      _error = 'No se pudo conectar al servidor';
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    }
+    final result = await execute(
+      () async {
+        await _api.post('/auth/register', body: {
+          'email': email,
+          'password': password,
+        });
+        return true;
+      },
+      unauthorizedMessage: 'Credenciales inválidas',
+    );
+    return result ?? false;
   }
 
   Future<void> logout() async {
-    try {
-      await _api.post('/auth/logout');
-    } catch (_) {}
     _token = null;
     _user = null;
     _api.setToken(null);
+    notifyListeners();
+
+    try {
+      await _api.post('/auth/logout');
+    } catch (_) {}
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
-    notifyListeners();
   }
 }
