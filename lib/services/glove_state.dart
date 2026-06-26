@@ -77,8 +77,8 @@ class GloveState extends ChangeNotifier {
           return;
         case 'reconnecting':
           _connectionStatus = ConnectionStatus.reconnecting;
-          _retryAttempt = data['attempt'] ?? 0;
-          _maxRetries = data['maxRetries'] ?? 10;
+          _retryAttempt = (data['attempt'] as int?) ?? 0;
+          _maxRetries = (data['maxRetries'] as int?) ?? 10;
           notifyListeners();
           return;
         case 'disconnected':

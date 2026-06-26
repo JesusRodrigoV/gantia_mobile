@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gantia_mobile/models/gesture_config_model.dart';
 import 'package:gantia_mobile/widgets/macro_step_editor.dart';
 
 void main() {

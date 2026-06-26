@@ -15,8 +15,8 @@ class GestureFlash extends StatefulWidget {
 class _GestureFlashState extends State<GestureFlash>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _fadeScaleIn;
-  late Animation<double> _fadeScaleOut;
+  late CurvedAnimation _fadeScaleIn;
+  late CurvedAnimation _fadeScaleOut;
   GestureDetectedEvent? _current;
 
   @override

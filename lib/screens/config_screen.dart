@@ -43,7 +43,6 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
   // --- Absolute pointer state ---
   bool? _absCalibrationExists; // null = unknown
   bool _absCalibSaving = false;
-  bool _absCalibWizardOpen = false;
   int _absCalibStep = 0; // 0=start, 1-4=corners, 5=review
   final Map<String, Map<String, double>?> _absCalibCorners = {
     'tl': null, 'tr': null, 'bl': null, 'br': null,
@@ -306,7 +305,7 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
                         config.movement == 'COMPOSITE'
                             ? 'COMPUESTO'
                             : getActionLabel(config.actionKey),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                           color: config.movement == 'COMPOSITE'
@@ -439,15 +438,15 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
       try {
         final steps = jsonDecode(existing!.actionValue!) as List;
         if (steps.length >= 2) {
-          compositeStep1Movement.value = steps[0]['movement'] ?? 'SWIPE_RIGHT';
+          compositeStep1Movement.value = (steps[0]['movement'] as String?) ?? 'SWIPE_RIGHT';
           compositeStep1Index.value = (steps[0]['index_state'] as num?)?.toInt() ?? 2;
           compositeStep1Middle.value = (steps[0]['middle_state'] as num?)?.toInt() ?? 2;
-          compositeStep2Movement.value = steps[1]['movement'] ?? 'TWIST';
+          compositeStep2Movement.value = (steps[1]['movement'] as String?) ?? 'TWIST';
           compositeStep2Index.value = (steps[1]['index_state'] as num?)?.toInt() ?? 2;
           compositeStep2Middle.value = (steps[1]['middle_state'] as num?)?.toInt() ?? 2;
         }
       } catch (_) {}
-      compositeActionKeyCtrl.value = existing.actionKey;
+      compositeActionKeyCtrl.value = existing!.actionKey;
     }
 
     showDialog<void>(
@@ -1361,7 +1360,7 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
                         glove.sendToggleAbsolutePointer(v);
                       }
                     : null,
-                activeColor: AppColors.primary500,
+                activeThumbColor: AppColors.primary500,
               ),
             ],
           ),
@@ -1425,7 +1424,6 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
   // — Absolute Pointer Calibration Wizard
   void _showAbsCalibrationWizard() {
     setState(() {
-      _absCalibWizardOpen = true;
       _absCalibStep = 0;
       _absCalibCorners.updateAll((k, v) => null);
     });
@@ -1693,9 +1691,7 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
           },
         );
       },
-    ).then((_) {
-      setState(() => _absCalibWizardOpen = false);
-    });
+    );
   }
 
   Widget _absReadingColumn(String label, String value) {
@@ -1754,6 +1750,8 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
 
     try {
       final api = ref.read(apiServiceProvider);
+      final navigator = Navigator.of(dialogContext);
+      final messenger = ScaffoldMessenger.of(context);
       final corners = <String, dynamic>{};
       for (final entry in _absCalibCorners.entries) {
         if (entry.value != null) {
@@ -1774,8 +1772,8 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
           _absCalibrationExists = true;
           _absCalibSaving = false;
         });
-        Navigator.of(dialogContext).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
+        navigator.pop();
+        messenger.showSnackBar(
           const SnackBar(content: Text('Calibración guardada')),
         );
       }

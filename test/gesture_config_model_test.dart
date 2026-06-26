@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gantia_mobile/models/gesture_config_model.dart';
 
@@ -93,8 +92,8 @@ void main() {
       final data = MacroData(steps: testSteps, repeat: 2);
       final json = data.toJson();
 
-      expect(json['steps'], isA<List>());
-      expect((json['steps'] as List).length, 3);
+      expect(json['steps'], isA<List<dynamic>>());
+      expect((json['steps'] as List<dynamic>).length, 3);
       expect(json['repeat'], 2);
       expect((json['steps'] as List)[0]['action'], 'hotkey');
     });

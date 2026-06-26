@@ -385,7 +385,7 @@ class MacroStepEditor extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             DropdownButtonFormField<String>(
-              value: step.action,
+              initialValue: step.action,
               isExpanded: true,
               decoration: InputDecoration(
                 isDense: true,
