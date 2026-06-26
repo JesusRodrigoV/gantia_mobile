@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'auth_service.dart';
-import '../utils/jwt_utils.dart';
 
 enum _ConnectionAttemptState { idle, connecting }
 
