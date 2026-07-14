@@ -108,28 +108,28 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: () => Navigator.of(ctx).pop(),
               child: const Text('Cancelar'),
             ),
-            FilledButton(
-              onPressed: () async {
-                if (!formKey.currentState!.validate()) return;
-                final host = hostCtrl.text.trim();
-                final port = int.parse(portCtrl.text.trim());
-                await ref.read(serverConfigProvider).setHostPort(host, port);
-                ref.read(apiServiceProvider).setBaseUrl('http://$host:$port');
-                ref.invalidate(wsClientProvider);
-                if (ctx.mounted) {
-                  Navigator.of(ctx).pop();
-                }
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Servidor: $host:$port'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
-              },
-              child: const Text('Guardar'),
-            ),
+              FilledButton(
+                onPressed: () async {
+                  if (!formKey.currentState!.validate()) return;
+                  final host = hostCtrl.text.trim();
+                  final port = int.parse(portCtrl.text.trim());
+                  await ref.read(serverConfigProvider).setHostPort(host, port);
+                  ref.read(apiServiceProvider).setBaseUrl('http://$host:$port');
+                  if (ctx.mounted) {
+                    Navigator.of(ctx).pop();
+                  }
+                  ref.invalidate(wsClientProvider);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Servidor: $host:$port'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                },
+                child: const Text('Guardar'),
+              ),
           ],
         );
       },
