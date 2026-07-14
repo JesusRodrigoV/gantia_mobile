@@ -56,10 +56,10 @@ class AuthService extends ChangeNotifier with ApiServiceMixin {
       unauthorizedMessage: 'Credenciales inválidas',
     );
     debugPrint('[AUTH] login: execute() returned, result isNull=${result == null}');
-    debugPrint('[AUTH] login: _isLoading=$_isLoading');
+    debugPrint('[AUTH] login: isLoading=$isLoading');
     debugPrint('[AUTH] login: isAuthenticated=$isAuthenticated');
     notifyListeners();
-    debugPrint('[AUTH] login: notifyListeners called, isAuthenticated=${isAuthenticated}');
+    debugPrint('[AUTH] login: notifyListeners called, isAuthenticated=$isAuthenticated');
     return result != null;
   }
 
