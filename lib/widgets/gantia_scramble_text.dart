@@ -105,7 +105,7 @@ class _GantiaScrambleTextState extends State<GantiaScrambleText>
       excluding: _displayText != widget.text,
       child: FadeTransition(
         opacity: _opacity,
-        child: Text(_displayText, style: widget.style),
+        child: Text(_displayText, style: widget.style, overflow: TextOverflow.ellipsis),
       ),
     );
   }
