@@ -33,24 +33,33 @@ class AuthService extends ChangeNotifier with ApiServiceMixin {
   }
 
   Future<bool> login(String email, String password) async {
+    debugPrint('[AUTH] login(email=$email)');
     final result = await execute<Map<String, dynamic>>(
       () async {
+        debugPrint('[AUTH] login: calling _api.post');
         final data = await _api.post('/auth/login', body: {
           'email': email,
           'password': password,
         });
+        debugPrint('[AUTH] login: _api.post returned, data type=${data.runtimeType}');
         final response = AuthResponse.fromJson(data as Map<String, dynamic>);
         _token = response.accessToken;
         _user = response.user;
         _api.setToken(_token);
+        debugPrint('[AUTH] login: _token set, token=${_token != null ? _token!.length.toString() : "null"} chars');
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', _token!);
+        debugPrint('[AUTH] login: token saved to SharedPreferences');
         return data;
       },
       unauthorizedMessage: 'Credenciales inválidas',
     );
+    debugPrint('[AUTH] login: execute() returned, result isNull=${result == null}');
+    debugPrint('[AUTH] login: _isLoading=$_isLoading');
+    debugPrint('[AUTH] login: isAuthenticated=$isAuthenticated');
     notifyListeners();
+    debugPrint('[AUTH] login: notifyListeners called, isAuthenticated=${isAuthenticated}');
     return result != null;
   }
 

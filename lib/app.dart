@@ -62,6 +62,7 @@ class _AuthGateState extends ConsumerState<_AuthGate> {
   }
 
   void _onLoginSuccess() {
+    debugPrint('[AUTH_GATE] _onLoginSuccess called');
     setState(() {});
   }
 
@@ -70,6 +71,7 @@ class _AuthGateState extends ConsumerState<_AuthGate> {
     final auth = ref.watch(authServiceProvider);
     final showRegister = ref.watch(showRegisterProvider);
 
+    debugPrint('[AUTH_GATE] build() isAuthenticated=${auth.isAuthenticated} tokenNull=${auth.token == null}');
     if (!auth.isAuthenticated) {
       if (showRegister) {
         return RegisterScreen(
