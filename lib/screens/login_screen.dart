@@ -43,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _passwordCtrl.text,
     );
 
-    if (success && mounted) {
+    if (success) {
       widget.onLoginSuccess?.call();
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

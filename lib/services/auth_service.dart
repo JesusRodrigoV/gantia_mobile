@@ -50,6 +50,7 @@ class AuthService extends ChangeNotifier with ApiServiceMixin {
       },
       unauthorizedMessage: 'Credenciales inválidas',
     );
+    notifyListeners();
     return result != null;
   }
 

@@ -42,6 +42,20 @@ class _AuthGateState extends ConsumerState<_AuthGate> {
   void initState() {
     super.initState();
     final auth = ref.read(authServiceProvider);
+    auth.addListener(_onAuthChanged);
+    if (auth.isAuthenticated) {
+      ref.read(wsClientProvider).connect();
+    }
+  }
+
+  @override
+  void dispose() {
+    ref.read(authServiceProvider).removeListener(_onAuthChanged);
+    super.dispose();
+  }
+
+  void _onAuthChanged() {
+    final auth = ref.read(authServiceProvider);
     if (auth.isAuthenticated) {
       ref.read(wsClientProvider).connect();
     }
@@ -67,9 +81,6 @@ class _AuthGateState extends ConsumerState<_AuthGate> {
 
       return LoginScreen(
         authService: auth,
-        onLoginSuccess: () {
-          ref.read(wsClientProvider).connect();
-        },
         onRegisterTap: () {
           ref.read(showRegisterProvider.notifier).state = true;
         },
