@@ -46,26 +46,18 @@ class GantiaHeader extends ConsumerWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
+                ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  'assets/logos/logo.webp',
                   width: 36,
                   height: 36,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary500,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'G',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 20,
-                      ),
-                    ),
-                  ),
+                  fit: BoxFit.cover,
                 ),
-                const SizedBox(width: Spacing.sm),
-                GantiaScrambleText(
+              ),
+              const SizedBox(width: Spacing.sm),
+              Flexible(
+                child: GantiaScrambleText(
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -73,6 +65,7 @@ class GantiaHeader extends ConsumerWidget {
                     color: context.surface800,
                   ),
                 ),
+              ),
               ],
             ),
 

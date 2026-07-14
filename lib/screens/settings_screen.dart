@@ -259,8 +259,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                       );
                       if (confirm == true) {
-                        await authService.logout();
                         ref.read(wsClientProvider).disconnect();
+                        await authService.logout();
                       }
                     },
                   ),

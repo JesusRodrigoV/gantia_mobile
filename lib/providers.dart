@@ -54,7 +54,7 @@ final themeServiceProvider = ChangeNotifierProvider<ThemeService>((ref) {
 });
 
 final wsClientProvider = Provider<WsClient>((ref) {
-  final auth = ref.watch(authServiceProvider);
+  final auth = ref.read(authServiceProvider);
   final config = ref.read(serverConfigProvider);
   final client = WsClient(auth, wsUrl: config.wsUrl);
   ref.onDispose(() => client.dispose());

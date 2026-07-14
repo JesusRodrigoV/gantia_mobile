@@ -4,9 +4,9 @@ import 'package:flutter/foundation.dart';
 String _padBase64(String input) {
   switch (input.length % 4) {
     case 2:
-      return '${input}==';
+      return '$input==';
     case 3:
-      return '${input}=';
+      return '$input=';
     default:
       return input;
   }

@@ -78,16 +78,12 @@ class AuthService extends ChangeNotifier with ApiServiceMixin {
   }
 
   Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+
     _token = null;
     _user = null;
     _api.setToken(null);
     notifyListeners();
-
-    try {
-      await _api.post('/auth/logout');
-    } catch (_) {}
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token');
   }
 }

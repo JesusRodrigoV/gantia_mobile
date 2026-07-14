@@ -51,8 +51,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             GantiaHeader(
               scrolled: _scrolled,
               onLogout: () async {
-                await ref.read(authServiceProvider).logout();
                 ref.read(wsClientProvider).disconnect();
+                await ref.read(authServiceProvider).logout();
               },
             ),
             Expanded(

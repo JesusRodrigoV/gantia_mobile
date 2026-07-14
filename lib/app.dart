@@ -58,6 +58,8 @@ class _AuthGateState extends ConsumerState<_AuthGate> {
     final auth = ref.read(authServiceProvider);
     if (auth.isAuthenticated) {
       ref.read(wsClientProvider).connect();
+    } else {
+      ref.read(wsClientProvider).disconnect();
     }
   }
 

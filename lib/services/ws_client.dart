@@ -85,7 +85,9 @@ class WsClient {
     _controller.add({'\$type': 'connecting'});
 
     try {
-      _channel = WebSocketChannel.connect(Uri.parse('$_wsUrl/ws/dashboard'));
+      _channel = WebSocketChannel.connect(Uri.parse('$_wsUrl/ws/dashboard?token=$token'));
+
+      _channel!.ready.then((_) => _resetRetryState());
 
       _channel!.stream.listen(
         (data) {
@@ -102,11 +104,6 @@ class WsClient {
               return;
             }
 
-            if (parsed['\$type'] == 'auth_ok') {
-              _connectionTimer?.cancel();
-              _resetRetryState();
-            }
-
             _controller.add(parsed);
           } catch (_) {}
         },
@@ -117,8 +114,10 @@ class WsClient {
         },
         onDone: () {
           final closeCode = _channel?.closeCode;
-          if (closeCode != null && closeCode != 1000) {
-            debugPrint('[WsClient] Closed: code=$closeCode');
+          if (closeCode == 1008) {
+            debugPrint('[WsClient] Token rechazado por el servidor — cerrando sesión');
+            _shouldBeConnected = false;
+            _authService.logout();
           }
           _finishAttempt();
           _clearPingTimer();
@@ -129,11 +128,6 @@ class WsClient {
         },
         cancelOnError: false,
       );
-
-      _channel!.sink.add(jsonEncode({
-        '\$type': 'auth',
-        'token': token,
-      }));
     } catch (_) {
       _finishAttempt();
       _controller.add({'\$type': 'error'});
