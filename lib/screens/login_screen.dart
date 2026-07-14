@@ -118,8 +118,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ref.invalidate(wsClientProvider);
                 if (ctx.mounted) {
                   Navigator.of(ctx).pop();
-                  hostCtrl.dispose();
-                  portCtrl.dispose();
                 }
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
