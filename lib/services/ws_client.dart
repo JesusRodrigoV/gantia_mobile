@@ -8,15 +8,24 @@ enum _ConnectionAttemptState { idle, connecting }
 
 class WsClient {
   final AuthService _authService;
-  final String _wsUrl;
+  String _wsUrl;
 
   WsClient(this._authService, {required String wsUrl}) : _wsUrl = wsUrl;
+
+  void setWsUrl(String url) {
+    if (_wsUrl == url) return;
+    _wsUrl = url;
+    if (_shouldBeConnected) {
+      disconnect();
+      connect();
+    }
+  }
 
   static const int maxRetries = 10;
   static const Duration baseReconnectDelay = Duration(seconds: 1);
   static const Duration maxReconnectDelay = Duration(seconds: 30);
-  static const Duration pingInterval = Duration(seconds: 30);
-  static const Duration pongTimeoutDuration = Duration(seconds: 10);
+  static const Duration pingInterval = Duration(seconds: 25);
+  static const Duration pongTimeoutDuration = Duration(seconds: 20);
   static const Duration connectionTimeout = Duration(seconds: 10);
 
   WebSocketChannel? _channel;
@@ -82,7 +91,7 @@ class WsClient {
           try {
             final parsed = jsonDecode(data as String) as Map<String, dynamic>;
 
-            if (parsed['\$type'] == 'pong') {
+            if (parsed['type'] == 'pong') {
               _clearPongTimer();
               return;
             }
@@ -106,6 +115,10 @@ class WsClient {
           if (_shouldBeConnected) _scheduleReconnect();
         },
         onDone: () {
+          final closeCode = _channel?.closeCode;
+          if (closeCode != null && closeCode != 1000) {
+            print('[WsClient] Closed: code=$closeCode');
+          }
           _finishAttempt();
           _clearPingTimer();
           _controller.add({'\$type': 'disconnected'});
@@ -171,6 +184,7 @@ class WsClient {
     _pingTimer = Timer.periodic(pingInterval, (_) {
       send({'type': 'ping'});
       _pongTimer = Timer(pongTimeoutDuration, () {
+        print('[WsClient] Pong timeout fired — closing channel');
         _clearPingTimer();
         _closeChannel();
       });

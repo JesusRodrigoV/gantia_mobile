@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/auth_service.dart';
+import '../services/server_config_service.dart';
+import '../providers.dart';
 import '../theme/context_extensions.dart';
 import '../theme/shadows.dart';
 import '../theme/spacing.dart';
@@ -54,6 +57,91 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  void _showServerConfigDialog(BuildContext context, WidgetRef ref) {
+    final config = ref.read(serverConfigProvider);
+    final hostCtrl = TextEditingController(text: config.host);
+    final portCtrl = TextEditingController(text: config.port.toString());
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('Configuración Servidor'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: hostCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Host',
+                    hintText: '192.168.1.100',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.url,
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Host requerido';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: portCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Puerto',
+                    hintText: '8000',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'Puerto requerido';
+                    final n = int.tryParse(v);
+                    if (n == null || n < 1 || n > 65535) return 'Puerto inválido';
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+                final host = hostCtrl.text.trim();
+                final port = int.parse(portCtrl.text.trim());
+                await ref.read(serverConfigProvider).setHostPort(host, port);
+                ref.read(apiServiceProvider).setBaseUrl('http://$host:$port');
+                if (ctx.mounted) {
+                  Navigator.of(ctx).pop();
+                  hostCtrl.dispose();
+                  portCtrl.dispose();
+                }
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Servidor: $host:$port'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
+              child: const Text('Guardar'),
+            ),
+          ],
+        );
+      },
+    ).whenComplete(() {
+      hostCtrl.dispose();
+      portCtrl.dispose();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,10 +163,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Image.asset(
-                      'assets/logos/logo.webp',
-                      width: 64,
-                      height: 64,
+                    Consumer(
+                      builder: (context, ref, _) {
+                        return GestureDetector(
+                          onLongPress: () => _showServerConfigDialog(context, ref),
+                          child: Image.asset(
+                            'assets/logos/logo.webp',
+                            width: 64,
+                            height: 64,
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(height: Spacing.lg),
                     GantiaScrambleText(

@@ -9,13 +9,15 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load();
 
-  final apiService = ApiService(baseUrl: AppConfig.apiUrl);
+  final serverConfig = await ServerConfigService.load();
+  final apiService = ApiService(baseUrl: serverConfig.apiUrl);
   final authService = await AuthService.init(apiService);
   final themeService = await ThemeService.init();
 
   runApp(
     ProviderScope(
       overrides: [
+        serverConfigProvider.overrideWith((_) => serverConfig),
         apiServiceProvider.overrideWith((_) => apiService),
         authServiceProvider.overrideWith((_) => authService),
         themeServiceProvider.overrideWith((_) => themeService),

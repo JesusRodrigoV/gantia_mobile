@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'services/api_service.dart';
 import 'services/auth_service.dart';
 import 'services/ws_client.dart';
+import 'services/server_config_service.dart';
 import 'services/glove_state.dart';
 import 'services/action_log.dart';
 import 'services/bt_service.dart';
@@ -34,6 +35,10 @@ export 'services/history_service.dart';
 export 'services/target_service.dart';
 export 'services/recording_service.dart';
 
+final serverConfigProvider = ChangeNotifierProvider<ServerConfigService>((ref) {
+  throw UnimplementedError('Must be overridden in main.dart');
+});
+
 final apiServiceProvider = Provider<ApiService>((ref) {
   return ApiService(baseUrl: AppConfig.apiUrl);
 });
@@ -49,7 +54,8 @@ final themeServiceProvider = ChangeNotifierProvider<ThemeService>((ref) {
 
 final wsClientProvider = Provider<WsClient>((ref) {
   final auth = ref.watch(authServiceProvider);
-  final client = WsClient(auth, wsUrl: AppConfig.wsUrl);
+  final config = ref.watch(serverConfigProvider);
+  final client = WsClient(auth, wsUrl: config.wsUrl);
   ref.onDispose(() => client.dispose());
   return client;
 });
