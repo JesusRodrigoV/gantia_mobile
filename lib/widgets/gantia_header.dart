@@ -43,30 +43,25 @@ class GantiaHeader extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.sm),
         child: Row(
           children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.asset(
-                  'assets/logos/logo.webp',
-                  width: 36,
-                  height: 36,
-                  fit: BoxFit.cover,
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(
+                'assets/logos/logo.webp',
+                width: 36,
+                height: 36,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(width: Spacing.sm),
+            Flexible(
+              child: GantiaScrambleText(
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1,
+                  color: context.surface800,
                 ),
               ),
-              const SizedBox(width: Spacing.sm),
-              Flexible(
-                child: GantiaScrambleText(
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1,
-                    color: context.surface800,
-                  ),
-                ),
-              ),
-              ],
             ),
 
             const Spacer(),
