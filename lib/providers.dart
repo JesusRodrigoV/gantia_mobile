@@ -21,6 +21,7 @@ import 'config.dart';
 export 'services/api_service.dart';
 export 'services/auth_service.dart';
 export 'services/ws_client.dart';
+export 'services/server_config_service.dart';
 export 'services/glove_state.dart';
 export 'services/action_log.dart';
 export 'services/bt_service.dart';

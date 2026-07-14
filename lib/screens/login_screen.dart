@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/auth_service.dart';
-import '../services/server_config_service.dart';
 import '../providers.dart';
 import '../theme/context_extensions.dart';
 import '../theme/shadows.dart';
@@ -63,7 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final portCtrl = TextEditingController(text: config.port.toString());
     final formKey = GlobalKey<FormState>();
 
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (ctx) {
         return AlertDialog(

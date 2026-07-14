@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'auth_service.dart';
 
@@ -117,7 +118,7 @@ class WsClient {
         onDone: () {
           final closeCode = _channel?.closeCode;
           if (closeCode != null && closeCode != 1000) {
-            print('[WsClient] Closed: code=$closeCode');
+            debugPrint('[WsClient] Closed: code=$closeCode');
           }
           _finishAttempt();
           _clearPingTimer();
@@ -184,7 +185,7 @@ class WsClient {
     _pingTimer = Timer.periodic(pingInterval, (_) {
       send({'type': 'ping'});
       _pongTimer = Timer(pongTimeoutDuration, () {
-        print('[WsClient] Pong timeout fired — closing channel');
+        debugPrint('[WsClient] Pong timeout fired — closing channel');
         _clearPingTimer();
         _closeChannel();
       });

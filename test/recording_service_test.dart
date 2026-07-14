@@ -31,6 +31,9 @@ class FakeWsClient implements WsClient {
   void send(Map<String, dynamic> data) {}
 
   @override
+  void setWsUrl(String url) {}
+
+  @override
   bool get isConnected => true;
 }
 
