@@ -36,7 +36,7 @@ export 'services/history_service.dart';
 export 'services/target_service.dart';
 export 'services/recording_service.dart';
 
-final serverConfigProvider = ChangeNotifierProvider<ServerConfigService>((ref) {
+final serverConfigProvider = Provider<ServerConfigService>((ref) {
   throw UnimplementedError('Must be overridden in main.dart');
 });
 
@@ -55,7 +55,7 @@ final themeServiceProvider = ChangeNotifierProvider<ThemeService>((ref) {
 
 final wsClientProvider = Provider<WsClient>((ref) {
   final auth = ref.watch(authServiceProvider);
-  final config = ref.watch(serverConfigProvider);
+  final config = ref.read(serverConfigProvider);
   final client = WsClient(auth, wsUrl: config.wsUrl);
   ref.onDispose(() => client.dispose());
   return client;

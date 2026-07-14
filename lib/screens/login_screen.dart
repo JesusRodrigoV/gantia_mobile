@@ -115,6 +115,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 final port = int.parse(portCtrl.text.trim());
                 await ref.read(serverConfigProvider).setHostPort(host, port);
                 ref.read(apiServiceProvider).setBaseUrl('http://$host:$port');
+                ref.invalidate(wsClientProvider);
                 if (ctx.mounted) {
                   Navigator.of(ctx).pop();
                   hostCtrl.dispose();

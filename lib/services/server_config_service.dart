@@ -1,8 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config.dart';
 
-class ServerConfigService extends ChangeNotifier {
+class ServerConfigService {
   static const _hostKey = 'backend_host';
   static const _portKey = 'backend_port';
 
@@ -17,13 +16,11 @@ class ServerConfigService extends ChangeNotifier {
   String get wsUrl => 'ws://$_host:$_port';
 
   Future<void> setHostPort(String host, int port) async {
-    if (_host == host && _port == port) return;
     _host = host;
     _port = port;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_hostKey, host);
     await prefs.setInt(_portKey, port);
-    notifyListeners();
   }
 
   static Future<ServerConfigService> load() async {
