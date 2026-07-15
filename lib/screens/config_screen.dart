@@ -144,7 +144,7 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
         children: [
           const Icon(Icons.tune, color: AppColors.primary500, size: 28),
           const SizedBox(width: Spacing.xs),
-          const Text(
+          Text(
             'Configuración de Gestos',
             style: TextStyle(
               fontSize: 24,
@@ -155,7 +155,7 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
         ],
       ),
     );
-
+  }
 
   // ====================================================================
   // 1 — GESTURE CONFIG LIST
@@ -1153,7 +1153,7 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
 
             return AlertDialog(
               backgroundColor: context.surface0,
-              title: const Text(
+              title: Text(
                 'Calibración',
                 style: TextStyle(
                   fontSize: 18,
@@ -1450,7 +1450,7 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
 
             return AlertDialog(
               backgroundColor: context.surface0,
-              title: const Text(
+              title: Text(
                 'Calibración Puntero Absoluto',
                 style: TextStyle(
                   fontSize: 18,

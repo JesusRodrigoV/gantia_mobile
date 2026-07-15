@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/action_message.dart';
 import '../theme/app_colors.dart';
+import '../theme/context_extensions.dart';
 
 class ActionLog extends StatelessWidget {
   final List<ActionEvent> actions;

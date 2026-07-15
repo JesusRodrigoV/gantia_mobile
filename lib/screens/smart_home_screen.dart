@@ -134,7 +134,7 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
                 children: [
                   const Icon(Icons.lightbulb, color: AppColors.primary500, size: 28),
                   const SizedBox(width: Spacing.xs),
-                  const Text(
+                  Text(
                     'Hogar Inteligente',
                     style: TextStyle(
                       fontSize: 24,
@@ -239,8 +239,8 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
 
                   // ── Device list ──
                   if (_devices.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: Spacing.xxxl),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: Spacing.xxxl),
                       child: Center(
                         child: Text(
                           'Sin dispositivos configurados',

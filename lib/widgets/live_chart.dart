@@ -31,7 +31,7 @@ class LiveChart extends StatelessWidget {
         SizedBox(
           height: 140,
           child: data.length < 2
-              ? const Center(
+              ? Center(
                   child: Text(
                     'Esperando datos...',
                     style: TextStyle(
