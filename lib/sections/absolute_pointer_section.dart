@@ -32,14 +32,12 @@ class _AbsolutePointerSectionState
   final _absWidthCtrl = TextEditingController(text: '1920');
   final _absHeightCtrl = TextEditingController(text: '1080');
 
-    @override
+  @override
   void dispose() {
     _absWidthCtrl.dispose();
     _absHeightCtrl.dispose();
     super.dispose();
   }
-  final _absWidthCtrl = TextEditingController(text: '1920');
-  final _absHeightCtrl = TextEditingController(text: '1080');
 
   @override
   void initState() {

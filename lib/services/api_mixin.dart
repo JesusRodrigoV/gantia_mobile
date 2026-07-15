@@ -32,7 +32,7 @@ mixin ApiServiceMixin on ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return null;
-    } catch (e, st) {
+    } catch (e, _) {
       debugPrint('[API] $e');
       _error = e.toString();
       _isLoading = false;
