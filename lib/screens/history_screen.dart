@@ -32,7 +32,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen>
   String? _readingsError;
   DateTime? _readingsSince;
   DateTime? _readingsUntil;
-  int _readingsLimit = 200;
+  final int _readingsLimit = 200;
   ReadingsChartType _selectedChart = ReadingsChartType.accelerometer;
 
   @override
