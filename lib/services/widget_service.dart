@@ -23,6 +23,10 @@ class WidgetService {
   void listenTo(GloveState gloveState, ActionLog actionLog) {
     if (_disposed) return;
     try {
+      _gestureSub?.cancel();
+      _connectionSub?.cancel();
+      _actionSub?.cancel();
+
       _gestureSub = gloveState.gestureDetectedStream.listen(_onEvent, onError: (_) {});
       _connectionSub = gloveState.connectionStatusStream.listen(_onEvent, onError: (_) {});
       _actionSub = actionLog.actionEventStream.listen(_onEvent, onError: (_) {});

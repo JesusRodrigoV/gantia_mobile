@@ -64,7 +64,6 @@ class _AuthGateState extends ConsumerState<_AuthGate> {
   }
 
   void _onLoginSuccess() {
-    debugPrint('[AUTH_GATE] _onLoginSuccess called');
     setState(() {});
   }
 
@@ -73,7 +72,7 @@ class _AuthGateState extends ConsumerState<_AuthGate> {
     final auth = ref.watch(authServiceProvider);
     final showRegister = ref.watch(showRegisterProvider);
 
-    debugPrint('[AUTH_GATE] build() isAuthenticated=${auth.isAuthenticated} tokenNull=${auth.token == null}');
+
     if (!auth.isAuthenticated) {
       if (showRegister) {
         return RegisterScreen(
@@ -144,21 +143,6 @@ class _MainShellState extends ConsumerState<_MainShell> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(gloveStateProvider, (_, _) {
-      if (_shellDisposed) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_shellDisposed) return;
-        _initServices();
-      });
-    });
-    ref.listen(actionLogProvider, (_, _) {
-      if (_shellDisposed) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_shellDisposed) return;
-        _initServices();
-      });
-    });
-
     final currentIndex = ref.watch(bottomNavIndexProvider);
     final pages = <Widget>[
       const HomeScreen(),

@@ -36,33 +36,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
-    if (!_formKey.currentState!.validate()) {
-      debugPrint('[LOGIN] _submit: form validation FAILED');
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
-    debugPrint('[LOGIN] _submit: calling login()');
     final success = await widget.authService.login(
       _emailCtrl.text.trim(),
       _passwordCtrl.text,
     );
 
-    debugPrint('[LOGIN] _submit: login() returned success=$success');
-    debugPrint('[LOGIN] _submit: onLoginSuccess isNull=${widget.onLoginSuccess == null}');
-
     if (success) {
-      debugPrint('[LOGIN] _submit: calling onLoginSuccess');
       widget.onLoginSuccess?.call();
     } else if (mounted) {
-      debugPrint('[LOGIN] _submit: showing snackbar, error="${widget.authService.error}"');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(widget.authService.error ?? 'Error al iniciar sesión'),
           behavior: SnackBarBehavior.floating,
         ),
       );
-    } else {
-      debugPrint('[LOGIN] _submit: success=false AND mounted=false — no feedback shown');
     }
   }
 
@@ -146,12 +135,8 @@ class _LoginScreenState extends State<LoginScreen> {
       },
     );
 
-    try {
-      hostCtrl.dispose();
-    } catch (_) {}
-    try {
-      portCtrl.dispose();
-    } catch (_) {}
+    hostCtrl.dispose();
+    portCtrl.dispose();
   }
 
   @override
@@ -179,9 +164,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       builder: (context, ref, _) {
                         return GestureDetector(
                            onLongPress: () {
-                              _showServerConfigDialog(context, ref).catchError((Object e) {
-                               debugPrint('[LOGIN] server config error: $e');
-                             });
+                              _showServerConfigDialog(context, ref);
                            },
                           child: Image.asset(
                             'assets/logos/logo.webp',

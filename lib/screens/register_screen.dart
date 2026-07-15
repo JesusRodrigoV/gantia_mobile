@@ -51,12 +51,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
 
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Registro exitoso — ahora iniciá sesión'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
       widget.onRegisterSuccess?.call();
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

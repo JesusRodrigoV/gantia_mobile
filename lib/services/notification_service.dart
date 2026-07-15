@@ -93,6 +93,10 @@ class NotificationService {
   }) {
     if (_disposed) return;
     try {
+      _gestureSub?.cancel();
+      _connectionSub?.cancel();
+      _actionSub?.cancel();
+
       if (notifyGestures) {
         _gestureSub = gloveState.gestureDetectedStream.listen(_onGestureDetected);
       }
