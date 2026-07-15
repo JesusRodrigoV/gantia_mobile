@@ -18,19 +18,23 @@ class SmartHomeScreen extends ConsumerStatefulWidget {
 
 class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
   final List<_LightDevice> _devices = [];
+  final List<_Scene> _scenes = [];
   final _urlCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
+  final _sceneNameCtrl = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadDevices();
+    _loadScenes();
   }
 
   @override
   void dispose() {
     _urlCtrl.dispose();
     _nameCtrl.dispose();
+    _sceneNameCtrl.dispose();
     super.dispose();
   }
 
@@ -50,6 +54,22 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
     await prefs.setString('smart_home_devices', raw);
   }
 
+  Future<void> _loadScenes() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('smart_home_scenes');
+    if (raw == null) return;
+    final list = jsonDecode(raw) as List<dynamic>;
+    setState(() {
+      _scenes.addAll(list.map((e) => _Scene.fromJson(e as Map<String, dynamic>)));
+    });
+  }
+
+  Future<void> _saveScenes() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = jsonEncode(_scenes.map((s) => s.toJson()).toList());
+    await prefs.setString('smart_home_scenes', raw);
+  }
+
   void _addDevice() {
     if (_urlCtrl.text.trim().isEmpty) return;
     setState(() {
@@ -61,6 +81,49 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
       _nameCtrl.clear();
     });
     _saveDevices();
+  }
+
+  void _addScene() {
+    final name = _sceneNameCtrl.text.trim();
+    if (name.isEmpty) return;
+
+    final snapshot = _devices
+        .map((d) => _SceneDeviceState(name: d.name, url: d.url, isOn: d.isOn, brightness: d.brightness))
+        .toList();
+
+    setState(() {
+      _scenes.add(_Scene(name: name, devices: snapshot));
+      _sceneNameCtrl.clear();
+    });
+    _saveScenes();
+  }
+
+  Future<void> _applyScene(_Scene scene) async {
+    final smartHomeService = ref.read(smartHomeServiceProvider);
+    for (final d in scene.devices) {
+      if (d.isOn) {
+        smartHomeService.lightOn(d.url);
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (d.brightness < 100) {
+          smartHomeService.setBrightness(d.url, d.brightness.round());
+          await Future.delayed(const Duration(milliseconds: 50));
+        }
+      } else {
+        smartHomeService.lightOff(d.url);
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Escena "${scene.name}" aplicada')),
+      );
+    }
+  }
+
+  void _deleteScene(int index) {
+    setState(() => _scenes.removeAt(index));
+    _saveScenes();
   }
 
   @override
@@ -94,6 +157,53 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
                 children: [
+                  // ── Scene section ──
+                  if (_scenes.isNotEmpty) ...[
+                    SettingsCard(
+                      icon: Icons.view_quilt,
+                      title: 'ESCENAS',
+                      child: Column(
+                        children: [
+                          ..._scenes.asMap().entries.map(
+                                (entry) => _SceneCard(
+                                  scene: entry.value,
+                                  onApply: () => _applyScene(entry.value),
+                                  onDelete: () => _deleteScene(entry.key),
+                                ),
+                              ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  // Add scene form
+                  SettingsCard(
+                    icon: Icons.add_circle_outline,
+                    title: 'Agregar Escena',
+                    description: 'Guarda el estado actual de todas las luces como una escena',
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _sceneNameCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'Nombre de la escena',
+                              hintText: 'Ej: Apagar todo',
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: Spacing.sm),
+                        GantiaButton(
+                          label: 'Guardar',
+                          icon: Icons.save,
+                          variant: GantiaButtonVariant.primary,
+                          onPressed: _scenes.length < 10 ? _addScene : null,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // ── Add device form ──
                   SettingsCard(
                     icon: Icons.add,
                     title: 'Agregar Dispositivo',
@@ -127,6 +237,7 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
                     ),
                   ),
 
+                  // ── Device list ──
                   if (_devices.isEmpty)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: Spacing.xxxl),
@@ -185,6 +296,8 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
   }
 }
 
+// ── Models ──
+
 class _LightDevice {
   final String name;
   final String url;
@@ -211,6 +324,120 @@ class _LightDevice {
         'isOn': isOn,
         'brightness': brightness,
       };
+}
+
+class _SceneDeviceState {
+  final String name;
+  final String url;
+  final bool isOn;
+  final double brightness;
+
+  const _SceneDeviceState({
+    required this.name,
+    required this.url,
+    required this.isOn,
+    required this.brightness,
+  });
+
+  factory _SceneDeviceState.fromJson(Map<String, dynamic> json) => _SceneDeviceState(
+        name: json['name'] as String? ?? '',
+        url: json['url'] as String? ?? '',
+        isOn: json['isOn'] as bool? ?? false,
+        brightness: (json['brightness'] as num?)?.toDouble() ?? 0,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'url': url,
+        'isOn': isOn,
+        'brightness': brightness,
+      };
+}
+
+class _Scene {
+  final String name;
+  final List<_SceneDeviceState> devices;
+
+  const _Scene({required this.name, required this.devices});
+
+  factory _Scene.fromJson(Map<String, dynamic> json) => _Scene(
+        name: json['name'] as String? ?? '',
+        devices: (json['devices'] as List<dynamic>?)
+                ?.map((e) => _SceneDeviceState.fromJson(e as Map<String, dynamic>))
+                .toList() ??
+            [],
+      );
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'devices': devices.map((d) => d.toJson()).toList(),
+      };
+}
+
+// ── Widgets ──
+
+class _SceneCard extends StatelessWidget {
+  final _Scene scene;
+  final VoidCallback onApply;
+  final VoidCallback onDelete;
+
+  const _SceneCard({
+    required this.scene,
+    required this.onApply,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(Spacing.sm),
+      decoration: BoxDecoration(
+        color: context.surface100,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.view_quilt, size: 20, color: AppColors.primary500),
+          const SizedBox(width: Spacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  scene.name,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.surfaceLight700,
+                  ),
+                ),
+                Text(
+                  '${scene.devices.where((d) => d.isOn).length}/${scene.devices.length} encendidas',
+                  style: const TextStyle(fontSize: 11, color: AppColors.surfaceLight500),
+                ),
+              ],
+            ),
+          ),
+          GantiaButton(
+            label: 'Aplicar',
+            icon: Icons.play_arrow,
+            variant: GantiaButtonVariant.primary,
+            onPressed: onApply,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          ),
+          const SizedBox(width: Spacing.xxs),
+          GantiaButton(
+            label: '',
+            icon: Icons.delete,
+            variant: GantiaButtonVariant.danger,
+            onPressed: onDelete,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _LightDeviceCard extends StatefulWidget {

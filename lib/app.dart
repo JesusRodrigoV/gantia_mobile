@@ -109,6 +109,24 @@ class _MainShell extends ConsumerStatefulWidget {
 
 class _MainShellState extends ConsumerState<_MainShell> {
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initServices();
+    });
+  }
+
+  void _initServices() {
+    final gloveState = ref.read(gloveStateProvider);
+    final actionLog = ref.read(actionLogProvider);
+
+    final notificationService = ref.read(notificationServiceProvider);
+    notificationService.listenTo(gloveState, actionLog);
+
+    final widgetService = ref.read(widgetServiceProvider);
+    widgetService.listenTo(gloveState, actionLog);
+  }
+  @override
   Widget build(BuildContext context) {
     final currentIndex = ref.watch(bottomNavIndexProvider);
     final pages = <Widget>[

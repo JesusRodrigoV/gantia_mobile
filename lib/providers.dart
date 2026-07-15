@@ -16,6 +16,8 @@ import 'services/learning_service.dart';
 import 'services/history_service.dart';
 import 'services/target_service.dart';
 import 'services/recording_service.dart';
+import 'services/notification_service.dart';
+import 'services/widget_service.dart';
 import 'config.dart';
 
 export 'services/api_service.dart';
@@ -35,6 +37,8 @@ export 'services/learning_service.dart';
 export 'services/history_service.dart';
 export 'services/target_service.dart';
 export 'services/recording_service.dart';
+export 'services/notification_service.dart';
+export 'services/widget_service.dart';
 
 final serverConfigProvider = Provider<ServerConfigService>((ref) {
   throw UnimplementedError('Must be overridden in main.dart');
@@ -117,6 +121,16 @@ final targetServiceProvider = ChangeNotifierProvider<TargetService>((ref) {
 final recordingServiceProvider = ChangeNotifierProvider<RecordingService>((ref) {
   final client = ref.watch(wsClientProvider);
   return RecordingService(client);
+});
+
+// ── Notifications & Widget ──
+
+final notificationServiceProvider = Provider<NotificationService>((ref) {
+  throw UnimplementedError('Must be overridden in main.dart');
+});
+
+final widgetServiceProvider = Provider<WidgetService>((ref) {
+  throw UnimplementedError('Must be overridden in main.dart');
 });
 
 // ── Navigation ──

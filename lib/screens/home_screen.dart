@@ -9,6 +9,7 @@ import '../widgets/gantia_header.dart';
 import '../widgets/gesture_flash.dart';
 import '../widgets/action_log.dart';
 import '../widgets/status_dot.dart';
+import '../widgets/live_chart.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -70,6 +71,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: _buildConnectionStatus(gloveState),
                     ),
                     const SizedBox(height: Spacing.md),
+
+                    if (gloveState.dataFlowing && gloveState.telemetryBuffer.length >= 2) ...[
+                      NeuromorphicCard(
+                        showAccentLine: false,
+                        padding: const EdgeInsets.all(Spacing.md),
+                        child: LiveChart(
+                          type: LiveChartType.accelerometer,
+                          data: gloveState.telemetryBuffer,
+                        ),
+                      ),
+                      const SizedBox(height: Spacing.md),
+                      NeuromorphicCard(
+                        showAccentLine: false,
+                        padding: const EdgeInsets.all(Spacing.md),
+                        child: LiveChart(
+                          type: LiveChartType.gyroscope,
+                          data: gloveState.telemetryBuffer,
+                        ),
+                      ),
+                      const SizedBox(height: Spacing.md),
+                      NeuromorphicCard(
+                        showAccentLine: false,
+                        padding: const EdgeInsets.all(Spacing.md),
+                        child: LiveChart(
+                          type: LiveChartType.flexion,
+                          data: gloveState.telemetryBuffer,
+                        ),
+                      ),
+                      const SizedBox(height: Spacing.md),
+                    ],
 
                     NeuromorphicCard(
                       padding: const EdgeInsets.all(Spacing.md),

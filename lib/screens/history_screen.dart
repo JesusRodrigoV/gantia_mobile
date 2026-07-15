@@ -7,6 +7,7 @@ import '../theme/spacing.dart';
 import '../models/history_model.dart';
 import '../models/action_message.dart';
 import '../widgets/gantia_button.dart';
+import '../widgets/readings_chart.dart';
 
 class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({super.key});
@@ -15,20 +16,46 @@ class HistoryScreen extends ConsumerStatefulWidget {
   ConsumerState<HistoryScreen> createState() => _HistoryScreenState();
 }
 
-class _HistoryScreenState extends ConsumerState<HistoryScreen> {
-  static const int _pageSize = 50;
+class _HistoryScreenState extends ConsumerState<HistoryScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabCtrl;
 
+  // ── Actions state ──
+  static const int _pageSize = 50;
   final List<HistoryActionEntry> _allEntries = [];
   int _offset = 0;
   bool _allLoaded = false;
 
+  // ── Readings state ──
+  List<HistoryReading> _readings = [];
+  bool _readingsLoading = false;
+  String? _readingsError;
+  DateTime? _readingsSince;
+  DateTime? _readingsUntil;
+  int _readingsLimit = 200;
+  ReadingsChartType _selectedChart = ReadingsChartType.accelerometer;
+
   @override
   void initState() {
     super.initState();
-    Future.microtask(_fetch);
+    _tabCtrl = TabController(length: 2, vsync: this);
+    _tabCtrl.addListener(() {
+      if (_tabCtrl.index == 1 && _readings.isEmpty && !_readingsLoading) {
+        _fetchReadings();
+      }
+    });
+    Future.microtask(_fetchActions);
   }
 
-  Future<void> _fetch() async {
+  @override
+  void dispose() {
+    _tabCtrl.dispose();
+    super.dispose();
+  }
+
+  // ── Actions ──
+
+  Future<void> _fetchActions() async {
     try {
       final result = await ref.read(historyServiceProvider).getActionsHistory(
         limit: _pageSize,
@@ -49,7 +76,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     }
   }
 
-  Future<void> _refresh() async {
+  Future<void> _refreshActions() async {
     try {
       final result = await ref.read(historyServiceProvider).getActionsHistory(
         limit: _pageSize,
@@ -73,56 +100,52 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   }
 
   void _loadMore() {
-    if (!_allLoaded) _fetch();
+    if (!_allLoaded) _fetchActions();
   }
 
-  String _formatTimestamp(int seconds) {
-    final date = DateTime.fromMillisecondsSinceEpoch(seconds * 1000);
-    final now = DateTime.now();
-    final diff = now.difference(date);
+  // ── Readings ──
 
-    if (diff.inMinutes < 1) return 'Ahora';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m atrás';
-    if (diff.inHours < 24) return '${diff.inHours}h atrás';
-    if (diff.inDays < 7) return '${diff.inDays}d atrás';
-    return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
-  }
+  Future<void> _fetchReadings() async {
+    setState(() {
+      _readingsLoading = true;
+      _readingsError = null;
+    });
 
-  Color _statusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'sent':
-      case 'success':
-        return AppColors.primary500;
-      case 'error':
-      case 'failed':
-        return AppColors.red500;
-      case 'pending':
-        return AppColors.amber500;
-      default:
-        return context.surface500;
+    try {
+      final result = await ref.read(historyServiceProvider).getReadingsHistory(
+        since: _readingsSince,
+        until: _readingsUntil,
+        limit: _readingsLimit,
+      );
+      if (!mounted) return;
+      setState(() {
+        _readings = result;
+        _readingsLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _readingsLoading = false;
+        _readingsError = e.toString();
+      });
     }
   }
 
-  IconData _targetIcon(String target) {
-    switch (target.toLowerCase()) {
-      case 'pico_w':
-        return Icons.memory;
-      case 'mobile':
-        return Icons.phone_android;
-      case 'agent':
-        return Icons.smart_toy;
-      default:
-        return Icons.devices;
-    }
+  void _setLast6h() {
+    setState(() {
+      _readingsSince = DateTime.now().subtract(const Duration(hours: 6));
+      _readingsUntil = null;
+    });
+    _fetchReadings();
   }
+
+  // ── Build ──
 
   @override
   Widget build(BuildContext context) {
     final historyService = ref.watch(historyServiceProvider);
     final isLoading = historyService.isLoading;
     final error = historyService.error;
-    final isEmpty = _allEntries.isEmpty && !isLoading && error == null;
-    final hasMore = !_allLoaded && !isLoading;
 
     return Scaffold(
       backgroundColor: context.surface50,
@@ -131,9 +154,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(
-                Spacing.md, Spacing.md, Spacing.md, Spacing.xs,
-              ),
+              padding: const EdgeInsets.fromLTRB(Spacing.md, Spacing.md, Spacing.md, 0),
               child: Row(
                 children: [
                   const Icon(Icons.history, color: AppColors.primary500, size: 28),
@@ -149,8 +170,24 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 ],
               ),
             ),
+            TabBar(
+              controller: _tabCtrl,
+              indicatorColor: AppColors.primary500,
+              labelColor: AppColors.primary500,
+              unselectedLabelColor: context.surface500,
+              tabs: const [
+                Tab(text: 'ACCIONES'),
+                Tab(text: 'LECTURAS'),
+              ],
+            ),
             Expanded(
-              child: _buildContent(_allEntries, isLoading, error, isEmpty, hasMore),
+              child: TabBarView(
+                controller: _tabCtrl,
+                children: [
+                  _buildActionsTab(isLoading, error),
+                  _buildReadingsTab(),
+                ],
+              ),
             ),
           ],
         ),
@@ -158,31 +195,29 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     );
   }
 
-  Widget _buildContent(
-    List<HistoryActionEntry> entries,
-    bool isLoading,
-    String? error,
-    bool isEmpty,
-    bool hasMore,
-  ) {
-    if (isLoading && entries.isEmpty) {
-      return _buildLoadingSkeleton();
+  Widget _buildActionsTab(bool isLoading, String? error) {
+    final isEmpty = _allEntries.isEmpty && !isLoading && error == null;
+    final hasMore = !_allLoaded && !isLoading;
+
+    if (isLoading && _allEntries.isEmpty) {
+      return _buildActionsLoading();
     }
 
-    if (error != null && entries.isEmpty) {
-      return _buildErrorState(error);
+    if (error != null && _allEntries.isEmpty) {
+      return _buildErrorState(error, _refreshActions);
     }
 
     if (isEmpty) {
-      return _buildEmptyState();
+      return _buildEmptyActions();
     }
 
     return RefreshIndicator(
-      onRefresh: _refresh,
+      onRefresh: _refreshActions,
       child: ListView(
         padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
         children: [
-          ...entries.map((entry) => _buildEntryCard(entry)),
+          const SizedBox(height: Spacing.xs),
+          ..._allEntries.map((entry) => _buildEntryCard(entry)),
           if (hasMore)
             Padding(
               padding: const EdgeInsets.only(top: Spacing.sm, bottom: Spacing.xxl),
@@ -201,7 +236,120 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     );
   }
 
-  Widget _buildLoadingSkeleton() {
+  Widget _buildReadingsTab() {
+    if (_readingsLoading && _readings.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_readingsError != null && _readings.isEmpty) {
+      return _buildErrorState(_readingsError!, _fetchReadings);
+    }
+
+    return RefreshIndicator(
+      onRefresh: _fetchReadings,
+      child: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
+        children: [
+          const SizedBox(height: Spacing.xs),
+
+          // Chart type selector
+          Row(
+            children: [
+              _chartTypeChip(ReadingsChartType.accelerometer, 'Acelerómetro'),
+              const SizedBox(width: Spacing.xs),
+              _chartTypeChip(ReadingsChartType.gyroscope, 'Giroscopio'),
+              const SizedBox(width: Spacing.xs),
+              _chartTypeChip(ReadingsChartType.flexion, 'Flexión'),
+            ],
+          ),
+          const SizedBox(height: Spacing.sm),
+
+          // Quick filter
+          Row(
+            children: [
+              GantiaButton(
+                label: 'Últimas 6h',
+                icon: Icons.schedule,
+                onPressed: _setLast6h,
+              ),
+              const SizedBox(width: Spacing.xs),
+              GantiaButton(
+                label: 'Actualizar',
+                icon: Icons.refresh,
+                onPressed: _fetchReadings,
+              ),
+            ],
+          ),
+          const SizedBox(height: Spacing.sm),
+
+          // Chart
+          if (_readings.isEmpty)
+            _buildEmptyReadings()
+          else ...[
+            ReadingsChart(data: _readings, type: _selectedChart),
+            const SizedBox(height: Spacing.md),
+
+            // Readings list
+            ..._readings.take(50).map((r) => _buildReadingRow(r)),
+            const SizedBox(height: Spacing.xxl),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _chartTypeChip(ReadingsChartType type, String label) {
+    final selected = _selectedChart == type;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedChart = type),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primary500 : context.surface100,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: selected ? Colors.white : context.surface500,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReadingRow(HistoryReading r) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.symmetric(horizontal: Spacing.sm, vertical: Spacing.xs),
+      decoration: BoxDecoration(
+        color: context.surface0,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Text(
+            '${r.timestamp.hour}:${r.timestamp.minute.toString().padLeft(2, '0')}:${r.timestamp.second.toString().padLeft(2, '0')}',
+            style: TextStyle(fontSize: 11, color: context.surface500),
+          ),
+          const SizedBox(width: Spacing.sm),
+          Expanded(
+            child: Text(
+              'A:${r.accelX.toStringAsFixed(1)},${r.accelY.toStringAsFixed(1)},${r.accelZ.toStringAsFixed(1)}  '
+              'G:${r.gyroX.toStringAsFixed(0)},${r.gyroY.toStringAsFixed(0)},${r.gyroZ.toStringAsFixed(0)}  '
+              'F:${r.flexIndex.toStringAsFixed(0)}/${r.flexMiddle.toStringAsFixed(0)}',
+              style: TextStyle(fontSize: 10, color: context.surface500, fontFamily: 'monospace'),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionsLoading() {
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
       children: List.generate(
@@ -251,7 +399,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     );
   }
 
-  Widget _buildErrorState(String errorMessage) {
+  Widget _buildErrorState(String errorMessage, VoidCallback onRetry) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(Spacing.xl),
@@ -272,12 +420,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             GantiaButton(
               label: 'Reintentar',
               icon: Icons.refresh,
-              onPressed: () {
-                _offset = 0;
-                _allEntries.clear();
-                _allLoaded = false;
-                _fetch();
-              },
+              onPressed: onRetry,
             ),
           ],
         ),
@@ -285,7 +428,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyActions() {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(Spacing.xl),
@@ -313,6 +456,35 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyReadings() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: Spacing.xxxl),
+      child: Column(
+        children: [
+          const Icon(Icons.show_chart, size: 48, color: AppColors.surfaceLight400),
+          const SizedBox(height: Spacing.md),
+          const Text(
+            'Sin lecturas',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.surfaceLight600,
+            ),
+          ),
+          const SizedBox(height: Spacing.xs),
+          const Text(
+            'Seleccioná "Últimas 6h" para cargar datos.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              color: AppColors.surfaceLight400,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -402,5 +574,45 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
         ),
       ),
     );
+  }
+
+  String _formatTimestamp(int seconds) {
+    final date = DateTime.fromMillisecondsSinceEpoch(seconds * 1000);
+    final now = DateTime.now();
+    final diff = now.difference(date);
+
+    if (diff.inMinutes < 1) return 'Ahora';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m atrás';
+    if (diff.inHours < 24) return '${diff.inHours}h atrás';
+    if (diff.inDays < 7) return '${diff.inDays}d atrás';
+    return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+  }
+
+  Color _statusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'sent':
+      case 'success':
+        return AppColors.primary500;
+      case 'error':
+      case 'failed':
+        return AppColors.red500;
+      case 'pending':
+        return AppColors.amber500;
+      default:
+        return context.surface500;
+    }
+  }
+
+  IconData _targetIcon(String target) {
+    switch (target.toLowerCase()) {
+      case 'pico_w':
+        return Icons.memory;
+      case 'mobile':
+        return Icons.phone_android;
+      case 'agent':
+        return Icons.smart_toy;
+      default:
+        return Icons.devices;
+    }
   }
 }

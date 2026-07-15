@@ -13,6 +13,14 @@ void main() async {
   final authService = await AuthService.init(apiService);
   final themeService = await ThemeService.init();
 
+  // Initialize notification service
+  final notificationService = NotificationService();
+  await notificationService.init();
+
+  // Initialize home widget service
+  final widgetService = WidgetService();
+  await widgetService.init();
+
   runApp(
     ProviderScope(
       overrides: [
@@ -20,6 +28,8 @@ void main() async {
         apiServiceProvider.overrideWith((_) => apiService),
         authServiceProvider.overrideWith((_) => authService),
         themeServiceProvider.overrideWith((_) => themeService),
+        notificationServiceProvider.overrideWith((_) => notificationService),
+        widgetServiceProvider.overrideWith((_) => widgetService),
       ],
       child: const GantiaApp(),
     ),
