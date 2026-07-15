@@ -10,13 +10,13 @@ class WidgetService {
   StreamSubscription<ConnectionStatus>? _connectionSub;
   StreamSubscription<ActionEvent?>? _actionSub;
 
-  static const String _widgetName = 'GantiaWidget';
+  static const String _widgetProviderName = 'GantiaWidgetProvider';
 
   Future<void> init() async {
-    await HomeWidget.registerWidget(
-      android: _widgetName,
-      iOS: _widgetName,
-    );
+    // Initialize for Android widget. Android does not need an app group ID.
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      // Set an app group ID for iOS if needed for widget data sharing
+    }
   }
 
   void listenTo(GloveState gloveState, ActionLog actionLog) {
@@ -29,8 +29,8 @@ class WidgetService {
   Future<void> _updateWidget([_]) async {
     try {
       await HomeWidget.updateWidget(
-        name: _widgetName,
-        androidName: _widgetName,
+        name: _widgetProviderName,
+        androidName: _widgetProviderName,
       );
     } catch (e) {
       debugPrint('[WidgetService] update error: $e');
@@ -49,16 +49,16 @@ class WidgetService {
     final flexMiddle = gloveState.telemetry?.flexMiddle ?? 0;
 
     try {
-      await HomeWidget.saveWidgetData('status', status);
-      await HomeWidget.saveWidgetData('isConnected', isConnected.toString());
-      await HomeWidget.saveWidgetData('isFlowing', isFlowing.toString());
-      await HomeWidget.saveWidgetData('lastAction', lastAction);
-      await HomeWidget.saveWidgetData('lastGesture', lastGesture);
-      await HomeWidget.saveWidgetData('flexIndex', flexIndex.toString());
-      await HomeWidget.saveWidgetData('flexMiddle', flexMiddle.toString());
+      await HomeWidget.saveWidgetData<String>('status', status);
+      await HomeWidget.saveWidgetData<String>('isConnected', isConnected.toString());
+      await HomeWidget.saveWidgetData<String>('isFlowing', isFlowing.toString());
+      await HomeWidget.saveWidgetData<String>('lastAction', lastAction);
+      await HomeWidget.saveWidgetData<String>('lastGesture', lastGesture);
+      await HomeWidget.saveWidgetData<String>('flexIndex', flexIndex.toString());
+      await HomeWidget.saveWidgetData<String>('flexMiddle', flexMiddle.toString());
       await HomeWidget.updateWidget(
-        name: _widgetName,
-        androidName: _widgetName,
+        name: _widgetProviderName,
+        androidName: _widgetProviderName,
       );
     } catch (e) {
       debugPrint('[WidgetService] save/update error: $e');

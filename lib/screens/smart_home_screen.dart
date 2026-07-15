@@ -103,14 +103,14 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
     for (final d in scene.devices) {
       if (d.isOn) {
         smartHomeService.lightOn(d.url);
-        await Future.delayed(const Duration(milliseconds: 100));
+        await Future<void>.delayed(const Duration(milliseconds: 100));
         if (d.brightness < 100) {
           smartHomeService.setBrightness(d.url, d.brightness.round());
-          await Future.delayed(const Duration(milliseconds: 50));
+          await Future<void>.delayed(const Duration(milliseconds: 50));
         }
       } else {
         smartHomeService.lightOff(d.url);
-        await Future.delayed(const Duration(milliseconds: 100));
+        await Future<void>.delayed(const Duration(milliseconds: 100));
       }
     }
 
