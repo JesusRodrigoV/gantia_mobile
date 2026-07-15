@@ -14,7 +14,7 @@ class CalibrationService extends ChangeNotifier with ApiServiceMixin {
 
   Future<List<CalibrationEntry>> getAll() async {
     return (await execute(() async {
-      final data = await _api.get('/calibration');
+      final data = await _api.get('/config/calibration');
       final list = (data as List)
           .map((e) => CalibrationEntry.fromJson(e as Map<String, dynamic>))
           .toList();
@@ -34,7 +34,7 @@ class CalibrationService extends ChangeNotifier with ApiServiceMixin {
       if (maxValue != null) body['max_value'] = maxValue;
 
       final response =
-          await _api.put('/calibration/$sensorName', body: body);
+          await _api.put('/config/calibration/$sensorName', body: body);
       final entry =
           CalibrationEntry.fromJson(response as Map<String, dynamic>);
 

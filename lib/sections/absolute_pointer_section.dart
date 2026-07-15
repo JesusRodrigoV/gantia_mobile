@@ -50,7 +50,7 @@ class _AbsolutePointerSectionState
   Future<void> _checkAbsCalibration() async {
     try {
       final api = ref.read(apiServiceProvider);
-      await api.get('/absolute-pointer/calibration');
+      await api.get('/config/absolute-pointer/calibration');
       if (mounted) setState(() => _absCalibrationExists = true);
     } catch (_) {
       if (mounted) setState(() => _absCalibrationExists = false);
@@ -489,7 +489,7 @@ class _AbsolutePointerSectionState
         }
       }
 
-      await api.put('/absolute-pointer/calibration', body: {
+      await api.put('/config/absolute-pointer/calibration', body: {
         'corners': corners,
         'screen_width': _absScreenWidth,
         'screen_height': _absScreenHeight,
