@@ -102,7 +102,7 @@ class WsClient {
       _channel!.ready.then((_) {
         if (_disposed) return;
         _resetRetryState();
-      }).catchError((Object error) {
+      }).catchError((error) {
         debugPrint('[WsClient] ready error: $error');
         if (_disposed) return;
         _finishAttempt();
@@ -130,7 +130,7 @@ class WsClient {
             _safeAdd(parsed);
           } catch (_) {}
         },
-        onError: (Object error) {
+        onError: (error) {
           debugPrint('[WsClient] stream error: $error');
           if (_disposed) return;
           _finishAttempt();

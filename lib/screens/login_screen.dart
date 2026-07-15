@@ -179,7 +179,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       builder: (context, ref, _) {
                         return GestureDetector(
                            onLongPress: () {
-                             _showServerConfigDialog(context, ref).catchError((Object e) {
+                             _showServerConfigDialog(context, ref).catchError((e) {
                                debugPrint('[LOGIN] server config error: $e');
                              });
                            },

@@ -144,14 +144,14 @@ class _MainShellState extends ConsumerState<_MainShell> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(gloveStateProvider, (_, __) {
+    ref.listen(gloveStateProvider, (_, _) {
       if (_shellDisposed) return;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_shellDisposed) return;
         _initServices();
       });
     });
-    ref.listen(actionLogProvider, (_, __) {
+    ref.listen(actionLogProvider, (_, _) {
       if (_shellDisposed) return;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_shellDisposed) return;
