@@ -159,12 +159,12 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen>
                 children: [
                   const Icon(Icons.history, color: AppColors.primary500, size: 28),
                   const SizedBox(width: Spacing.xs),
-                  const Text(
+                  Text(
                     'Historial',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.surfaceLight700,
+                      color: context.surface800,
                     ),
                   ),
                 ],
@@ -411,9 +411,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen>
             Text(
               errorMessage,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: AppColors.surfaceLight600,
+                color: context.surface700,
               ),
             ),
             const SizedBox(height: Spacing.lg),
@@ -435,23 +435,23 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.history_toggle_off, size: 48, color: AppColors.surfaceLight400),
+            Icon(Icons.history_toggle_off, size: 48, color: context.surface500),
             const SizedBox(height: Spacing.md),
-            const Text(
+            Text(
               'Sin acciones',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: AppColors.surfaceLight600,
+                color: context.surface700,
               ),
             ),
             const SizedBox(height: Spacing.xs),
-            const Text(
+            Text(
               'Todavía no hay acciones registradas.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 13,
-                color: AppColors.surfaceLight400,
+                color: context.surface500,
               ),
             ),
           ],
@@ -465,23 +465,23 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen>
       padding: const EdgeInsets.symmetric(vertical: Spacing.xxxl),
       child: Column(
         children: [
-          const Icon(Icons.show_chart, size: 48, color: AppColors.surfaceLight400),
+          Icon(Icons.show_chart, size: 48, color: context.surface500),
           const SizedBox(height: Spacing.md),
-          const Text(
+          Text(
             'Sin lecturas',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: AppColors.surfaceLight600,
+              color: context.surface700,
             ),
           ),
           const SizedBox(height: Spacing.xs),
-          const Text(
+          Text(
             'Seleccioná "Últimas 6h" para cargar datos.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13,
-              color: AppColors.surfaceLight400,
+              color: context.surface500,
             ),
           ),
         ],
@@ -515,10 +515,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen>
                 Expanded(
                   child: Text(
                     actionLabel,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.surfaceLight800,
+                      color: context.surface900,
                     ),
                   ),
                 ),

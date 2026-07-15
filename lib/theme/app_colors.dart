@@ -44,6 +44,10 @@ class AppColors {
   static const Color surfaceDark900 = Color(0xFFebe5da);
   static const Color surfaceDark950 = Color(0xFFf5f2eb);
 
+  // Accent
+  static const Color gold400 = Color(0xFFc9a94e);
+  static const Color gold500 = Color(0xFFb8942e);
+
   // Semantic
   static const Color red400 = Color(0xFFf87171);
   static const Color red500 = Color(0xFFef4444);

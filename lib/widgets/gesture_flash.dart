@@ -166,9 +166,9 @@ class _GestureFlashState extends State<GestureFlash>
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFFc9a94e).withAlpha(200),
-                  const Color(0xFFc9a94e),
-                  const Color(0xFFc9a94e).withAlpha(200),
+                  AppColors.gold500.withAlpha(200),
+                  AppColors.gold500,
+                  AppColors.gold500.withAlpha(200),
                 ],
                 stops: const [0.0, 0.5, 1.0],
               ),
@@ -186,7 +186,7 @@ class _GestureFlashState extends State<GestureFlash>
               style: GoogleFonts.cormorantGaramond(
                 fontWeight: FontWeight.w700,
                 fontSize: 64,
-                color: const Color(0xFFc9a94e).withAlpha(20),
+                color:                   AppColors.gold500.withAlpha(20),
               ),
             ),
           ),

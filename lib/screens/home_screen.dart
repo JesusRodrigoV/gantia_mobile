@@ -159,10 +159,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 children: [
                   Text(
                     statusText,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.surfaceLight700,
+                      color: context.surface800,
                     ),
                   ),
                   if (gloveState.telemetry != null)
@@ -170,7 +170,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       'Datos recibiendo',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.surfaceLight500,
+                        color: context.surface600,
                       ),
                     ),
                 ],
@@ -209,18 +209,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               color: AppColors.primary500.withAlpha(10),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                SizedBox(
+                const SizedBox(
                   width: 12,
                   height: 12,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
-                SizedBox(width: Spacing.xs),
+                const SizedBox(width: Spacing.xs),
                 Text(
                   'Conectado al servidor — esperando guante...',
-                  style: TextStyle(fontSize: 12, color: AppColors.surfaceLight500),
+                  style: TextStyle(fontSize: 12, color: context.surface600),
                 ),
               ],
             ),
@@ -281,10 +281,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           const SizedBox(width: Spacing.xs),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: AppColors.surfaceLight700,
+              color: context.surface800,
             ),
           ),
           const Spacer(),
@@ -293,7 +293,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: connected ? AppColors.primary500 : AppColors.surfaceLight400,
+              color: connected ? AppColors.primary500 : context.surface500,
             ),
           ),
         ],
@@ -352,7 +352,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               height: 4.0 + i * 3.0,
               margin: const EdgeInsets.only(right: 3),
               decoration: BoxDecoration(
-                color: active ? AppColors.primary500 : AppColors.surfaceLight300,
+                color: active ? AppColors.primary500 : context.surface400,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
               ),
             );
@@ -376,18 +376,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             const SizedBox(height: 2),
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
-                color: AppColors.surfaceLight700,
+                color: context.surface800,
               ),
             ),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 9,
                 fontWeight: FontWeight.w600,
-                color: AppColors.surfaceLight400,
+                color: context.surface500,
               ),
             ),
           ],

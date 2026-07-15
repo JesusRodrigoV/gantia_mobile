@@ -16,7 +16,7 @@ class ActionLog extends StatelessWidget {
           child: Text(
             'Sin acciones registradas',
             style: TextStyle(
-              color: AppColors.surfaceLight400,
+              color: context.surface500,
               fontSize: 13,
               fontStyle: FontStyle.italic,
             ),
@@ -48,7 +48,7 @@ class ActionLog extends StatelessWidget {
               Icon(
                 _iconForAction(action.action),
                 size: 18,
-                color: isFirst ? AppColors.primary500 : AppColors.surfaceLight400,
+                color: isFirst ? AppColors.primary500 : context.surface500,
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -57,7 +57,7 @@ class ActionLog extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: isFirst ? FontWeight.w700 : FontWeight.w500,
-                    color: AppColors.surfaceLight700,
+                    color: context.surface800,
                   ),
                 ),
               ),
@@ -65,14 +65,14 @@ class ActionLog extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceLight200,
+                    color: context.surface300,
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
                     '${action.actionValue}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
-                      color: AppColors.surfaceLight600,
+                      color: context.surface700,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

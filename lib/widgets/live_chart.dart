@@ -36,7 +36,7 @@ class LiveChart extends StatelessWidget {
                     'Esperando datos...',
                     style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.surfaceLight400,
+                      color: context.surface500,
                       fontStyle: FontStyle.italic,
                     ),
                   ),

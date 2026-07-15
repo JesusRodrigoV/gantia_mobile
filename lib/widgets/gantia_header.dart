@@ -139,10 +139,10 @@ class _ModeBadge extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             mode,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: AppColors.surfaceLight700,
+              color: context.surface800,
             ),
           ),
         ],

@@ -149,13 +149,13 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w700,
-              color: AppColors.surfaceLight700,
+              color: context.surface800,
             ),
           ),
         ],
       ),
     );
-  }
+
 
   // ====================================================================
   // 1 — GESTURE CONFIG LIST
@@ -452,10 +452,10 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
         backgroundColor: context.surface0,
         title: Text(
           isEditing ? 'Editar Gesto' : 'Nuevo Gesto',
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
-            color: AppColors.surfaceLight700,
+            color: context.surface800,
           ),
         ),
         content: SingleChildScrollView(
@@ -1158,7 +1158,7 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.surfaceLight700,
+                  color: context.surface800,
                 ),
               ),
               content: SizedBox(
@@ -1167,13 +1167,13 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       '1. Relajá el dedo y capturá el mínimo.\n'
                       '2. Flexioná completamente y capturá el máximo.\n'
                       '3. Guardá la calibración.',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.surfaceLight500,
+                        color: context.surface600,
                       ),
                     ),
                     const SizedBox(height: Spacing.sm),
@@ -1455,7 +1455,7 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.surfaceLight700,
+                  color: context.surface800,
                 ),
               ),
               content: SizedBox(
@@ -1467,10 +1467,10 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
                     children: [
                       // START STEP
                       if (_absCalibStep == 0) ...[
-                        const Text(
+                        Text(
                           'Este asistente te guiará para calibrar las 4 esquinas. '
                           'Incliná tu mano hacia cada esquina y presioná el botón para registrar.',
-                          style: TextStyle(fontSize: 12, color: AppColors.surfaceLight500),
+                          style: TextStyle(fontSize: 12, color: context.surface600),
                         ),
                         const SizedBox(height: Spacing.md),
                         SizedBox(
@@ -2241,10 +2241,10 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!_learnInProgress) ...[
-            const Text(
+            Text(
               'Realizá un gesto 3 veces y el asistente lo '
               'analizará para configurarlo.',
-              style: TextStyle(fontSize: 12, color: AppColors.surfaceLight500),
+              style: TextStyle(fontSize: 12, color: context.surface600),
             ),
             const SizedBox(height: Spacing.sm),
             GantiaButton(

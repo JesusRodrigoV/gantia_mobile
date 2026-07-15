@@ -83,12 +83,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 children: [
                   const Icon(Icons.settings, color: AppColors.primary500, size: 28),
                   const SizedBox(width: Spacing.xs),
-                  const Text(
+                  Text(
                     'Ajustes',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.surfaceLight700,
+                      color: context.surface800,
                     ),
                   ),
                 ],
@@ -108,10 +108,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       children: [
                         Text(
                           themeService.isDarkMode ? 'Modo Oscuro' : 'Modo Claro',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.surfaceLight700,
+                            color: context.surface800,
                           ),
                         ),
                         Switch(
@@ -229,10 +229,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   SettingsCard(
                     icon: Icons.info,
                     title: 'Acerca de',
-                    child: const Text(
-                      'Gantia Mobile v0.1.0',
-                      style: TextStyle(fontSize: 13, color: AppColors.surfaceLight500),
-                    ),
+                  child: Text(
+                    'Gantia Mobile v0.1.0',
+                    style: TextStyle(fontSize: 13, color: context.surface600),
+                  ),
                   ),
 
                   const SizedBox(height: Spacing.sm),
@@ -303,10 +303,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Expanded(
                     child: Text(
                       f.label,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.surfaceLight700,
+                        color: context.surface800,
                       ),
                     ),
                   ),
@@ -319,7 +319,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
-                      color: isSaving ? AppColors.primary500 : AppColors.surfaceLight500,
+                      color: isSaving ? AppColors.primary500 : context.surface600,
                     ),
                   ),
                   if (isSaving)
@@ -334,7 +334,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               Text(
                 f.desc,
-                style: const TextStyle(fontSize: 11, color: AppColors.surfaceLight400),
+                style: TextStyle(fontSize: 11, color: context.surface500),
               ),
               Slider(
                 value: currentValue.clamp(f.min, f.max),
@@ -385,12 +385,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: AppColors.surfaceLight500),
+          Icon(icon, size: 18, color: context.surface600),
           const SizedBox(width: Spacing.xs),
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(fontSize: 13, color: AppColors.surfaceLight600),
+              style: TextStyle(fontSize: 13, color: context.surface700),
             ),
           ),
           Switch(
@@ -406,9 +406,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget _buildModeSelector(GloveState gloveState) {
     return Row(
       children: [
-        const Text(
+        Text(
           'Modo activo:',
-          style: TextStyle(fontSize: 13, color: AppColors.surfaceLight600),
+          style: TextStyle(fontSize: 13, color: context.surface700),
         ),
         const Spacer(),
         DropdownButton<String>(
@@ -438,9 +438,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     return Row(
       children: [
-        const Text(
+        Text(
           'Destino acciones:',
-          style: TextStyle(fontSize: 13, color: AppColors.surfaceLight600),
+          style: TextStyle(fontSize: 13, color: context.surface700),
         ),
         const Spacer(),
         DropdownButton<String>(

@@ -170,7 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 decoration: BoxDecoration(
                   color: context.surface0,
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: GantiaShadows.elevated(context.surface900, context.surface0),
+                    boxShadow: GantiaShadows.inset(context.surface900, context.surface0),
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,

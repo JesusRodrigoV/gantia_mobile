@@ -32,7 +32,7 @@ class StatusDot extends StatelessWidget {
           width: size,
           height: size,
           decoration: BoxDecoration(
-            color: _dotColor,
+            color: _dotColor(context),
             shape: BoxShape.circle,
             boxShadow: flowing ? _flowGlow : null,
           ),
@@ -41,7 +41,7 @@ class StatusDot extends StatelessWidget {
     );
   }
 
-  Color get _dotColor {
+  Color _dotColor(BuildContext context) {
     switch (status) {
       case ConnectionStatus.connected:
         return AppColors.primary500;
@@ -51,7 +51,7 @@ class StatusDot extends StatelessWidget {
         return AppColors.warning500;
       case ConnectionStatus.disconnected:
       case ConnectionStatus.error:
-        return AppColors.surfaceLight300;
+        return context.surface400;
     }
   }
 
@@ -66,10 +66,10 @@ class StatusDot extends StatelessWidget {
   List<BoxShadow>? _buildShadow(BuildContext context) {
     if (status == ConnectionStatus.disconnected || status == ConnectionStatus.error) {
       return [
-        const BoxShadow(
-          offset: Offset(2, 2),
+        BoxShadow(
+          offset: const Offset(2, 2),
           blurRadius: 4,
-          color: Color(0x0F000000),
+          color: context.surface900.withAlpha(15),
         ),
         BoxShadow(
           offset: const Offset(-2, -2),
@@ -81,7 +81,7 @@ class StatusDot extends StatelessWidget {
 
     return [
       BoxShadow(
-        color: _dotColor.withAlpha(30),
+        color: _dotColor(context).withAlpha(30),
         blurRadius: 0,
         spreadRadius: 3,
       ),
@@ -101,7 +101,7 @@ class StatusDotSmall extends StatelessWidget {
       height: 8,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: active ? AppColors.primary500 : AppColors.surfaceLight400,
+        color: active ? AppColors.primary500 : context.surface500,
         boxShadow: active
             ? [BoxShadow(color: AppColors.primary500.withAlpha(50), blurRadius: 4)]
             : null,

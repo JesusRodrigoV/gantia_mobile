@@ -16,14 +16,14 @@ class ReadingsChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (data.length < 2) {
-      return const SizedBox(
+      return SizedBox(
         height: 200,
         child: Center(
           child: Text(
             'Se necesitan al menos 2 lecturas',
             style: TextStyle(
               fontSize: 12,
-              color: AppColors.surfaceLight400,
+              color: context.surface500,
               fontStyle: FontStyle.italic,
             ),
           ),

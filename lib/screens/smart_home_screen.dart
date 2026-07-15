@@ -139,7 +139,7 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.surfaceLight700,
+                      color: context.surface800,
                     ),
                   ),
                 ],
@@ -246,7 +246,7 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
                           'Sin dispositivos configurados',
                           style: TextStyle(
                             fontSize: 13,
-                            color: AppColors.surfaceLight400,
+                            color: context.surface500,
                             fontStyle: FontStyle.italic,
                           ),
                         ),
@@ -406,15 +406,15 @@ class _SceneCard extends StatelessWidget {
               children: [
                 Text(
                   scene.name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.surfaceLight700,
+                    color: context.surface800,
                   ),
                 ),
                 Text(
                   '${scene.devices.where((d) => d.isOn).length}/${scene.devices.length} encendidas',
-                  style: const TextStyle(fontSize: 11, color: AppColors.surfaceLight500),
+                  style: TextStyle(fontSize: 11, color: context.surface600),
                 ),
               ],
             ),
@@ -488,13 +488,13 @@ class _LightDeviceCardState extends State<_LightDeviceCard> {
                 children: [
                   Icon(
                     device.isOn ? Icons.lightbulb : Icons.lightbulb_outline,
-                    color: device.isOn ? AppColors.warning500 : AppColors.surfaceLight400,
+                    color: device.isOn ? AppColors.warning500 : context.surface500,
                     size: 24,
                   ),
                   const SizedBox(width: Spacing.xs),
                   Text(
                     device.url,
-                    style: const TextStyle(fontSize: 11, color: AppColors.surfaceLight500),
+                    style: TextStyle(fontSize: 11, color: context.surface600),
                   ),
                 ],
               ),
@@ -509,7 +509,7 @@ class _LightDeviceCardState extends State<_LightDeviceCard> {
             const SizedBox(height: Spacing.sm),
             Row(
               children: [
-                const Icon(Icons.brightness_low, size: 16, color: AppColors.surfaceLight500),
+                Icon(Icons.brightness_low, size: 16, color: context.surface600),
                 Expanded(
                   child: Slider(
                     value: _brightness,
@@ -518,7 +518,7 @@ class _LightDeviceCardState extends State<_LightDeviceCard> {
                     divisions: 100,
                     onChanged: (v) => setState(() => _brightness = v),
                     onChangeEnd: (v) => widget.onBrightness(v.round()),
-                    inactiveColor: AppColors.surfaceLight200,
+                    inactiveColor: context.surface300,
                   ),
                 ),
                 Text(
