@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -6,6 +7,18 @@ import 'providers.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  FlutterError.onError = (details) {
+    debugPrint('[GLOBAL] FlutterError: ${details.exception}');
+    debugPrint('[GLOBAL] Stack: ${details.stack}');
+  };
+
+  ui.PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
+    debugPrint('[GLOBAL] PlatformDispatcher error: $error');
+    debugPrint('[GLOBAL] Stack: $stack');
+    return true;
+  };
+
   await dotenv.load();
 
   final serverConfig = await ServerConfigService.load();

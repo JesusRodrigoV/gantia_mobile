@@ -10,6 +10,7 @@ class NotificationService {
   StreamSubscription<GestureDetectedEvent?>? _gestureSub;
   StreamSubscription<ConnectionStatus>? _connectionSub;
   StreamSubscription<ActionEvent?>? _actionSub;
+  bool _disposed = false;
 
   static const String _gestureChannelId = 'gantia_gestures';
   static const String _gestureChannelName = 'Gestos detectados';
@@ -33,44 +34,53 @@ class NotificationService {
       android: androidSettings,
       iOS: iosSettings,
     );
-    await _plugin.initialize(settings);
-
-    final androidChannels = [
-      AndroidNotificationChannel(
-        _gestureChannelId,
-        _gestureChannelName,
-        description: 'Notificaciones cuando se detecta un gesto',
-        importance: Importance.high,
-        playSound: true,
-        enableVibration: true,
-      ),
-      AndroidNotificationChannel(
-        _connectionChannelId,
-        _connectionChannelName,
-        description: 'Notificaciones cuando cambia el estado de conexión del guante',
-        importance: Importance.defaultImportance,
-        playSound: true,
-      ),
-      AndroidNotificationChannel(
-        _actionsChannelId,
-        _actionsChannelName,
-        description: 'Notificaciones de acciones ejecutadas importantes',
-        importance: Importance.low,
-      ),
-    ];
-
-    for (final channel in androidChannels) {
-      await _plugin.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()?.createNotificationChannel(channel);
+    try {
+      await _plugin.initialize(settings);
+    } catch (e) {
+      debugPrint('[NotificationService] init error: $e');
+      return;
     }
 
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
-      await _plugin.resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin>()?.requestPermissions(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
+    try {
+      final androidChannels = [
+        AndroidNotificationChannel(
+          _gestureChannelId,
+          _gestureChannelName,
+          description: 'Notificaciones cuando se detecta un gesto',
+          importance: Importance.high,
+          playSound: true,
+          enableVibration: true,
+        ),
+        AndroidNotificationChannel(
+          _connectionChannelId,
+          _connectionChannelName,
+          description: 'Notificaciones cuando cambia el estado de conexión del guante',
+          importance: Importance.defaultImportance,
+          playSound: true,
+        ),
+        AndroidNotificationChannel(
+          _actionsChannelId,
+          _actionsChannelName,
+          description: 'Notificaciones de acciones ejecutadas importantes',
+          importance: Importance.low,
+        ),
+      ];
+
+      for (final channel in androidChannels) {
+        await _plugin.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()?.createNotificationChannel(channel);
+      }
+
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
+        await _plugin.resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin>()?.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+      }
+    } catch (e) {
+      debugPrint('[NotificationService] channel setup error: $e');
     }
   }
 
@@ -81,21 +91,26 @@ class NotificationService {
     bool notifyConnections = true,
     bool notifyActions = false,
   }) {
-    if (notifyGestures) {
-      _gestureSub = gloveState.gestureDetectedStream.listen(_onGestureDetected);
-    }
-    if (notifyConnections) {
-      _connectionSub = gloveState.connectionStatusStream.listen(_onConnectionChanged);
-    }
-    if (notifyActions) {
-      _actionSub = actionLog.actionEventStream.listen(_onActionExecuted);
+    if (_disposed) return;
+    try {
+      if (notifyGestures) {
+        _gestureSub = gloveState.gestureDetectedStream.listen(_onGestureDetected);
+      }
+      if (notifyConnections) {
+        _connectionSub = gloveState.connectionStatusStream.listen(_onConnectionChanged);
+      }
+      if (notifyActions) {
+        _actionSub = actionLog.actionEventStream.listen(_onActionExecuted);
+      }
+    } catch (e) {
+      debugPrint('[NotificationService] listenTo error: $e');
     }
   }
 
   void _onGestureDetected(GestureDetectedEvent? event) {
-    if (event == null) return;
+    if (_disposed || event == null) return;
     final actionLabel = getActionLabel(event.action);
-    _showNotification(
+    _showNotificationSafe(
       _notificationIdGesture,
       _gestureChannelId,
       'Gesto: ${event.gesture}',
@@ -104,23 +119,24 @@ class NotificationService {
   }
 
   void _onConnectionChanged(ConnectionStatus status) {
+    if (_disposed) return;
     switch (status) {
       case ConnectionStatus.disconnected:
-        _showNotification(
+        _showNotificationSafe(
           _notificationIdConnection,
           _connectionChannelId,
           'Guante desconectado',
           'Se perdió la conexión con el servidor',
         );
       case ConnectionStatus.connected:
-        _showNotification(
+        _showNotificationSafe(
           _notificationIdConnection,
           _connectionChannelId,
           'Guante conectado',
           'El guante está recibiendo datos',
         );
       case ConnectionStatus.reconnecting:
-        _showNotification(
+        _showNotificationSafe(
           _notificationIdConnection,
           _connectionChannelId,
           'Reconectando...',
@@ -132,11 +148,11 @@ class NotificationService {
   }
 
   void _onActionExecuted(ActionEvent? event) {
-    if (event == null) return;
+    if (_disposed || event == null) return;
     final actionLabel = getActionLabel(event.action);
     final value = event.actionValue?.toString() ?? '';
     final body = value.isNotEmpty ? '$actionLabel: $value' : actionLabel;
-    _showNotification(
+    _showNotificationSafe(
       _notificationIdAction,
       _actionsChannelId,
       'Acción ejecutada',
@@ -144,14 +160,10 @@ class NotificationService {
     );
   }
 
-  Future<void> _showNotification(
-    int id,
-    String channelId,
-    String title,
-    String body,
-  ) async {
+  void _showNotificationSafe(int id, String channelId, String title, String body) {
+    if (_disposed) return;
     try {
-      await _plugin.show(
+      _plugin.show(
         id,
         title,
         body,
@@ -181,14 +193,23 @@ class NotificationService {
         ),
       );
     } catch (e) {
-      debugPrint('[NotificationService] Error showing notification: $e');
+      debugPrint('[NotificationService] show error: $e');
     }
   }
 
   void dispose() {
-    _gestureSub?.cancel();
-    _connectionSub?.cancel();
-    _actionSub?.cancel();
-    _plugin.cancelAll();
+    _disposed = true;
+    try {
+      _gestureSub?.cancel();
+    } catch (_) {}
+    try {
+      _connectionSub?.cancel();
+    } catch (_) {}
+    try {
+      _actionSub?.cancel();
+    } catch (_) {}
+    try {
+      _plugin.cancelAll();
+    } catch (_) {}
   }
 }

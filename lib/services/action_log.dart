@@ -6,6 +6,7 @@ import 'ws_client.dart';
 class ActionLog extends ChangeNotifier {
   final WsClient _client;
   StreamSubscription<Map<String, dynamic>>? _sub;
+  bool _disposed = false;
 
   ActionEvent? _actionEvent;
   ActionEvent? get actionEvent => _actionEvent;
@@ -23,12 +24,13 @@ class ActionLog extends ChangeNotifier {
   }
 
   void _handleRawMessage(Map<String, dynamic> data) {
+    if (_disposed) return;
     if (data.containsKey('\$type')) return;
 
     if (isActionMessage(data)) {
       final evt = ActionEvent.fromJson(data);
       _actionEvent = evt;
-      _actionCtrl.add(evt);
+      if (!_actionCtrl.isClosed) _actionCtrl.add(evt);
       _recentActions = [evt, ..._recentActions].take(_maxRecentActions).toList();
       notifyListeners();
     }
@@ -36,8 +38,9 @@ class ActionLog extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     _sub?.cancel();
-    _actionCtrl.close();
+    if (!_actionCtrl.isClosed) _actionCtrl.close();
     super.dispose();
   }
 }

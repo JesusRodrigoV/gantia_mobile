@@ -178,7 +178,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     Consumer(
                       builder: (context, ref, _) {
                         return GestureDetector(
-                          onLongPress: () => _showServerConfigDialog(context, ref),
+                           onLongPress: () {
+                             _showServerConfigDialog(context, ref).catchError((Object e) {
+                               debugPrint('[LOGIN] server config error: $e');
+                             });
+                           },
                           child: Image.asset(
                             'assets/logos/logo.webp',
                             width: 64,

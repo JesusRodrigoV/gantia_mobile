@@ -60,10 +60,21 @@ class WsClient {
 
   void send(Map<String, dynamic> data) {
     if (!isConnected) return;
-    _channel!.sink.add(jsonEncode(data));
+    try {
+      _channel!.sink.add(jsonEncode(data));
+    } catch (_) {}
+  }
+
+  bool get _canAddToController => !_disposed && !_controller.isClosed;
+
+  void _safeAdd(Map<String, dynamic> data) {
+    if (_canAddToController) {
+      _controller.add(data);
+    }
   }
 
   void _establishConnection() {
+    if (_disposed) return;
     if (_connectionAttemptState == _ConnectionAttemptState.connecting) return;
     _connectionAttemptState = _ConnectionAttemptState.connecting;
 
@@ -76,21 +87,33 @@ class WsClient {
 
     _clearReconnectTimer();
     _connectionTimer = Timer(connectionTimeout, () {
-      _controller.add({'\$type': 'error'});
+      if (_disposed) return;
+      _safeAdd({'\$type': 'error'});
       _closeChannel();
       _finishAttempt();
       if (_shouldBeConnected) _scheduleReconnect();
     });
 
-    _controller.add({'\$type': 'connecting'});
+    _safeAdd({'\$type': 'connecting'});
 
     try {
       _channel = WebSocketChannel.connect(Uri.parse('$_wsUrl/ws/dashboard?token=$token'));
 
-      _channel!.ready.then((_) => _resetRetryState());
+      _channel!.ready.then((_) {
+        if (_disposed) return;
+        _resetRetryState();
+      }).catchError((Object error) {
+        debugPrint('[WsClient] ready error: $error');
+        if (_disposed) return;
+        _finishAttempt();
+        _closeChannel();
+        _safeAdd({'\$type': 'error'});
+        if (_shouldBeConnected) _scheduleReconnect();
+      });
 
       _channel!.stream.listen(
         (data) {
+          if (_disposed) return;
           try {
             final parsed = jsonDecode(data as String) as Map<String, dynamic>;
 
@@ -104,15 +127,19 @@ class WsClient {
               return;
             }
 
-            _controller.add(parsed);
+            _safeAdd(parsed);
           } catch (_) {}
         },
-        onError: (_) {
+        onError: (Object error) {
+          debugPrint('[WsClient] stream error: $error');
+          if (_disposed) return;
           _finishAttempt();
-          _controller.add({'\$type': 'error'});
+          _closeChannel();
+          _safeAdd({'\$type': 'error'});
           if (_shouldBeConnected) _scheduleReconnect();
         },
         onDone: () {
+          if (_disposed) return;
           final closeCode = _channel?.closeCode;
           if (closeCode == 1008) {
             debugPrint('[WsClient] Token rechazado por el servidor — cerrando sesión');
@@ -121,16 +148,17 @@ class WsClient {
           }
           _finishAttempt();
           _clearPingTimer();
-          _controller.add({'\$type': 'disconnected'});
+          _safeAdd({'\$type': 'disconnected'});
           if (_shouldBeConnected && _authService.isAuthenticated) {
             _scheduleReconnect();
           }
         },
         cancelOnError: false,
       );
-    } catch (_) {
+    } catch (Object e) {
+      debugPrint('[WsClient] connect exception: $e');
       _finishAttempt();
-      _controller.add({'\$type': 'error'});
+      _safeAdd({'\$type': 'error'});
       if (_shouldBeConnected) _scheduleReconnect();
     }
   }
@@ -142,16 +170,17 @@ class WsClient {
   }
 
   void _scheduleReconnect() {
+    if (_disposed) return;
     _clearReconnectTimer();
     _reconnectAttempts++;
-    _controller.add({
+    _safeAdd({
       '\$type': 'reconnecting',
       'attempt': _reconnectAttempts,
       'maxRetries': maxRetries,
     });
 
     if (_reconnectAttempts > maxRetries) {
-      _controller.add({
+      _safeAdd({
         '\$type': 'disconnected',
         'reason': 'max_retries_exceeded',
       });
@@ -170,7 +199,7 @@ class WsClient {
   void _resetRetryState() {
     _reconnectAttempts = 0;
     _finishAttempt();
-    _controller.add({'\$type': 'connected'});
+    _safeAdd({'\$type': 'connected'});
     _startPingTimer();
   }
 
@@ -216,6 +245,8 @@ class WsClient {
     _clearPingTimer();
     _finishAttempt();
     _closeChannel();
-    _controller.close();
+    if (!_controller.isClosed) {
+      _controller.close();
+    }
   }
 }

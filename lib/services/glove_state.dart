@@ -8,6 +8,7 @@ enum ConnectionStatus { disconnected, connecting, connected, reconnecting, error
 class GloveState extends ChangeNotifier {
   final WsClient _client;
   StreamSubscription<Map<String, dynamic>>? _sub;
+  bool _disposed = false;
 
   ConnectionStatus _connectionStatus = ConnectionStatus.disconnected;
   ConnectionStatus get connectionStatus => _connectionStatus;
@@ -61,24 +62,26 @@ class GloveState extends ChangeNotifier {
   }
 
   void _handleRawMessage(Map<String, dynamic> data) {
+    if (_disposed) return;
     final type = data['\$type'];
 
     if (type != null) {
       switch (type) {
         case 'connecting':
           _connectionStatus = ConnectionStatus.connecting;
-          _connectionStatusCtrl.add(_connectionStatus);
+          if (!_connectionStatusCtrl.isClosed) _connectionStatusCtrl.add(_connectionStatus);
           notifyListeners();
           return;
         case 'connected':
           _connectionStatus = ConnectionStatus.connected;
-          _connectionStatusCtrl.add(_connectionStatus);
+          if (!_connectionStatusCtrl.isClosed) _connectionStatusCtrl.add(_connectionStatus);
           _retryAttempt = 0;
           _waitingForDevice = false;
           _cancelWaitingTimer();
           _waitingTimer = Timer(
             Duration(milliseconds: _waitingTimeoutMs),
             () {
+              if (_disposed) return;
               if (_telemetry == null) {
                 _waitingForDevice = true;
                 notifyListeners();
@@ -89,14 +92,14 @@ class GloveState extends ChangeNotifier {
           return;
         case 'reconnecting':
           _connectionStatus = ConnectionStatus.reconnecting;
-          _connectionStatusCtrl.add(_connectionStatus);
+          if (!_connectionStatusCtrl.isClosed) _connectionStatusCtrl.add(_connectionStatus);
           _retryAttempt = (data['attempt'] as int?) ?? 0;
           _maxRetries = (data['maxRetries'] as int?) ?? 10;
           notifyListeners();
           return;
         case 'disconnected':
           _connectionStatus = ConnectionStatus.disconnected;
-          _connectionStatusCtrl.add(_connectionStatus);
+          if (!_connectionStatusCtrl.isClosed) _connectionStatusCtrl.add(_connectionStatus);
           _dataFlowing = false;
           _waitingForDevice = false;
           _cancelWaitingTimer();
@@ -105,7 +108,7 @@ class GloveState extends ChangeNotifier {
           return;
         case 'error':
           _connectionStatus = ConnectionStatus.error;
-          _connectionStatusCtrl.add(_connectionStatus);
+          if (!_connectionStatusCtrl.isClosed) _connectionStatusCtrl.add(_connectionStatus);
           _telemetry = null;
           _dataFlowing = false;
           notifyListeners();
@@ -116,7 +119,7 @@ class GloveState extends ChangeNotifier {
 
     if (isGestureDetected(data)) {
       _gestureDetected = GestureDetectedEvent.fromJson(data);
-      _gestureCtrl.add(_gestureDetected);
+      if (!_gestureCtrl.isClosed) _gestureCtrl.add(_gestureDetected);
       notifyListeners();
       return;
     }
@@ -139,7 +142,6 @@ class GloveState extends ChangeNotifier {
       return;
     }
 
-    // Absolute pointer status message
     if (data['type'] == 'absolute_pointer_status') {
       _absolutePointerEnabled = data['enabled'] == true;
       _cancelWaitingTimer();
@@ -166,9 +168,11 @@ class GloveState extends ChangeNotifier {
   }
 
   void _resetDataTimeout() {
+    if (_disposed) return;
     _dataTimer?.cancel();
     _dataFlowing = true;
     _dataTimer = Timer(Duration(milliseconds: _dataTimeoutMs), () {
+      if (_disposed) return;
       _dataFlowing = false;
       notifyListeners();
     });
@@ -195,11 +199,12 @@ class GloveState extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     _sub?.cancel();
     _dataTimer?.cancel();
     _cancelWaitingTimer();
-    _connectionStatusCtrl.close();
-    _gestureCtrl.close();
+    if (!_connectionStatusCtrl.isClosed) _connectionStatusCtrl.close();
+    if (!_gestureCtrl.isClosed) _gestureCtrl.close();
     super.dispose();
   }
 }

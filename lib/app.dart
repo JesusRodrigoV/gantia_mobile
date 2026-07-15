@@ -108,10 +108,13 @@ class _MainShell extends ConsumerStatefulWidget {
 }
 
 class _MainShellState extends ConsumerState<_MainShell> {
+  bool _shellDisposed = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_shellDisposed) return;
       _initServices();
     });
   }
@@ -126,8 +129,36 @@ class _MainShellState extends ConsumerState<_MainShell> {
     final widgetService = ref.read(widgetServiceProvider);
     widgetService.listenTo(gloveState, actionLog);
   }
+
+  @override
+  void dispose() {
+    _shellDisposed = true;
+    try {
+      ref.read(notificationServiceProvider).dispose();
+    } catch (_) {}
+    try {
+      ref.read(widgetServiceProvider).dispose();
+    } catch (_) {}
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    ref.listen(gloveStateProvider, (_, __) {
+      if (_shellDisposed) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_shellDisposed) return;
+        _initServices();
+      });
+    });
+    ref.listen(actionLogProvider, (_, __) {
+      if (_shellDisposed) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_shellDisposed) return;
+        _initServices();
+      });
+    });
+
     final currentIndex = ref.watch(bottomNavIndexProvider);
     final pages = <Widget>[
       const HomeScreen(),
