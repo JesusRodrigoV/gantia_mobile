@@ -19,23 +19,15 @@ class SmartHomeScreen extends ConsumerStatefulWidget {
 class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
   final List<_LightDevice> _devices = [];
   final List<_Scene> _scenes = [];
-  final _urlCtrl = TextEditingController();
-  final _nameCtrl = TextEditingController();
-  final _sceneNameCtrl = TextEditingController();
+  String _urlInput = '';
+  String _nameInput = '';
+  String _sceneNameInput = '';
 
   @override
   void initState() {
     super.initState();
     _loadDevices();
     _loadScenes();
-  }
-
-  @override
-  void dispose() {
-    _urlCtrl.dispose();
-    _nameCtrl.dispose();
-    _sceneNameCtrl.dispose();
-    super.dispose();
   }
 
   Future<void> _loadDevices() async {
@@ -71,20 +63,20 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
   }
 
   void _addDevice() {
-    if (_urlCtrl.text.trim().isEmpty) return;
+    if (_urlInput.trim().isEmpty) return;
     setState(() {
       _devices.add(_LightDevice(
-        name: _nameCtrl.text.trim().isNotEmpty ? _nameCtrl.text.trim() : 'Luz ${_devices.length + 1}',
-        url: _urlCtrl.text.trim(),
+        name: _nameInput.trim().isNotEmpty ? _nameInput.trim() : 'Luz ${_devices.length + 1}',
+        url: _urlInput.trim(),
       ));
-      _urlCtrl.clear();
-      _nameCtrl.clear();
+      _urlInput = '';
+      _nameInput = '';
     });
     _saveDevices();
   }
 
   void _addScene() {
-    final name = _sceneNameCtrl.text.trim();
+    final name = _sceneNameInput.trim();
     if (name.isEmpty) return;
 
     final snapshot = _devices
@@ -93,7 +85,7 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
 
     setState(() {
       _scenes.add(_Scene(name: name, devices: snapshot));
-      _sceneNameCtrl.clear();
+      _sceneNameInput = '';
     });
     _saveScenes();
   }
@@ -181,25 +173,29 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
                     icon: Icons.add_circle_outline,
                     title: 'Agregar Escena',
                     description: 'Guarda el estado actual de todas las luces como una escena',
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _sceneNameCtrl,
-                            decoration: const InputDecoration(
-                              labelText: 'Nombre de la escena',
-                              hintText: 'Ej: Apagar todo',
+                    child: Builder(
+                      builder: (context) {
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                onChanged: (v) => _sceneNameInput = v,
+                                decoration: const InputDecoration(
+                                  labelText: 'Nombre de la escena',
+                                  hintText: 'Ej: Apagar todo',
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(width: Spacing.sm),
-                        GantiaButton(
-                          label: 'Guardar',
-                          icon: Icons.save,
-                          variant: GantiaButtonVariant.primary,
-                          onPressed: _scenes.length < 10 ? _addScene : null,
-                        ),
-                      ],
+                            const SizedBox(width: Spacing.sm),
+                            GantiaButton(
+                              label: 'Guardar',
+                              icon: Icons.save,
+                              variant: GantiaButtonVariant.primary,
+                              onPressed: _scenes.length < 10 ? _addScene : null,
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
 
@@ -207,33 +203,37 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
                   SettingsCard(
                     icon: Icons.add,
                     title: 'Agregar Dispositivo',
-                    child: Column(
-                      children: [
-                        TextField(
-                          controller: _nameCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Nombre (opcional)',
-                            hintText: 'Ej: Luz Escritorio',
-                          ),
-                        ),
-                        const SizedBox(height: Spacing.xs),
-                        TextField(
-                          controller: _urlCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'URL del dispositivo',
-                            hintText: 'http://192.168.1.100/api/light',
-                          ),
-                        ),
-                        const SizedBox(height: Spacing.sm),
-                        GantiaButton(
-                          label: 'Agregar',
-                          icon: Icons.add,
-                          variant: GantiaButtonVariant.primary,
-                          onPressed: _addDevice,
-                          minWidth: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
-                        ),
-                      ],
+                    child: Builder(
+                      builder: (context) {
+                        return Column(
+                          children: [
+                            TextField(
+                              onChanged: (v) => _nameInput = v,
+                              decoration: const InputDecoration(
+                                labelText: 'Nombre (opcional)',
+                                hintText: 'Ej: Luz Escritorio',
+                              ),
+                            ),
+                            const SizedBox(height: Spacing.xs),
+                            TextField(
+                              onChanged: (v) => _urlInput = v,
+                              decoration: const InputDecoration(
+                                labelText: 'URL del dispositivo',
+                                hintText: 'http://192.168.1.100/api/light',
+                              ),
+                            ),
+                            const SizedBox(height: Spacing.sm),
+                            GantiaButton(
+                              label: 'Agregar',
+                              icon: Icons.add,
+                              variant: GantiaButtonVariant.primary,
+                              onPressed: _addDevice,
+                              minWidth: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
 

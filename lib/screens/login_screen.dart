@@ -66,13 +66,13 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _showServerConfigDialog(BuildContext context, WidgetRef ref) {
+  Future<void> _showServerConfigDialog(BuildContext context, WidgetRef ref) async {
     final config = ref.read(serverConfigProvider);
     final hostCtrl = TextEditingController(text: config.host);
     final portCtrl = TextEditingController(text: config.port.toString());
     final formKey = GlobalKey<FormState>();
 
-    showDialog<void>(
+    await showDialog<void>(
       context: context,
       builder: (ctx) {
         return AlertDialog(
@@ -144,10 +144,14 @@ class _LoginScreenState extends State<LoginScreen> {
           ],
         );
       },
-    ).whenComplete(() {
+    );
+
+    try {
       hostCtrl.dispose();
+    } catch (_) {}
+    try {
       portCtrl.dispose();
-    });
+    } catch (_) {}
   }
 
   @override
