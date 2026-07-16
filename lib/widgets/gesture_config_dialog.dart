@@ -7,7 +7,6 @@ import '../models/action_message.dart';
 import '../models/gesture_config_model.dart';
 import '../providers.dart';
 import 'macro_step_utils.dart';
-import '../theme/app_colors.dart';
 import '../theme/context_extensions.dart';
 import '../theme/spacing.dart';
 import '../widgets/gantia_button.dart';
