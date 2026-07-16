@@ -31,7 +31,7 @@ class _SensitivitySlidersState extends ConsumerState<SensitivitySliders> {
 
   @override
   void dispose() {
-    for (final t in _debounceTimers.values) t.cancel();
+    for (final t in _debounceTimers.values) { t.cancel(); }
     _debounceTimers.clear();
     super.dispose();
   }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/smart_home_device.dart';
-import '../theme/context_extensions.dart';
 import '../theme/spacing.dart';
 import 'gantia_button.dart';
 import 'settings_card.dart';

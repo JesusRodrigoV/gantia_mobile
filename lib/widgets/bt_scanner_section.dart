@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers.dart';
 import '../theme/app_colors.dart';
-import '../theme/context_extensions.dart';
 import '../theme/spacing.dart';
 import 'gantia_button.dart';
 import 'settings_card.dart';

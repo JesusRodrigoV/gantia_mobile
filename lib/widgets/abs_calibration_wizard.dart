@@ -30,7 +30,6 @@ class _AbsCalibrationWizardState extends ConsumerState<AbsCalibrationWizard> {
   late final TextEditingController _widthCtrl;
   late final TextEditingController _heightCtrl;
   bool _saving = false;
-  bool _introDone = false;
 
   static const _cornerSteps = [
     ('tl', 'Sup. Izquierda', 'Incliná arriba-izquierda', Icons.arrow_upward),

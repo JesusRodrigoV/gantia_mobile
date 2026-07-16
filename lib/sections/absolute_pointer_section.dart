@@ -17,8 +17,8 @@ class AbsolutePointerSection extends ConsumerStatefulWidget {
 
 class _AbsolutePointerSectionState extends ConsumerState<AbsolutePointerSection> {
   bool? _calibrationExists;
-  int _screenWidth = 1920;
-  int _screenHeight = 1080;
+  final int _screenWidth = 1920;
+  final int _screenHeight = 1080;
 
   @override
   void initState() {
@@ -93,7 +93,7 @@ class _AbsolutePointerSectionState extends ConsumerState<AbsolutePointerSection>
               label: _calibrationExists == true ? 'Recalibrar' : 'Iniciar Calibración',
               icon: Icons.sensors,
               variant: GantiaButtonVariant.primary,
-              onPressed: () => showDialog(
+              onPressed: () => showDialog<void>(
                 context: context,
                 barrierDismissible: false,
                 builder: (_) => AbsCalibrationWizard(

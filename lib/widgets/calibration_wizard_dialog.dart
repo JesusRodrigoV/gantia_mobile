@@ -55,7 +55,7 @@ class _CalibrationWizardDialogState extends ConsumerState<CalibrationWizardDialo
             ],
             ValueListenableBuilder<int?>(
               valueListenable: _min,
-              builder: (_, min, __) {
+              builder: (_, min, _) {
                 final max = _max.value;
                 if (min == null && max == null) return const SizedBox.shrink();
                 return Container(
@@ -109,7 +109,7 @@ class _CalibrationWizardDialogState extends ConsumerState<CalibrationWizardDialo
           child: Text('Cancelar', style: TextStyle(color: context.surface500))),
         ValueListenableBuilder<int?>(
           valueListenable: _min,
-          builder: (_, min, __) {
+          builder: (_, min, _) {
             final max = _max.value;
             return GantiaButton(
               label: 'Guardar',
@@ -118,8 +118,8 @@ class _CalibrationWizardDialogState extends ConsumerState<CalibrationWizardDialo
                 Navigator.of(context).pop();
                 await ref.read(calibrationServiceProvider).update(
                   _sensor.value!,
-                  minValue: min!.toDouble(),
-                  maxValue: max!.toDouble(),
+                  minValue: min.toDouble(),
+                  maxValue: max.toDouble(),
                 );
               },
             );

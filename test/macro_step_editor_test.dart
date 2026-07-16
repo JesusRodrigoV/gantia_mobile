@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gantia_mobile/widgets/macro_step_editor.dart';
+import 'package:gantia_mobile/widgets/macro_step_utils.dart';
 
 void main() {
   group('parsePipeToSteps', () {

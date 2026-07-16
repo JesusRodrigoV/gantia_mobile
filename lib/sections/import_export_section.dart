@@ -33,7 +33,7 @@ class _ImportExportSectionState extends ConsumerState<ImportExportSection> {
         Expanded(
           child: GantiaButton(
             label: 'Importar', icon: Icons.download,
-            onPressed: () => showDialog(
+            onPressed: () => showDialog<void>(
               context: context,
               builder: (_) => ImportDialog(service: service),
             ),
@@ -46,6 +46,6 @@ class _ImportExportSectionState extends ConsumerState<ImportExportSection> {
   Future<void> _handleExport(GestureConfigService service) async {
     final json = await service.exportConfigs();
     if (json == null || !mounted) return;
-    showDialog(context: context, builder: (_) => ExportDialog(jsonContent: json));
+    showDialog<void>(context: context, builder: (_) => ExportDialog(jsonContent: json));
   }
 }

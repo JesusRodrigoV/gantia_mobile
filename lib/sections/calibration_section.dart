@@ -51,7 +51,7 @@ class _CalibrationSectionState extends ConsumerState<CalibrationSection> {
             label: 'Iniciar Calibración',
             icon: Icons.sensors,
             variant: GantiaButtonVariant.primary,
-            onPressed: () => showDialog(
+            onPressed: () => showDialog<void>(
               context: context,
               builder: (_) => const CalibrationWizardDialog(),
             ),

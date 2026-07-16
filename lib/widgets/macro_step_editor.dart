@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../models/gesture_config_model.dart';
 import 'macro_step_repeat_field.dart';
 import 'macro_step_row.dart';
-import 'macro_step_utils.dart';
 
 const int _maxSteps = 20;
 

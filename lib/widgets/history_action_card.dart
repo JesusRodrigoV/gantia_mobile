@@ -14,8 +14,8 @@ class HistoryActionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final actionLabel = getActionLabel(entry.action);
     final formattedTime = formatTimestamp(entry.timestamp);
-    final statusColor = statusColor(entry.status, context);
-    final targetIcon = targetIcon(entry.target);
+    final color = statusColor(entry.status, context);
+    final icon = targetIcon(entry.target);
 
     return Container(
       width: double.infinity,
@@ -36,14 +36,14 @@ class HistoryActionCard extends StatelessWidget {
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.surface900))),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(color: statusColor.withAlpha(20), borderRadius: BorderRadius.circular(6)),
+              decoration: BoxDecoration(color: color.withAlpha(20), borderRadius: BorderRadius.circular(6)),
               child: Text(entry.status,
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: statusColor)),
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color)),
             ),
           ]),
           const SizedBox(height: Spacing.sm),
           Row(children: [
-            Icon(targetIcon, size: 13, color: context.surface500),
+            Icon(icon, size: 13, color: context.surface500),
             const SizedBox(width: 4),
             Text(entry.target, style: TextStyle(fontSize: 12, color: context.surface500)),
             if (entry.actionValue != null && entry.actionValue!.isNotEmpty) ...[

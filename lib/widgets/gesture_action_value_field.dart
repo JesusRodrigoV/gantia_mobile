@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/gesture_config_model.dart';
 import '../providers.dart';
 import '../theme/context_extensions.dart';
-import '../theme/spacing.dart';
-import 'gesture_hotkey_editor.dart';
 import 'macro_step_editor.dart';
 
 class GestureActionValueField extends ConsumerStatefulWidget {
