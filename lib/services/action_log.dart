@@ -22,7 +22,7 @@ class ActionLog extends ChangeNotifier {
   ActionLog(this._client) {
     _sub = _client.messages.listen(
       _handleRawMessage,
-      onError: (e) => debugPrint('[ActionLog] stream error: $e'),
+      onError: (Object e) => debugPrint('[ActionLog] stream error: $e'),
     );
   }
 

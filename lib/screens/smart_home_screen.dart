@@ -2,12 +2,13 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/smart_home_device.dart';
 import '../providers.dart';
 import '../theme/app_colors.dart';
 import '../theme/context_extensions.dart';
 import '../theme/spacing.dart';
-import '../widgets/settings_card.dart';
-import '../widgets/gantia_button.dart';
+import '../widgets/smart_home_device_section.dart';
+import '../widgets/smart_home_scene_section.dart';
 
 class SmartHomeScreen extends ConsumerStatefulWidget {
   const SmartHomeScreen({super.key});
@@ -17,11 +18,12 @@ class SmartHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
-  final List<_LightDevice> _devices = [];
-  final List<_Scene> _scenes = [];
-  String _urlInput = '';
-  String _nameInput = '';
-  String _sceneNameInput = '';
+  static const int _maxScenes = 10;
+  static const String _devicesKey = 'smart_home_devices';
+  static const String _scenesKey = 'smart_home_scenes';
+
+  final List<LightDevice> _devices = [];
+  final List<Scene> _scenes = [];
   String? _deviceError;
 
   @override
@@ -31,106 +33,113 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
     _loadScenes();
   }
 
-  void _clearDeviceError() {
-    if (_deviceError != null) {
-      setState(() => _deviceError = null);
-    }
+  void _clearError() {
+    if (_deviceError != null) setState(() => _deviceError = null);
   }
 
   Future<void> _loadDevices() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString('smart_home_devices');
+    final raw = prefs.getString(_devicesKey);
     if (raw == null) return;
     final list = jsonDecode(raw) as List<dynamic>;
-    setState(() {
-      _devices.addAll(list.map((e) => _LightDevice.fromJson(e as Map<String, dynamic>)));
-    });
+    setState(() => _devices.addAll(list.map((e) => LightDevice.fromJson(e as Map<String, dynamic>))));
   }
 
   Future<void> _saveDevices() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = jsonEncode(_devices.map((d) => d.toJson()).toList());
-    await prefs.setString('smart_home_devices', raw);
+    await prefs.setString(_devicesKey, jsonEncode(_devices.map((d) => d.toJson()).toList()));
   }
 
   Future<void> _loadScenes() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString('smart_home_scenes');
+    final raw = prefs.getString(_scenesKey);
     if (raw == null) return;
     final list = jsonDecode(raw) as List<dynamic>;
-    setState(() {
-      _scenes.addAll(list.map((e) => _Scene.fromJson(e as Map<String, dynamic>)));
-    });
+    setState(() => _scenes.addAll(list.map((e) => Scene.fromJson(e as Map<String, dynamic>))));
   }
 
   Future<void> _saveScenes() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = jsonEncode(_scenes.map((s) => s.toJson()).toList());
-    await prefs.setString('smart_home_scenes', raw);
+    await prefs.setString(_scenesKey, jsonEncode(_scenes.map((s) => s.toJson()).toList()));
   }
 
-  void _addDevice() {
-    if (_urlInput.trim().isEmpty) return;
+  void _addDevice(String name, String url) {
+    if (url.isEmpty) return;
     setState(() {
-      _devices.add(_LightDevice(
-        name: _nameInput.trim().isNotEmpty ? _nameInput.trim() : 'Luz ${_devices.length + 1}',
-        url: _urlInput.trim(),
+      _devices.add(LightDevice(
+        name: name.isNotEmpty ? name : 'Luz ${_devices.length + 1}',
+        url: url,
       ));
-      _urlInput = '';
-      _nameInput = '';
     });
     _saveDevices();
   }
 
-  void _addScene() {
-    final name = _sceneNameInput.trim();
+  void _addScene(String name) {
     if (name.isEmpty) return;
-
-    final snapshot = _devices
-        .map((d) => _SceneDeviceState(name: d.name, url: d.url, isOn: d.isOn, brightness: d.brightness))
-        .toList();
-
     setState(() {
-      _scenes.add(_Scene(name: name, devices: snapshot));
-      _sceneNameInput = '';
+      _scenes.add(Scene(
+        name: name,
+        devices: _devices.map((d) => SceneDeviceState(
+          name: d.name, url: d.url, isOn: d.isOn, brightness: d.brightness)).toList(),
+      ));
     });
     _saveScenes();
   }
 
-  Future<void> _applyScene(_Scene scene) async {
-    final smartHomeService = ref.read(smartHomeServiceProvider);
+  Future<bool> _toggleDevice(int index, bool on) async {
+    _clearError();
+    setState(() => _devices[index] = _devices[index].copyWith(isOn: on));
+    _saveDevices();
+    final svc = ref.read(smartHomeServiceProvider);
+    final ok = on ? await svc.lightOn(_devices[index].url) : await svc.lightOff(_devices[index].url);
+    if (!ok && mounted) {
+      setState(() {
+        _deviceError = 'Error al ${on ? "encender" : "apagar"} ${_devices[index].name}';
+        _devices[index] = _devices[index].copyWith(isOn: !on);
+      });
+      _saveDevices();
+    }
+    return ok;
+  }
+
+  Future<bool> _brightnessDevice(int index, int value) async {
+    _clearError();
+    setState(() => _devices[index] = _devices[index].copyWith(brightness: value.toDouble()));
+    _saveDevices();
+    final svc = ref.read(smartHomeServiceProvider);
+    final ok = await svc.setBrightness(_devices[index].url, value);
+    if (!ok && mounted) {
+      setState(() => _deviceError = 'Error al ajustar brillo de ${_devices[index].name}');
+    }
+    return ok;
+  }
+
+  void _removeDevice(int index) {
+    setState(() => _devices.removeAt(index));
+    _saveDevices();
+  }
+
+  Future<void> _applyScene(Scene scene) async {
+    final svc = ref.read(smartHomeServiceProvider);
     for (final d in scene.devices) {
-      bool ok;
-      if (d.isOn) {
-        ok = await smartHomeService.lightOn(d.url);
-        if (!ok) {
-          _deviceError = 'Error al encender ${d.name}';
-          if (mounted) setState(() {});
-          return;
-        }
-        if (d.brightness < 100) {
-          ok = await smartHomeService.setBrightness(d.url, d.brightness.round());
-          if (!ok) {
-            _deviceError = 'Error al ajustar brillo de ${d.name}';
-            if (mounted) setState(() {});
-            return;
-          }
-        }
-      } else {
-        ok = await smartHomeService.lightOff(d.url);
-        if (!ok) {
-          _deviceError = 'Error al apagar ${d.name}';
+      final ok = d.isOn ? await svc.lightOn(d.url) : await svc.lightOff(d.url);
+      if (!ok) {
+        _deviceError = 'Error al ${d.isOn ? "encender" : "apagar"} ${d.name}';
+        if (mounted) setState(() {});
+        return;
+      }
+      if (d.isOn && d.brightness < 100) {
+        final ok2 = await svc.setBrightness(d.url, d.brightness.round());
+        if (!ok2) {
+          _deviceError = 'Error al ajustar brillo de ${d.name}';
           if (mounted) setState(() {});
           return;
         }
       }
     }
-
     if (mounted) {
-      setState(() => _deviceError = null);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Escena "${scene.name}" aplicada')),
-      );
+      _clearError();
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Escena "${scene.name}" aplicada')));
     }
   }
 
@@ -141,8 +150,6 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final smartHomeService = ref.watch(smartHomeServiceProvider);
-
     return Scaffold(
       backgroundColor: context.surface50,
       body: SafeArea(
@@ -151,456 +158,38 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(Spacing.md, Spacing.md, Spacing.md, Spacing.xs),
-              child: Row(
-                children: [
-                  const Icon(Icons.lightbulb, color: AppColors.primary500, size: 28),
-                  const SizedBox(width: Spacing.xs),
-                  Text(
-                    'Hogar Inteligente',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      color: context.surface800,
-                    ),
-                  ),
-                ],
-              ),
+              child: Row(children: [
+                const Icon(Icons.lightbulb, color: AppColors.primary500, size: 28),
+                const SizedBox(width: Spacing.xs),
+                Text('Hogar Inteligente',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: context.surface800)),
+              ]),
             ),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
                 children: [
-                  // ── Scene section ──
-                  if (_scenes.isNotEmpty) ...[
-                    SettingsCard(
-                      icon: Icons.view_quilt,
-                      title: 'ESCENAS',
-                      child: Column(
-                        children: [
-                          ..._scenes.asMap().entries.map(
-                                (entry) => _SceneCard(
-                                  scene: entry.value,
-                                  onApply: () => _applyScene(entry.value),
-                                  onDelete: () => _deleteScene(entry.key),
-                                ),
-                              ),
-                        ],
-                      ),
-                    ),
-                  ],
-
-                  // Add scene form
-                  SettingsCard(
-                    icon: Icons.add_circle_outline,
-                    title: 'Agregar Escena',
-                    description: 'Guarda el estado actual de todas las luces como una escena',
-                    child: Builder(
-                      builder: (context) {
-                        return Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                onChanged: (v) => _sceneNameInput = v,
-                                decoration: const InputDecoration(
-                                  labelText: 'Nombre de la escena',
-                                  hintText: 'Ej: Apagar todo',
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: Spacing.sm),
-                            GantiaButton(
-                              label: 'Guardar',
-                              icon: Icons.save,
-                              variant: GantiaButtonVariant.primary,
-                              onPressed: _scenes.length < 10 ? _addScene : null,
-                            ),
-                          ],
-                        );
-                      },
-                    ),
+                  SmartHomeSceneSection(
+                    scenes: _scenes,
+                    maxScenes: _maxScenes,
+                    onApplyScene: _applyScene,
+                    onDeleteScene: _deleteScene,
+                    onAddScene: _addScene,
                   ),
-
-                  // ── Error banner ──
-                  if (_deviceError != null)
-                    Container(
-                      margin: const EdgeInsets.only(bottom: Spacing.sm),
-                      padding: const EdgeInsets.all(Spacing.sm),
-                      decoration: BoxDecoration(
-                        color: AppColors.red500.withAlpha(15),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.error_outline, size: 16, color: AppColors.red500),
-                          const SizedBox(width: Spacing.xs),
-                          Expanded(
-                            child: Text(
-                              _deviceError!,
-                              style: const TextStyle(fontSize: 12, color: AppColors.red500),
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () => setState(() => _deviceError = null),
-                            child: const Icon(Icons.close, size: 16, color: AppColors.red500),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                  // ── Add device form ──
-                  SettingsCard(
-                    icon: Icons.add,
-                    title: 'Agregar Dispositivo',
-                    child: Builder(
-                      builder: (context) {
-                        return Column(
-                          children: [
-                            TextField(
-                              onChanged: (v) => _nameInput = v,
-                              decoration: const InputDecoration(
-                                labelText: 'Nombre (opcional)',
-                                hintText: 'Ej: Luz Escritorio',
-                              ),
-                            ),
-                            const SizedBox(height: Spacing.xs),
-                            TextField(
-                              onChanged: (v) => _urlInput = v,
-                              decoration: const InputDecoration(
-                                labelText: 'URL del dispositivo',
-                                hintText: 'http://192.168.1.100/api/light',
-                              ),
-                            ),
-                            const SizedBox(height: Spacing.sm),
-                            GantiaButton(
-                              label: 'Agregar',
-                              icon: Icons.add,
-                              variant: GantiaButtonVariant.primary,
-                              onPressed: _addDevice,
-                              minWidth: double.infinity,
-                              padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
+                  SmartHomeDeviceSection(
+                    devices: _devices,
+                    error: _deviceError,
+                    onToggle: _toggleDevice,
+                    onBrightness: _brightnessDevice,
+                    onRemove: _removeDevice,
+                    onAddDevice: _addDevice,
+                    onDismissError: _clearError,
                   ),
-
-                  // ── Device list ──
-                  if (_devices.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: Spacing.xxxl),
-                      child: Center(
-                        child: Text(
-                          'Sin dispositivos configurados',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: context.surface500,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ),
-                    )
-                  else
-                    ..._devices.asMap().entries.map(
-                          (entry) => _LightDeviceCard(
-                            device: entry.value,
-                            onToggle: (on) async {
-                              setState(() => _updateDevice(entry.key, isOn: on));
-                              _saveDevices();
-                              final ok = on
-                                  ? await smartHomeService.lightOn(entry.value.url)
-                                  : await smartHomeService.lightOff(entry.value.url);
-                              if (!ok && mounted) {
-                                setState(() {
-                                  _deviceError = 'Error al ${on ? "encender" : "apagar"} ${entry.value.name}';
-                                  _updateDevice(entry.key, isOn: !on);
-                                });
-                                _saveDevices();
-                              } else {
-                                _clearDeviceError();
-                              }
-                            },
-                            onBrightness: (value) async {
-                              setState(() => _updateDevice(entry.key, brightness: value.toDouble()));
-                              _saveDevices();
-                              final ok = await smartHomeService.setBrightness(entry.value.url, value);
-                              if (!ok && mounted) {
-                                setState(() {
-                                  _deviceError = 'Error al ajustar brillo de ${entry.value.name}';
-                                });
-                              } else {
-                                _clearDeviceError();
-                              }
-                            },
-                            onRemove: () {
-                              setState(() => _devices.removeAt(entry.key));
-                              _saveDevices();
-                            },
-                          ),
-                        ),
                 ],
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _updateDevice(int index, {bool? isOn, double? brightness}) {
-    final d = _devices[index];
-    _devices[index] = _LightDevice(
-      name: d.name,
-      url: d.url,
-      isOn: isOn ?? d.isOn,
-      brightness: brightness ?? d.brightness,
-    );
-  }
-}
-
-// ── Models ──
-
-class _LightDevice {
-  final String name;
-  final String url;
-  final bool isOn;
-  final double brightness;
-
-  const _LightDevice({
-    required this.name,
-    required this.url,
-    this.isOn = false,
-    this.brightness = 50,
-  });
-
-  factory _LightDevice.fromJson(Map<String, dynamic> json) => _LightDevice(
-        name: json['name'] as String? ?? '',
-        url: json['url'] as String? ?? '',
-        isOn: json['isOn'] as bool? ?? false,
-        brightness: (json['brightness'] as num?)?.toDouble() ?? 50,
-      );
-
-  Map<String, dynamic> toJson() => {
-        'name': name,
-        'url': url,
-        'isOn': isOn,
-        'brightness': brightness,
-      };
-}
-
-class _SceneDeviceState {
-  final String name;
-  final String url;
-  final bool isOn;
-  final double brightness;
-
-  const _SceneDeviceState({
-    required this.name,
-    required this.url,
-    required this.isOn,
-    required this.brightness,
-  });
-
-  factory _SceneDeviceState.fromJson(Map<String, dynamic> json) => _SceneDeviceState(
-        name: json['name'] as String? ?? '',
-        url: json['url'] as String? ?? '',
-        isOn: json['isOn'] as bool? ?? false,
-        brightness: (json['brightness'] as num?)?.toDouble() ?? 0,
-      );
-
-  Map<String, dynamic> toJson() => {
-        'name': name,
-        'url': url,
-        'isOn': isOn,
-        'brightness': brightness,
-      };
-}
-
-class _Scene {
-  final String name;
-  final List<_SceneDeviceState> devices;
-
-  const _Scene({required this.name, required this.devices});
-
-  factory _Scene.fromJson(Map<String, dynamic> json) => _Scene(
-        name: json['name'] as String? ?? '',
-        devices: (json['devices'] as List<dynamic>?)
-                ?.map((e) => _SceneDeviceState.fromJson(e as Map<String, dynamic>))
-                .toList() ??
-            [],
-      );
-
-  Map<String, dynamic> toJson() => {
-        'name': name,
-        'devices': devices.map((d) => d.toJson()).toList(),
-      };
-}
-
-// ── Widgets ──
-
-class _SceneCard extends StatelessWidget {
-  final _Scene scene;
-  final VoidCallback onApply;
-  final VoidCallback onDelete;
-
-  const _SceneCard({
-    required this.scene,
-    required this.onApply,
-    required this.onDelete,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(Spacing.sm),
-      decoration: BoxDecoration(
-        color: context.surface100,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.view_quilt, size: 20, color: AppColors.primary500),
-          const SizedBox(width: Spacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  scene.name,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: context.surface800,
-                  ),
-                ),
-                Text(
-                  '${scene.devices.where((d) => d.isOn).length}/${scene.devices.length} encendidas',
-                  style: TextStyle(fontSize: 11, color: context.surface600),
-                ),
-              ],
-            ),
-          ),
-          GantiaButton(
-            label: 'Aplicar',
-            icon: Icons.play_arrow,
-            variant: GantiaButtonVariant.primary,
-            onPressed: onApply,
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          ),
-          const SizedBox(width: Spacing.xxs),
-          GantiaButton(
-            label: '',
-            icon: Icons.delete,
-            variant: GantiaButtonVariant.danger,
-            onPressed: onDelete,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LightDeviceCard extends StatefulWidget {
-  final _LightDevice device;
-  final ValueChanged<bool> onToggle;
-  final ValueChanged<int> onBrightness;
-  final VoidCallback onRemove;
-
-  const _LightDeviceCard({
-    required this.device,
-    required this.onToggle,
-    required this.onBrightness,
-    required this.onRemove,
-  });
-
-  @override
-  State<_LightDeviceCard> createState() => _LightDeviceCardState();
-}
-
-class _LightDeviceCardState extends State<_LightDeviceCard> {
-  late double _brightness;
-
-  @override
-  void initState() {
-    super.initState();
-    _brightness = widget.device.brightness;
-  }
-
-  @override
-  void didUpdateWidget(_LightDeviceCard old) {
-    super.didUpdateWidget(old);
-    if (widget.device != old.device) {
-      _brightness = widget.device.brightness;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final device = widget.device;
-    return SettingsCard(
-      title: device.name,
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    device.isOn ? Icons.lightbulb : Icons.lightbulb_outline,
-                    color: device.isOn ? AppColors.warning500 : context.surface500,
-                    size: 24,
-                  ),
-                  const SizedBox(width: Spacing.xs),
-                  Text(
-                    device.url,
-                    style: TextStyle(fontSize: 11, color: context.surface600),
-                  ),
-                ],
-              ),
-              Switch(
-                value: device.isOn,
-                onChanged: (v) => widget.onToggle(v),
-                activeThumbColor: AppColors.primary500,
-              ),
-            ],
-          ),
-          if (device.isOn) ...[
-            const SizedBox(height: Spacing.sm),
-            Row(
-              children: [
-                Icon(Icons.brightness_low, size: 16, color: context.surface600),
-                Expanded(
-                  child: Slider(
-                    value: _brightness,
-                    min: 0,
-                    max: 100,
-                    divisions: 100,
-                    onChanged: (v) => setState(() => _brightness = v),
-                    onChangeEnd: (v) => widget.onBrightness(v.round()),
-                    inactiveColor: context.surface300,
-                  ),
-                ),
-                Text(
-                  '${_brightness.round()}%',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-          ],
-          Align(
-            alignment: Alignment.centerRight,
-            child: GantiaButton(
-              label: 'Eliminar',
-              icon: Icons.delete,
-              variant: GantiaButtonVariant.danger,
-              onPressed: widget.onRemove,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            ),
-          ),
-        ],
       ),
     );
   }

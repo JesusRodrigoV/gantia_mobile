@@ -4,12 +4,13 @@ import '../providers.dart' hide ActionLog;
 import '../theme/app_colors.dart';
 import '../theme/context_extensions.dart';
 import '../theme/spacing.dart';
-import '../widgets/neuromorphic_card.dart';
+import '../widgets/action_log.dart';
 import '../widgets/gantia_header.dart';
 import '../widgets/gesture_flash.dart';
-import '../widgets/action_log.dart';
-import '../widgets/status_dot.dart';
+import '../widgets/home_connection_card.dart';
+import '../widgets/home_health_card.dart';
 import '../widgets/live_chart.dart';
+import '../widgets/neuromorphic_card.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -43,6 +44,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final gloveState = ref.watch(gloveStateProvider);
+    final bt = ref.watch(btServiceProvider);
 
     return Scaffold(
       backgroundColor: context.surface50,
@@ -64,75 +66,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   children: [
                     Center(child: GestureFlash(event: gloveState.gestureDetected)),
                     const SizedBox(height: Spacing.md),
-
-                    NeuromorphicCard(
-                      showAccentLine: false,
-                      padding: const EdgeInsets.all(Spacing.md),
-                      child: _buildConnectionStatus(gloveState),
-                    ),
+                    HomeConnectionCard(gloveState: gloveState),
                     const SizedBox(height: Spacing.md),
-
                     if (gloveState.dataFlowing && gloveState.telemetryBuffer.length >= 2) ...[
-                      NeuromorphicCard(
-                        showAccentLine: false,
-                        padding: const EdgeInsets.all(Spacing.md),
-                        child: LiveChart(
-                          type: LiveChartType.accelerometer,
-                          data: gloveState.telemetryBuffer,
-                        ),
-                      ),
+                      _chartCard(LiveChartType.accelerometer, 'Acelerómetro', gloveState),
                       const SizedBox(height: Spacing.md),
-                      NeuromorphicCard(
-                        showAccentLine: false,
-                        padding: const EdgeInsets.all(Spacing.md),
-                        child: LiveChart(
-                          type: LiveChartType.gyroscope,
-                          data: gloveState.telemetryBuffer,
-                        ),
-                      ),
+                      _chartCard(LiveChartType.gyroscope, 'Giroscopio', gloveState),
                       const SizedBox(height: Spacing.md),
-                      NeuromorphicCard(
-                        showAccentLine: false,
-                        padding: const EdgeInsets.all(Spacing.md),
-                        child: LiveChart(
-                          type: LiveChartType.flexion,
-                          data: gloveState.telemetryBuffer,
-                        ),
-                      ),
+                      _chartCard(LiveChartType.flexion, 'Flexión', gloveState),
                       const SizedBox(height: Spacing.md),
                     ],
-
-                    NeuromorphicCard(
-                      padding: const EdgeInsets.all(Spacing.md),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'ACCIONES RECIENTES',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.8,
-                              color: AppColors.primary600,
-                            ),
-                          ),
-                          const SizedBox(height: Spacing.sm),
-                          ActionLog(actions: ref.watch(actionLogProvider).recentActions),
-                        ],
-                      ),
-                    ),
+                    _actionLogCard(),
                     const SizedBox(height: Spacing.md),
-
-                    NeuromorphicCard(
-                      padding: const EdgeInsets.all(Spacing.md),
-                      child: _buildDeviceInfo(gloveState),
+                    HomeDeviceInfo(
+                      gloveState: gloveState,
+                      btConnected: bt.isConnected,
+                      btDeviceName: bt.connectedDevice,
                     ),
                     if (gloveState.telemetry?.hasHealth == true) ...[
                       const SizedBox(height: Spacing.md),
-                      NeuromorphicCard(
-                        padding: const EdgeInsets.all(Spacing.md),
-                        child: _buildHealthPanel(gloveState),
-                      ),
+                      HomeHealthCard(telemetry: gloveState.telemetry!),
                     ],
                   ],
                 ),
@@ -144,272 +97,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildConnectionStatus(GloveState gloveState) {
-    final statusText = _statusLabel(gloveState);
-
-    return Column(
-      children: [
-        Row(
-          children: [
-            StatusDot(status: gloveState.connectionStatus, flowing: gloveState.dataFlowing),
-            const SizedBox(width: Spacing.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    statusText,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: context.surface800,
-                    ),
-                  ),
-                  if (gloveState.telemetry != null)
-                    Text(
-                      'Datos recibiendo',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: context.surface600,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            if (gloveState.dataFlowing)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: Spacing.xs, vertical: Spacing.xxs),
-                decoration: BoxDecoration(
-                  color: AppColors.primary500.withAlpha(20),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.flash_on, size: 12, color: AppColors.primary500),
-                    SizedBox(width: Spacing.xxs),
-                    Text(
-                      'ACTIVO',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-        if (gloveState.waitingForDevice) ...[
-          const SizedBox(height: Spacing.sm),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: Spacing.xs, horizontal: Spacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.primary500.withAlpha(10),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(
-                  width: 12,
-                  height: 12,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                const SizedBox(width: Spacing.xs),
-                Text(
-                  'Conectado al servidor — esperando guante...',
-                  style: TextStyle(fontSize: 12, color: context.surface600),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ],
+  Widget _chartCard(LiveChartType type, String label, GloveState gloveState) {
+    return NeuromorphicCard(
+      showAccentLine: false,
+      padding: const EdgeInsets.all(Spacing.md),
+      child: LiveChart(type: type, data: gloveState.telemetryBuffer),
     );
   }
 
-  Widget _buildDeviceInfo(GloveState gloveState) {
-    final bt = ref.watch(btServiceProvider);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'DISPOSITIVOS',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1.2,
-            color: AppColors.primary600,
-          ),
-        ),
-        const SizedBox(height: Spacing.sm),
-        _deviceRow(
-          icon: Icons.back_hand,
-          label: 'Guante',
-          connected: gloveState.connectionStatus == ConnectionStatus.connected,
-        ),
-        const SizedBox(height: 8),
-        _deviceRow(
-          icon: Icons.bluetooth_audio,
-          label: 'Parlante BT',
-          connected: bt.isConnected,
-          detail: bt.isConnected ? bt.connectedDevice : null,
-        ),
-      ],
-    );
-  }
-
-  Widget _deviceRow({
-    required IconData icon,
-    required String label,
-    required bool connected,
-    String? detail,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(Spacing.sm),
-      decoration: BoxDecoration(
-        color: context.surface100,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
+  Widget _actionLogCard() {
+    final actions = ref.watch(actionLogProvider).recentActions;
+    return NeuromorphicCard(
+      padding: const EdgeInsets.all(Spacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          StatusDotSmall(active: connected),
-          const SizedBox(width: Spacing.sm),
-          Icon(icon, size: 20, color: AppColors.primary500),
-          const SizedBox(width: Spacing.xs),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: context.surface800,
-            ),
-          ),
-          const Spacer(),
-          Text(
-            connected ? 'Conectado' : 'Desconectado',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: connected ? AppColors.primary500 : context.surface500,
-            ),
-          ),
+          const Text('ACCIONES RECIENTES',
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: AppColors.primary600)),
+          const SizedBox(height: Spacing.sm),
+          ActionLog(actions: actions),
         ],
       ),
     );
-  }
-
-  Widget _buildHealthPanel(GloveState gloveState) {
-    final t = gloveState.telemetry!;
-    final rssi = t.rssi ?? -100;
-    final temp = t.tempMpu ?? 0;
-    final bars = rssi >= -50
-        ? 5
-        : rssi >= -60
-            ? 4
-            : rssi >= -70
-                ? 3
-                : rssi >= -80
-                    ? 2
-                    : 1;
-    final totalSec = (t.uptimeMs ?? 0) ~/ 1000;
-    final hrs = totalSec ~/ 3600;
-    final min = (totalSec % 3600) ~/ 60;
-    final sec = totalSec % 60;
-    final uptimeStr =
-        hrs > 0 ? '${hrs}h ${min}m' : min > 0 ? '${min}m ${sec}s' : '${sec}s';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'SALUD DEL GUANTE',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1.2,
-            color: AppColors.primary600,
-          ),
-        ),
-        const SizedBox(height: Spacing.sm),
-        Row(
-          children: [
-            _healthBadge(Icons.wifi, 'WiFi', '$rssi dBm'),
-            const SizedBox(width: Spacing.sm),
-            _healthBadge(Icons.thermostat, 'Temp', '${temp.toStringAsFixed(1)}°C'),
-            const SizedBox(width: Spacing.sm),
-            _healthBadge(Icons.timer, 'Activo', uptimeStr),
-          ],
-        ),
-        const SizedBox(height: Spacing.xs),
-        Row(
-          children: List.generate(5, (i) {
-            final active = i < bars;
-            return Container(
-              width: 8,
-              height: 4.0 + i * 3.0,
-              margin: const EdgeInsets.only(right: 3),
-              decoration: BoxDecoration(
-                color: active ? AppColors.primary500 : context.surface400,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
-              ),
-            );
-          }),
-        ),
-      ],
-    );
-  }
-
-  Widget _healthBadge(IconData icon, String label, String value) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(Spacing.sm),
-        decoration: BoxDecoration(
-          color: context.surface100,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, size: 18, color: AppColors.primary500),
-            const SizedBox(height: 2),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: context.surface800,
-              ),
-            ),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 9,
-                fontWeight: FontWeight.w600,
-                color: context.surface500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _statusLabel(GloveState gloveState) {
-    switch (gloveState.connectionStatus) {
-      case ConnectionStatus.connected:
-        if (gloveState.dataFlowing) return 'Guante conectado — recibiendo datos';
-        if (gloveState.waitingForDevice) return 'Conectado al servidor — esperando guante';
-        return 'Conectado — sin datos';
-      case ConnectionStatus.connecting:
-        return 'Conectando al servidor...';
-      case ConnectionStatus.reconnecting:
-        return 'Reconectando (${gloveState.retryAttempt}/${gloveState.maxRetries})...';
-      case ConnectionStatus.disconnected:
-        return 'Sin conexión';
-      case ConnectionStatus.error:
-        return 'Error de conexión';
-    }
   }
 }

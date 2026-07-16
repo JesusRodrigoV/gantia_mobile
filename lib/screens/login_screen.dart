@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers.dart';
 import '../theme/context_extensions.dart';
 import '../theme/shadows.dart';
@@ -7,6 +6,8 @@ import '../theme/spacing.dart';
 import '../widgets/gantia_button.dart';
 import '../widgets/gantia_form_field.dart';
 import '../widgets/gantia_scramble_text.dart';
+import '../widgets/password_visibility_icon.dart';
+import '../widgets/server_config_dialog.dart';
 
 final _emailRegex = RegExp(r'^[\w\.-]+@[\w\.-]+\.\w{2,}$');
 
@@ -55,88 +56,11 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _showServerConfigDialog(BuildContext context, WidgetRef ref) async {
-    final config = ref.read(serverConfigProvider);
-    final hostCtrl = TextEditingController(text: config.host);
-    final portCtrl = TextEditingController(text: config.port.toString());
-    final formKey = GlobalKey<FormState>();
-
+  Future<void> _showServerConfigDialog(BuildContext context) async {
     await showDialog<void>(
       context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          title: const Text('Configuración Servidor'),
-          content: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: hostCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Host',
-                    hintText: '192.168.1.100',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.url,
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Host requerido';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: portCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Puerto',
-                    hintText: '8000',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Puerto requerido';
-                    final n = int.tryParse(v);
-                    if (n == null || n < 1 || n > 65535) return 'Puerto inválido';
-                    return null;
-                  },
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Cancelar'),
-            ),
-              FilledButton(
-                onPressed: () async {
-                  if (!formKey.currentState!.validate()) return;
-                  final host = hostCtrl.text.trim();
-                  final port = int.parse(portCtrl.text.trim());
-                  await ref.read(serverConfigProvider).setHostPort(host, port);
-                  ref.read(apiServiceProvider).setBaseUrl('http://$host:$port');
-                  if (ctx.mounted) {
-                    Navigator.of(ctx).pop();
-                  }
-                  ref.invalidate(wsClientProvider);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Servidor: $host:$port'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  }
-                },
-                child: const Text('Guardar'),
-              ),
-          ],
-        );
-      },
+      builder: (_) => const ServerConfigDialog(),
     );
-
-    hostCtrl.dispose();
-    portCtrl.dispose();
   }
 
   @override
@@ -160,19 +84,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Consumer(
-                      builder: (context, ref, _) {
-                        return GestureDetector(
-                           onLongPress: () {
-                              _showServerConfigDialog(context, ref);
-                           },
-                          child: Image.asset(
-                            'assets/logos/logo.webp',
-                            width: 64,
-                            height: 64,
-                          ),
-                        );
-                      },
+                    GestureDetector(
+                      onLongPress: () => _showServerConfigDialog(context),
+                      child: Image.asset(
+                        'assets/logos/logo.webp',
+                        width: 64,
+                        height: 64,
+                      ),
                     ),
                     const SizedBox(height: Spacing.lg),
                     GantiaScrambleText(
@@ -210,21 +128,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               if (v == null || v.isEmpty) return 'Contraseña requerida';
                               return null;
                             },
-                            suffix: Tooltip(
-                              message: _obscurePassword
-                                  ? 'Mostrar contraseña'
-                                  : 'Ocultar contraseña',
-                              child: IconButton(
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                  size: 18,
-                                  color: context.surface500,
-                                ),
-                                onPressed: () => setState(
-                                    () => _obscurePassword = !_obscurePassword),
-                              ),
+                            suffix: PasswordVisibilityIcon(
+                              obscure: _obscurePassword,
+                              onToggle: () => setState(() => _obscurePassword = !_obscurePassword),
                             ),
                           ),
                           const SizedBox(height: Spacing.xl),

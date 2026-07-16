@@ -6,6 +6,7 @@ import '../theme/spacing.dart';
 import '../widgets/gantia_button.dart';
 import '../widgets/gantia_form_field.dart';
 import '../widgets/gantia_scramble_text.dart';
+import '../widgets/password_visibility_icon.dart';
 
 final _emailRegex = RegExp(r'^[\w\.-]+@[\w\.-]+\.\w{2,}$');
 
@@ -142,21 +143,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               if (v.length < 6) return 'Mínimo 6 caracteres';
                               return null;
                             },
-                            suffix: Tooltip(
-                              message: _obscurePassword
-                                  ? 'Mostrar contraseña'
-                                  : 'Ocultar contraseña',
-                              child: IconButton(
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                  size: 18,
-                                  color: context.surface500,
-                                ),
-                                onPressed: () => setState(
-                                    () => _obscurePassword = !_obscurePassword),
-                              ),
+                            suffix: PasswordVisibilityIcon(
+                              obscure: _obscurePassword,
+                              onToggle: () => setState(() => _obscurePassword = !_obscurePassword),
                             ),
                           ),
                           const SizedBox(height: Spacing.xl),
@@ -174,21 +163,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               }
                               return null;
                             },
-                            suffix: Tooltip(
-                              message: _obscureConfirm
-                                  ? 'Mostrar contraseña'
-                                  : 'Ocultar contraseña',
-                              child: IconButton(
-                                icon: Icon(
-                                  _obscureConfirm
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                  size: 18,
-                                  color: context.surface500,
-                                ),
-                                onPressed: () => setState(
-                                    () => _obscureConfirm = !_obscureConfirm),
-                              ),
+                            suffix: PasswordVisibilityIcon(
+                              obscure: _obscureConfirm,
+                              onToggle: () => setState(() => _obscureConfirm = !_obscureConfirm),
                             ),
                           ),
                           const SizedBox(height: Spacing.xxxl - 6),

@@ -1,15 +1,14 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/gesture_config_model.dart';
 import '../providers.dart';
 import '../theme/app_colors.dart';
 import '../theme/context_extensions.dart';
 import '../theme/spacing.dart';
-import '../widgets/settings_card.dart';
+import '../widgets/bt_scanner_section.dart';
 import '../widgets/gantia_button.dart';
-import '../models/gesture_config_model.dart';
-import '../models/sensitivity_model.dart';
-
+import '../widgets/sensitivity_sliders.dart';
+import '../widgets/settings_card.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -19,39 +18,12 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  bool _sensLoaded = false;
-  final Map<String, Timer> _sensTimers = {};
-
   @override
   void initState() {
     super.initState();
     Future.microtask(() {
-      ref.read(sensitivityServiceProvider).getSettings().then((_) {
-        if (mounted) setState(() => _sensLoaded = true);
-      });
       ref.read(mouseConfigServiceProvider).getConfig();
       ref.read(targetServiceProvider).getTarget();
-    });
-  }
-
-  @override
-  void dispose() {
-    for (final t in _sensTimers.values) {
-      t.cancel();
-    }
-    _sensTimers.clear();
-    super.dispose();
-  }
-
-  void _scanBt() {
-    ref.read(btServiceProvider).scanDevices();
-  }
-
-  void _updateSensitivity(String key, double value) {
-    _sensTimers[key]?.cancel();
-    _sensTimers[key] = Timer(const Duration(milliseconds: 300), () {
-      _sensTimers.remove(key);
-      ref.read(sensitivityServiceProvider).updateSettings({key: value});
     });
   }
 
@@ -59,11 +31,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final authService = ref.watch(authServiceProvider);
     final themeService = ref.watch(themeServiceProvider);
-    final btService = ref.watch(btServiceProvider);
-    final gloveState = ref.watch(gloveStateProvider);
-    final sensSvc = ref.watch(sensitivityServiceProvider);
     final mouseSvc = ref.watch(mouseConfigServiceProvider);
     final targetSvc = ref.watch(targetServiceProvider);
+    final gloveState = ref.watch(gloveStateProvider);
 
     return Scaffold(
       backgroundColor: context.surface50,
@@ -77,14 +47,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 children: [
                   const Icon(Icons.settings, color: AppColors.primary500, size: 28),
                   const SizedBox(width: Spacing.xs),
-                  Text(
-                    'Ajustes',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      color: context.surface800,
-                    ),
-                  ),
+                  Text('Ajustes',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: context.surface800)),
                 ],
               ),
             ),
@@ -92,200 +56,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
                 children: [
-                  // ── Apariencia ──
-                  SettingsCard(
-                    icon: Icons.palette,
-                    title: 'Apariencia',
-                    description: 'Alternar entre tema claro y oscuro',
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          themeService.isDarkMode ? 'Modo Oscuro' : 'Modo Claro',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: context.surface800,
-                          ),
-                        ),
-                        Switch(
-                          value: themeService.isDarkMode,
-                          onChanged: (_) => themeService.toggleTheme(),
-                          activeThumbColor: AppColors.primary500,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // ── Sensibilidad ──
-                  SettingsCard(
-                    icon: Icons.tune,
-                    title: 'Sensibilidad',
-                    description: 'Ajustá la sensibilidad de cada control del guante',
-                    child: sensSvc.isLoading && !_sensLoaded
-                        ? const Center(child: CircularProgressIndicator())
-                        : sensSvc.settings == null
-                            ? GantiaButton(
-                                label: 'Cargar',
-                                icon: Icons.refresh,
-                                onPressed: () => ref.read(sensitivityServiceProvider).getSettings(),
-                              )
-                            : _buildSensitivitySliders(sensSvc.settings!),
-                  ),
-
-                  // ── Mouse ──
-                  SettingsCard(
-                    icon: Icons.mouse,
-                    title: 'Mouse',
-                    description: 'Invertí la dirección del cursor',
-                    child: mouseSvc.isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : _buildMouseConfig(mouseSvc),
-                  ),
-
-                  // ── Contexto y Destino ──
-                  SettingsCard(
-                    icon: Icons.share,
-                    title: 'Contexto y Destino',
-                    child: Column(
-                      children: [
-                        _buildModeSelector(gloveState),
-                        const Divider(height: Spacing.lg),
-                        _buildTargetSelector(targetSvc),
-                      ],
-                    ),
-                  ),
-
-                  // ── Bluetooth ──
-                  SettingsCard(
-                    icon: Icons.bluetooth,
-                    title: 'Parlante Bluetooth',
-                    description: 'Conectá un parlante Bluetooth para control de audio',
-                    child: Column(
-                      children: [
-                        if (btService.isConnected)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: Spacing.sm),
-                            child: Container(
-                              padding: const EdgeInsets.all(Spacing.sm),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary500.withAlpha(15),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.bluetooth_connected,
-                                      color: AppColors.primary500, size: 20),
-                                  const SizedBox(width: Spacing.xs),
-                                  Expanded(
-                                    child: Text(
-                                      btService.connectedDevice ?? 'Conectado',
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.primary600,
-                                      ),
-                                    ),
-                                  ),
-                                  GantiaButton(
-                                    label: 'Desconectar',
-                                    variant: GantiaButtonVariant.danger,
-                                    onPressed: () => btService.disconnect(),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        if (btService.error != null)
-                          Container(
-                            margin: const EdgeInsets.only(bottom: Spacing.sm),
-                            padding: const EdgeInsets.all(Spacing.sm),
-                            decoration: BoxDecoration(
-                              color: AppColors.red500.withAlpha(15),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.error_outline, size: 16, color: AppColors.red500),
-                                const SizedBox(width: Spacing.xs),
-                                Expanded(
-                                  child: Text(
-                                    btService.error!,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.red500,
-                                    ),
-                                  ),
-                                ),
-                                GestureDetector(
-                                  onTap: () => btService.clearError(),
-                                  child: const Icon(Icons.close, size: 16, color: AppColors.red500),
-                                ),
-                              ],
-                            ),
-                          ),
-                        GantiaButton(
-                          label: btService.isScanning ? 'Escaneando...' : 'Escanear dispositivos',
-                          icon: Icons.search,
-                          isLoading: btService.isScanning,
-                          onPressed: btService.isScanning ? null : _scanBt,
-                        ),
-                        if (btService.availableDevices.isNotEmpty) ...[
-                          const SizedBox(height: Spacing.xs),
-                          ...btService.availableDevices.map(
-                            (d) => ListTile(
-                              dense: true,
-                              title: Text(d, style: const TextStyle(fontSize: 13)),
-                              trailing: GantiaButton(
-                                label: 'Conectar',
-                                onPressed: () => btService.connect(d),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-
-                  // ── Acerca de ──
-                  SettingsCard(
-                    icon: Icons.info,
-                    title: 'Acerca de',
-                  child: Text(
-                    'Gantia Mobile v0.1.0',
-                    style: TextStyle(fontSize: 13, color: context.surface600),
-                  ),
-                  ),
-
+                  _appearanceCard(themeService),
+                  _sensitivityCard(),
+                  _mouseCard(mouseSvc),
+                  _contextTargetCard(gloveState, targetSvc),
+                  const BtScannerSection(),
+                  _aboutCard(),
                   const SizedBox(height: Spacing.sm),
-                  GantiaButton(
-                    label: 'Cerrar sesión',
-                    icon: Icons.logout,
-                    variant: GantiaButtonVariant.danger,
-                    onPressed: () async {
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          title: const Text('Cerrar sesión'),
-                          content: const Text('¿Estás seguro de que querés cerrar sesión?'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(ctx).pop(false),
-                              child: const Text('Cancelar'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.of(ctx).pop(true),
-                              child: const Text('Cerrar sesión'),
-                            ),
-                          ],
-                        ),
-                      );
-                      if (confirm == true) {
-                        ref.read(wsClientProvider).disconnect();
-                        await authService.logout();
-                      }
-                    },
-                  ),
+                  _logoutButton(authService),
                   const SizedBox(height: Spacing.xxl),
                 ],
               ),
@@ -296,128 +74,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _buildSensitivitySliders(SensitivitySettings s) {
-    return Column(
-      children: sensitivityFields.map((f) {
-        double currentValue;
-        switch (f.key) {
-          case 'swipe_threshold': currentValue = s.swipeThreshold; break;
-          case 'swipe_dominance': currentValue = s.swipeDominance; break;
-          case 'swipe_cooldown': currentValue = s.swipeCooldown; break;
-          case 'posture_hold_time': currentValue = s.postureHoldTime; break;
-          case 'mouse_speed': currentValue = s.mouseSpeed; break;
-          case 'mouse_dead_zone': currentValue = s.mouseDeadZone; break;
-          case 'double_tap_window': currentValue = s.doubleTapWindow; break;
-          case 'tilt_threshold': currentValue = s.tiltThreshold; break;
-          case 'tilt_cooldown': currentValue = s.tiltCooldown; break;
-          default: currentValue = 0;
-        }
-
-        final isSaving = _sensTimers.containsKey(f.key);
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: Spacing.sm),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      f.label,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: context.surface800,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    f.key == 'swipe_dominance' || f.key == 'mouse_dead_zone'
-                        ? currentValue.toStringAsFixed(2)
-                        : (currentValue % 1 == 0
-                            ? currentValue.toInt().toString()
-                            : currentValue.toStringAsFixed(1)),
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: isSaving ? AppColors.primary500 : context.surface600,
-                    ),
-                  ),
-                  if (isSaving)
-                    const Padding(
-                      padding: EdgeInsets.only(left: 4),
-                      child: SizedBox(
-                        width: 10, height: 10,
-                        child: CircularProgressIndicator(strokeWidth: 1.5),
-                      ),
-                    ),
-                ],
-              ),
-              Text(
-                f.desc,
-                style: TextStyle(fontSize: 11, color: context.surface500),
-              ),
-              Slider(
-                value: currentValue.clamp(f.min, f.max),
-                min: f.min,
-                max: f.max,
-                divisions: ((f.max - f.min) / f.step).round().clamp(1, 200),
-                onChanged: (v) => _updateSensitivity(f.key, v),
-                activeColor: AppColors.primary500,
-                inactiveColor: context.surface200,
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildMouseConfig(MouseConfigService svc) {
-    final cfg = svc.config;
-    final invertRoll = cfg?['invert_roll'] == true;
-    final invertPitch = cfg?['invert_pitch'] == true;
-    return Column(
-      children: [
-        _toggleRow(
-          icon: Icons.swap_horiz,
-          label: 'Invertir Balanceo (Roll)',
-          value: invertRoll,
-          onChanged: (v) => ref.read(mouseConfigServiceProvider).updateConfig(invertRoll: v),
-        ),
-        const SizedBox(height: Spacing.xs),
-        _toggleRow(
-          icon: Icons.swap_vert,
-          label: 'Invertir Inclinación (Pitch)',
-          value: invertPitch,
-          onChanged: (v) => ref.read(mouseConfigServiceProvider).updateConfig(invertPitch: v),
-        ),
-      ],
-    );
-  }
-
-  Widget _toggleRow({
-    required IconData icon,
-    required String label,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+  Widget _appearanceCard(ThemeService themeService) {
+    return SettingsCard(
+      icon: Icons.palette,
+      title: 'Apariencia',
+      description: 'Alternar entre tema claro y oscuro',
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Icon(icon, size: 18, color: context.surface600),
-          const SizedBox(width: Spacing.xs),
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(fontSize: 13, color: context.surface700),
-            ),
-          ),
+          Text(themeService.isDarkMode ? 'Modo Oscuro' : 'Modo Claro',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.surface800)),
           Switch(
-            value: value,
-            onChanged: onChanged,
+            value: themeService.isDarkMode,
+            onChanged: (_) => themeService.toggleTheme(),
             activeThumbColor: AppColors.primary500,
           ),
         ],
@@ -425,64 +94,121 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _buildModeSelector(GloveState gloveState) {
-    return Row(
-      children: [
-        Text(
-          'Modo activo:',
-          style: TextStyle(fontSize: 13, color: context.surface700),
-        ),
-        const Spacer(),
-        DropdownButton<String>(
-          value: contexts.contains(gloveState.currentMode)
-              ? gloveState.currentMode
-              : 'GLOBAL',
-          underline: const SizedBox(),
-          items: contexts
-              .map((c) => DropdownMenuItem(
-                    value: c,
-                    child: Text(getContextLabel(c)),
-                  ))
-              .toList(),
-          onChanged: (v) {
-            if (v != null) {
-              ref.read(gloveStateProvider).changeMode(v);
-            }
-          },
-        ),
-      ],
+  Widget _sensitivityCard() {
+    return SettingsCard(
+      icon: Icons.tune,
+      title: 'Sensibilidad',
+      description: 'Ajustá la sensibilidad de cada control del guante',
+      child: const SensitivitySliders(),
     );
   }
 
-  Widget _buildTargetSelector(TargetService svc) {
+  Widget _mouseCard(MouseConfigService svc) {
+    final cfg = svc.config;
+    return SettingsCard(
+      icon: Icons.mouse,
+      title: 'Mouse',
+      description: 'Invertí la dirección del cursor',
+      child: svc.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                _toggleRow(Icons.swap_horiz, 'Invertir Balanceo (Roll)',
+                  cfg?['invert_roll'] == true, (v) => svc.updateConfig(invertRoll: v)),
+                const SizedBox(height: Spacing.xs),
+                _toggleRow(Icons.swap_vert, 'Invertir Inclinación (Pitch)',
+                  cfg?['invert_pitch'] == true, (v) => svc.updateConfig(invertPitch: v)),
+              ],
+            ),
+    );
+  }
+
+  Widget _contextTargetCard(GloveState gloveState, TargetService svc) {
     const targets = ['auto', 'pico_w', 'mobile'];
     const targetLabels = {'auto': 'Automático', 'pico_w': 'Pico W (PC)', 'mobile': 'Móvil'};
 
-    return Row(
-      children: [
-        Text(
-          'Destino acciones:',
-          style: TextStyle(fontSize: 13, color: context.surface700),
-        ),
-        const Spacer(),
-        DropdownButton<String>(
-          value: targets.contains(svc.target) ? svc.target! : 'auto',
-          underline: const SizedBox(),
-          items: targets
-              .map((t) => DropdownMenuItem(
-                    value: t,
-                    child: Text(targetLabels[t] ?? t),
-                  ))
-              .toList(),
-          onChanged: svc.isLoading
-              ? null
-              : (v) {
-                  if (v != null) {
-                    ref.read(targetServiceProvider).setTarget(v);
-                  }
-                },
-        ),
-      ],
+    return SettingsCard(
+      icon: Icons.share,
+      title: 'Contexto y Destino',
+      child: Column(
+        children: [
+          Row(children: [
+            Text('Modo activo:', style: TextStyle(fontSize: 13, color: context.surface700)),
+            const Spacer(),
+            DropdownButton<String>(
+              value: contexts.contains(gloveState.currentMode) ? gloveState.currentMode : 'GLOBAL',
+              underline: const SizedBox(),
+              items: contexts.map((c) => DropdownMenuItem(
+                value: c, child: Text(getContextLabel(c)))).toList(),
+              onChanged: (v) {
+                if (v != null) ref.read(gloveStateProvider).changeMode(v);
+              },
+            ),
+          ]),
+          const Divider(height: Spacing.lg),
+          Row(children: [
+            Text('Destino acciones:', style: TextStyle(fontSize: 13, color: context.surface700)),
+            const Spacer(),
+            DropdownButton<String>(
+              value: targets.contains(svc.target) ? svc.target! : 'auto',
+              underline: const SizedBox(),
+              items: targets.map((t) => DropdownMenuItem(
+                value: t, child: Text(targetLabels[t] ?? t))).toList(),
+              onChanged: svc.isLoading ? null : (v) {
+                if (v != null) ref.read(targetServiceProvider).setTarget(v);
+              },
+            ),
+          ]),
+        ],
+      ),
+    );
+  }
+
+  Widget _toggleRow(IconData icon, String label, bool value, ValueChanged<bool> onChanged) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: context.surface600),
+          const SizedBox(width: Spacing.xs),
+          Expanded(child: Text(label, style: TextStyle(fontSize: 13, color: context.surface700))),
+          Switch(value: value, onChanged: onChanged, activeThumbColor: AppColors.primary500),
+        ],
+      ),
+    );
+  }
+
+  Widget _aboutCard() {
+    return SettingsCard(
+      icon: Icons.info,
+      title: 'Acerca de',
+      child: Text('Gantia Mobile v0.1.0',
+        style: TextStyle(fontSize: 13, color: context.surface600)),
+    );
+  }
+
+  Widget _logoutButton(AuthService authService) {
+    return GantiaButton(
+      label: 'Cerrar sesión',
+      icon: Icons.logout,
+      variant: GantiaButtonVariant.danger,
+      onPressed: () async {
+        final confirm = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Cerrar sesión'),
+            content: const Text('¿Estás seguro de que querés cerrar sesión?'),
+            actions: [
+              TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancelar')),
+              TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Cerrar sesión')),
+            ],
+          ),
+        );
+        if (confirm == true) {
+          ref.read(wsClientProvider).disconnect();
+          await authService.logout();
+        }
+      },
     );
   }
 }

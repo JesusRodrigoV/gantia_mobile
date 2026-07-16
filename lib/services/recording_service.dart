@@ -18,7 +18,7 @@ class RecordingService extends ChangeNotifier {
   RecordingService(this._client) {
     _sub = _client.messages.listen(
       _handleRawMessage,
-      onError: (e) => debugPrint('[RecordingService] stream error: $e'),
+      onError: (Object e) => debugPrint('[RecordingService] stream error: $e'),
     );
   }
 

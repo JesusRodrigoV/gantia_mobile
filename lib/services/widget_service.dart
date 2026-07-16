@@ -27,9 +27,9 @@ class WidgetService {
       _connectionSub?.cancel();
       _actionSub?.cancel();
 
-      _gestureSub = gloveState.gestureDetectedStream.listen(_onEvent, onError: (e) => debugPrint('[WidgetService] gesture stream error: $e'));
-      _connectionSub = gloveState.connectionStatusStream.listen(_onEvent, onError: (e) => debugPrint('[WidgetService] connection stream error: $e'));
-      _actionSub = actionLog.actionEventStream.listen(_onEvent, onError: (e) => debugPrint('[WidgetService] action stream error: $e'));
+      _gestureSub = gloveState.gestureDetectedStream.listen(_onEvent, onError: (Object e) => debugPrint('[WidgetService] gesture stream error: $e'));
+      _connectionSub = gloveState.connectionStatusStream.listen(_onEvent, onError: (Object e) => debugPrint('[WidgetService] connection stream error: $e'));
+      _actionSub = actionLog.actionEventStream.listen(_onEvent, onError: (Object e) => debugPrint('[WidgetService] action stream error: $e'));
       _updateFromState(gloveState, actionLog);
     } catch (e) {
       debugPrint('[WidgetService] listenTo error: $e');
