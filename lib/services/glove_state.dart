@@ -58,7 +58,10 @@ class GloveState extends ChangeNotifier {
   List<GloveTelemetry> get telemetryBuffer => List.unmodifiable(_telemetryBuffer);
 
   GloveState(this._client) {
-    _sub = _client.messages.listen(_handleRawMessage);
+    _sub = _client.messages.listen(
+      _handleRawMessage,
+      onError: (e) => debugPrint('[GloveState] stream error: $e'),
+    );
   }
 
   void _handleRawMessage(Map<String, dynamic> data) {

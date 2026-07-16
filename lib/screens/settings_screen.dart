@@ -19,7 +19,6 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  bool _btScanning = false;
   bool _sensLoaded = false;
   final Map<String, Timer> _sensTimers = {};
 
@@ -44,13 +43,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     super.dispose();
   }
 
-  void _scanBt() async {
-    setState(() => _btScanning = true);
-    try {
-      await ref.read(btServiceProvider).scanDevices();
-    } finally {
-      setState(() => _btScanning = false);
-    }
+  void _scanBt() {
+    ref.read(btServiceProvider).scanDevices();
   }
 
   void _updateSensitivity(String key, double value) {
@@ -202,11 +196,39 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               ),
                             ),
                           ),
+                        if (btService.error != null)
+                          Container(
+                            margin: const EdgeInsets.only(bottom: Spacing.sm),
+                            padding: const EdgeInsets.all(Spacing.sm),
+                            decoration: BoxDecoration(
+                              color: AppColors.red500.withAlpha(15),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.error_outline, size: 16, color: AppColors.red500),
+                                const SizedBox(width: Spacing.xs),
+                                Expanded(
+                                  child: Text(
+                                    btService.error!,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.red500,
+                                    ),
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () => btService.clearError(),
+                                  child: const Icon(Icons.close, size: 16, color: AppColors.red500),
+                                ),
+                              ],
+                            ),
+                          ),
                         GantiaButton(
-                          label: _btScanning ? 'Escaneando...' : 'Escanear dispositivos',
+                          label: btService.isScanning ? 'Escaneando...' : 'Escanear dispositivos',
                           icon: Icons.search,
-                          isLoading: _btScanning,
-                          onPressed: _btScanning ? null : _scanBt,
+                          isLoading: btService.isScanning,
+                          onPressed: btService.isScanning ? null : _scanBt,
                         ),
                         if (btService.availableDevices.isNotEmpty) ...[
                           const SizedBox(height: Spacing.xs),

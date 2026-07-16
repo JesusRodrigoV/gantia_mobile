@@ -20,7 +20,10 @@ class ActionLog extends ChangeNotifier {
   static const int _maxRecentActions = 30;
 
   ActionLog(this._client) {
-    _sub = _client.messages.listen(_handleRawMessage);
+    _sub = _client.messages.listen(
+      _handleRawMessage,
+      onError: (e) => debugPrint('[ActionLog] stream error: $e'),
+    );
   }
 
   void _handleRawMessage(Map<String, dynamic> data) {

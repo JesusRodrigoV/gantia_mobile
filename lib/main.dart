@@ -29,6 +29,9 @@ void main() async {
   // Initialize notification service
   final notificationService = NotificationService();
   await notificationService.init();
+  if (notificationService.initError != null) {
+    debugPrint('[MAIN] Notificaciones no disponibles: ${notificationService.initError}');
+  }
 
   // Initialize home widget service
   final widgetService = WidgetService();

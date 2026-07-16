@@ -62,7 +62,9 @@ class WsClient {
     if (!isConnected) return;
     try {
       _channel!.sink.add(jsonEncode(data));
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[WsClient] send error: $e');
+    }
   }
 
   bool get _canAddToController => !_disposed && !_controller.isClosed;

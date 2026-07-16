@@ -12,6 +12,12 @@ class NotificationService {
   StreamSubscription<ActionEvent?>? _actionSub;
   bool _disposed = false;
 
+  String? _initError;
+  bool _initDone = false;
+
+  String? get initError => _initError;
+  bool get isOperational => _initDone && _initError == null;
+
   static const String _gestureChannelId = 'gantia_gestures';
   static const String _gestureChannelName = 'Gestos detectados';
   static const String _connectionChannelId = 'gantia_connection';
@@ -37,6 +43,7 @@ class NotificationService {
     try {
       await _plugin.initialize(settings);
     } catch (e) {
+      _initError = 'Error al inicializar notificaciones: $e';
       debugPrint('[NotificationService] init error: $e');
       return;
     }
@@ -80,7 +87,10 @@ class NotificationService {
         );
       }
     } catch (e) {
+      _initError = 'Error al configurar canales de notificación: $e';
       debugPrint('[NotificationService] channel setup error: $e');
+    } finally {
+      _initDone = true;
     }
   }
 

@@ -16,7 +16,10 @@ class RecordingService extends ChangeNotifier {
   List<MacroStep> get capturedSteps => _capturedSteps;
 
   RecordingService(this._client) {
-    _sub = _client.messages.listen(_handleRawMessage);
+    _sub = _client.messages.listen(
+      _handleRawMessage,
+      onError: (e) => debugPrint('[RecordingService] stream error: $e'),
+    );
   }
 
   void _handleRawMessage(Map<String, dynamic> data) {

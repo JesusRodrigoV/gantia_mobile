@@ -22,12 +22,19 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
   String _urlInput = '';
   String _nameInput = '';
   String _sceneNameInput = '';
+  String? _deviceError;
 
   @override
   void initState() {
     super.initState();
     _loadDevices();
     _loadScenes();
+  }
+
+  void _clearDeviceError() {
+    if (_deviceError != null) {
+      setState(() => _deviceError = null);
+    }
   }
 
   Future<void> _loadDevices() async {
@@ -93,20 +100,34 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
   Future<void> _applyScene(_Scene scene) async {
     final smartHomeService = ref.read(smartHomeServiceProvider);
     for (final d in scene.devices) {
+      bool ok;
       if (d.isOn) {
-        smartHomeService.lightOn(d.url);
-        await Future<void>.delayed(const Duration(milliseconds: 100));
+        ok = await smartHomeService.lightOn(d.url);
+        if (!ok) {
+          _deviceError = 'Error al encender ${d.name}';
+          if (mounted) setState(() {});
+          return;
+        }
         if (d.brightness < 100) {
-          smartHomeService.setBrightness(d.url, d.brightness.round());
-          await Future<void>.delayed(const Duration(milliseconds: 50));
+          ok = await smartHomeService.setBrightness(d.url, d.brightness.round());
+          if (!ok) {
+            _deviceError = 'Error al ajustar brillo de ${d.name}';
+            if (mounted) setState(() {});
+            return;
+          }
         }
       } else {
-        smartHomeService.lightOff(d.url);
-        await Future<void>.delayed(const Duration(milliseconds: 100));
+        ok = await smartHomeService.lightOff(d.url);
+        if (!ok) {
+          _deviceError = 'Error al apagar ${d.name}';
+          if (mounted) setState(() {});
+          return;
+        }
       }
     }
 
     if (mounted) {
+      setState(() => _deviceError = null);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Escena "${scene.name}" aplicada')),
       );
@@ -199,6 +220,33 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
                     ),
                   ),
 
+                  // ── Error banner ──
+                  if (_deviceError != null)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: Spacing.sm),
+                      padding: const EdgeInsets.all(Spacing.sm),
+                      decoration: BoxDecoration(
+                        color: AppColors.red500.withAlpha(15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.error_outline, size: 16, color: AppColors.red500),
+                          const SizedBox(width: Spacing.xs),
+                          Expanded(
+                            child: Text(
+                              _deviceError!,
+                              style: const TextStyle(fontSize: 12, color: AppColors.red500),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => setState(() => _deviceError = null),
+                            child: const Icon(Icons.close, size: 16, color: AppColors.red500),
+                          ),
+                        ],
+                      ),
+                    ),
+
                   // ── Add device form ──
                   SettingsCard(
                     icon: Icons.add,
@@ -256,19 +304,33 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
                     ..._devices.asMap().entries.map(
                           (entry) => _LightDeviceCard(
                             device: entry.value,
-                            onToggle: (on) {
+                            onToggle: (on) async {
                               setState(() => _updateDevice(entry.key, isOn: on));
                               _saveDevices();
-                              if (on) {
-                                smartHomeService.lightOn(entry.value.url);
+                              final ok = on
+                                  ? await smartHomeService.lightOn(entry.value.url)
+                                  : await smartHomeService.lightOff(entry.value.url);
+                              if (!ok && mounted) {
+                                setState(() {
+                                  _deviceError = 'Error al ${on ? "encender" : "apagar"} ${entry.value.name}';
+                                  _updateDevice(entry.key, isOn: !on);
+                                });
+                                _saveDevices();
                               } else {
-                                smartHomeService.lightOff(entry.value.url);
+                                _clearDeviceError();
                               }
                             },
-                            onBrightness: (value) {
+                            onBrightness: (value) async {
                               setState(() => _updateDevice(entry.key, brightness: value.toDouble()));
                               _saveDevices();
-                              smartHomeService.setBrightness(entry.value.url, value);
+                              final ok = await smartHomeService.setBrightness(entry.value.url, value);
+                              if (!ok && mounted) {
+                                setState(() {
+                                  _deviceError = 'Error al ajustar brillo de ${entry.value.name}';
+                                });
+                              } else {
+                                _clearDeviceError();
+                              }
                             },
                             onRemove: () {
                               setState(() => _devices.removeAt(entry.key));
