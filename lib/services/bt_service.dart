@@ -9,7 +9,7 @@ class BtService extends ChangeNotifier {
   String? _deviceName;
   String? _deviceAddress;
   bool _isConnected = false;
-  StreamSubscription? _eventSub;
+  StreamSubscription<dynamic>? _eventSub;
 
   String? get deviceName => _deviceName;
   String? get deviceAddress => _deviceAddress;
@@ -49,7 +49,7 @@ class BtService extends ChangeNotifier {
 
   Future<void> refresh() async {
     try {
-      final result = await _channel.invokeMethod<Map>('getConnectedDevice');
+      final result = await _channel.invokeMethod<Map<dynamic, dynamic>>('getConnectedDevice');
       if (result != null) {
         _deviceName = result['name'] as String?;
         _deviceAddress = result['address'] as String?;
