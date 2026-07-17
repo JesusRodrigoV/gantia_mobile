@@ -6,7 +6,7 @@ import '../theme/app_colors.dart';
 import '../theme/context_extensions.dart';
 import '../theme/spacing.dart';
 import 'gantia_button.dart';
-import 'readings_chart.dart';
+import 'sensor_chart.dart';
 
 class HistoryReadingsTab extends ConsumerStatefulWidget {
   const HistoryReadingsTab({super.key});
@@ -19,7 +19,7 @@ class _HistoryReadingsTabState extends ConsumerState<HistoryReadingsTab> {
   List<HistoryReading> _readings = [];
   bool _loading = false;
   String? _error;
-  ReadingsChartType _chartType = ReadingsChartType.accelerometer;
+  SensorType _chartType = SensorType.accelerometer;
   static const int _limit = 200;
 
   @override
@@ -70,11 +70,11 @@ class _HistoryReadingsTabState extends ConsumerState<HistoryReadingsTab> {
         children: [
           const SizedBox(height: Spacing.xs),
           Row(children: [
-            _chip(ReadingsChartType.accelerometer, 'Acelerómetro'),
+            _chip(SensorType.accelerometer, 'Acelerómetro'),
             const SizedBox(width: Spacing.xs),
-            _chip(ReadingsChartType.gyroscope, 'Giroscopio'),
+            _chip(SensorType.gyroscope, 'Giroscopio'),
             const SizedBox(width: Spacing.xs),
-            _chip(ReadingsChartType.flexion, 'Flexión'),
+            _chip(SensorType.flexion, 'Flexión'),
           ]),
           const SizedBox(height: Spacing.sm),
           Row(children: [
@@ -94,7 +94,12 @@ class _HistoryReadingsTabState extends ConsumerState<HistoryReadingsTab> {
               ]),
             )
           else ...[
-            ReadingsChart(data: _readings, type: _chartType),
+            SensorChart(
+              sensorType: _chartType,
+              lines: _extractLines(_readings, _chartType),
+              showTimeAxis: true,
+              height: 220,
+            ),
             const SizedBox(height: Spacing.md),
             ..._readings.take(50).map(_buildRow),
             const SizedBox(height: Spacing.xxl),
@@ -104,7 +109,26 @@ class _HistoryReadingsTabState extends ConsumerState<HistoryReadingsTab> {
     );
   }
 
-  Widget _chip(ReadingsChartType type, String label) {
+  List<List<double>> _extractLines(List<HistoryReading> readings, SensorType type) {
+    return switch (type) {
+      SensorType.accelerometer => [
+        readings.map((r) => r.accelX).toList(),
+        readings.map((r) => r.accelY).toList(),
+        readings.map((r) => r.accelZ).toList(),
+      ],
+      SensorType.gyroscope => [
+        readings.map((r) => r.gyroX).toList(),
+        readings.map((r) => r.gyroY).toList(),
+        readings.map((r) => r.gyroZ).toList(),
+      ],
+      SensorType.flexion => [
+        readings.map((r) => r.flexIndex).toList(),
+        readings.map((r) => r.flexMiddle).toList(),
+      ],
+    };
+  }
+
+  Widget _chip(SensorType type, String label) {
     final selected = _chartType == type;
     return GestureDetector(
       onTap: () => setState(() => _chartType = type),

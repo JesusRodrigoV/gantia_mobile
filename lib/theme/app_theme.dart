@@ -101,19 +101,16 @@ class AppTheme {
           borderSide: BorderSide(color: AppColors.red500, width: 1.5),
         ),
         labelStyle: TextStyle(
-          fontFamily: 'CormorantGaramond',
           fontSize: 12,
           fontWeight: FontWeight.w600,
           color: surface500,
           letterSpacing: 1,
         ),
         hintStyle: TextStyle(
-          fontFamily: 'CormorantGaramond',
           fontSize: 14,
           color: surface500,
         ),
         errorStyle: TextStyle(
-          fontFamily: 'CormorantGaramond',
           fontSize: 12,
           color: AppColors.red500,
         ),
@@ -126,7 +123,6 @@ class AppTheme {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           textStyle: TextStyle(
-            fontFamily: 'CormorantGaramond',
             fontSize: 12,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.5,
@@ -138,7 +134,6 @@ class AppTheme {
         style: TextButton.styleFrom(
           foregroundColor: surface500,
           textStyle: TextStyle(
-            fontFamily: 'CormorantGaramond',
             fontSize: 13,
             fontWeight: FontWeight.w500,
           ),

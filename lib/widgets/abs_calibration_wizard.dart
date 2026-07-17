@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/action_message.dart';
 import '../providers.dart';
 import '../theme/app_colors.dart';
 import '../theme/context_extensions.dart';
@@ -56,7 +57,7 @@ class _AbsCalibrationWizardState extends ConsumerState<AbsCalibrationWizard> {
 
   @override
   Widget build(BuildContext context) {
-    final telemetry = ref.read(gloveStateProvider).telemetry;
+    final telemetry = ref.watch(gloveStateProvider.select((s) => s.telemetry));
 
     double livePitch = 0;
     double liveRoll = 0;
@@ -118,7 +119,7 @@ class _AbsCalibrationWizardState extends ConsumerState<AbsCalibrationWizard> {
     );
   }
 
-  Widget _captureStep(int idx, dynamic telemetry, double livePitch, double liveRoll) {
+  Widget _captureStep(int idx, GloveTelemetry? telemetry, double livePitch, double liveRoll) {
     final step = _cornerSteps[idx];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,12 +157,12 @@ class _AbsCalibrationWizardState extends ConsumerState<AbsCalibrationWizard> {
             label: 'Capturar ${step.$2}',
             icon: Icons.check,
             variant: GantiaButtonVariant.primary,
-            onPressed: telemetry == null
-                ? null
-                : () {
-                    _corners[step.$1] = {'pitch': livePitch, 'roll': liveRoll};
-                    setState(() => _step = idx + 2 > 4 ? 5 : idx + 2);
-                  },
+                    onPressed: telemetry == null
+                        ? null
+                        : () {
+                            _corners[step.$1] = {'pitch': livePitch, 'roll': liveRoll};
+                            setState(() => _step = idx >= 3 ? 5 : idx + 2);
+                          },
           ),
         ),
       ],
@@ -265,18 +266,30 @@ class _AbsCalibrationWizardState extends ConsumerState<AbsCalibrationWizard> {
   }
 
   Future<void> _save() async {
+    final missing = _corners.entries.where((e) => e.value == null).map((e) => e.key).toList();
+    if (missing.isNotEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Faltan esquinas: ${missing.join(", ")}. Completá todas antes de guardar.'),
+            backgroundColor: AppColors.red500,
+          ),
+        );
+      }
+      return;
+    }
+
     setState(() => _saving = true);
     try {
-      final api = ref.read(apiServiceProvider);
       final corners = <String, dynamic>{};
       for (final e in _corners.entries) {
-        corners[e.key] = e.value ?? {'pitch': 0, 'roll': 0};
+        corners[e.key] = e.value!;
       }
-      await api.put('/config/absolute-pointer/calibration', body: {
-        'corners': corners,
-        'screen_width': _screenWidth,
-        'screen_height': _screenHeight,
-      });
+      await ref.read(calibrationServiceProvider).saveCalibration(
+        corners,
+        _screenWidth,
+        _screenHeight,
+      );
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(

@@ -22,7 +22,7 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
   static const String _devicesKey = 'smart_home_devices';
   static const String _scenesKey = 'smart_home_scenes';
 
-  final List<LightDevice> _devices = [];
+  final List<DeviceState> _devices = [];
   final List<Scene> _scenes = [];
   String? _deviceError;
 
@@ -42,7 +42,7 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
     final raw = prefs.getString(_devicesKey);
     if (raw == null) return;
     final list = jsonDecode(raw) as List<dynamic>;
-    setState(() => _devices.addAll(list.map((e) => LightDevice.fromJson(e as Map<String, dynamic>))));
+    setState(() => _devices.addAll(list.map((e) => DeviceState.fromJson(e as Map<String, dynamic>))));
   }
 
   Future<void> _saveDevices() async {
@@ -66,7 +66,7 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
   void _addDevice(String name, String url) {
     if (url.isEmpty) return;
     setState(() {
-      _devices.add(LightDevice(
+      _devices.add(DeviceState(
         name: name.isNotEmpty ? name : 'Luz ${_devices.length + 1}',
         url: url,
       ));
@@ -79,7 +79,7 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
     setState(() {
       _scenes.add(Scene(
         name: name,
-        devices: _devices.map((d) => SceneDeviceState(
+        devices: _devices.map((d) => DeviceState(
           name: d.name, url: d.url, isOn: d.isOn, brightness: d.brightness)).toList(),
       ));
     });

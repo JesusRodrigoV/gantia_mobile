@@ -62,8 +62,6 @@ class _AuthGateState extends ConsumerState<_AuthGate> {
     }
   }
 
-  void _onLoginSuccess() => setState(() {});
-
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authServiceProvider);
@@ -79,7 +77,7 @@ class _AuthGateState extends ConsumerState<_AuthGate> {
       }
       return LoginScreen(
         authService: auth,
-        onLoginSuccess: _onLoginSuccess,
+        onLoginSuccess: () {},
         onRegisterTap: () => ref.read(showRegisterProvider.notifier).state = true,
       );
     }

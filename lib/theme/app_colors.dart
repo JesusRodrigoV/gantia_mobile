@@ -28,7 +28,6 @@ class AppColors {
   static const Color surfaceLight700 = Color(0xFF3f3b35);
   static const Color surfaceLight800 = Color(0xFF2c2820);
   static const Color surfaceLight900 = Color(0xFF1a1814);
-  static const Color surfaceLight950 = Color(0xFF0d0c0a);
 
   // Surface — Dark (warm near-black)
   static const Color surfaceDark0 = Color(0xFF1c1a17);
@@ -42,10 +41,8 @@ class AppColors {
   static const Color surfaceDark700 = Color(0xFFb8b2a6);
   static const Color surfaceDark800 = Color(0xFFd4cec4);
   static const Color surfaceDark900 = Color(0xFFebe5da);
-  static const Color surfaceDark950 = Color(0xFFf5f2eb);
 
   // Accent
-  static const Color gold400 = Color(0xFFc9a94e);
   static const Color gold500 = Color(0xFFb8942e);
 
   // Semantic

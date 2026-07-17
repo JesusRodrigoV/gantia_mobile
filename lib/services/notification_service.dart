@@ -5,12 +5,16 @@ import '../models/action_message.dart';
 import 'glove_state.dart';
 import 'action_log.dart';
 
+typedef _ChannelConfig = ({String name, Importance importance, Priority priority});
+
 class NotificationService {
   final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
-  StreamSubscription<GestureDetectedEvent?>? _gestureSub;
-  StreamSubscription<ConnectionStatus>? _connectionSub;
   StreamSubscription<ActionEvent?>? _actionSub;
+  GloveState? _gloveState;
   bool _disposed = false;
+
+  ConnectionStatus? _lastConnection;
+  GestureDetectedEvent? _lastGesture;
 
   String? _initError;
   bool _initDone = false;
@@ -19,15 +23,34 @@ class NotificationService {
   bool get isOperational => _initDone && _initError == null;
 
   static const String _gestureChannelId = 'gantia_gestures';
-  static const String _gestureChannelName = 'Gestos detectados';
   static const String _connectionChannelId = 'gantia_connection';
-  static const String _connectionChannelName = 'Estado de conexión';
   static const String _actionsChannelId = 'gantia_actions';
+
+  static const String _gestureChannelName = 'Gestos detectados';
+  static const String _connectionChannelName = 'Estado de conexión';
   static const String _actionsChannelName = 'Acciones ejecutadas';
 
   static const _notificationIdGesture = 1000;
   static const _notificationIdConnection = 1001;
   static const _notificationIdAction = 1002;
+
+  static final Map<String, _ChannelConfig> _channels = {
+    _gestureChannelId: (
+      name: _gestureChannelName,
+      importance: Importance.high,
+      priority: Priority.high,
+    ),
+    _connectionChannelId: (
+      name: _connectionChannelName,
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+    ),
+    _actionsChannelId: (
+      name: _actionsChannelName,
+      importance: Importance.low,
+      priority: Priority.low,
+    ),
+  };
 
   Future<void> init() async {
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -102,22 +125,31 @@ class NotificationService {
     bool notifyActions = false,
   }) {
     if (_disposed) return;
-    try {
-      _gestureSub?.cancel();
-      _connectionSub?.cancel();
-      _actionSub?.cancel();
+    _actionSub?.cancel();
 
-      if (notifyGestures) {
-        _gestureSub = gloveState.gestureDetectedStream.listen(_onGestureDetected);
-      }
-      if (notifyConnections) {
-        _connectionSub = gloveState.connectionStatusStream.listen(_onConnectionChanged);
-      }
-      if (notifyActions) {
-        _actionSub = actionLog.actionEventStream.listen(_onActionExecuted);
-      }
-    } catch (e) {
-      debugPrint('[NotificationService] listenTo error: $e');
+    _gloveState = gloveState;
+    _lastConnection = gloveState.connectionStatus;
+    _lastGesture = gloveState.gestureDetected;
+
+    if (notifyGestures || notifyConnections) {
+      gloveState.addListener(_onGloveStateChanged);
+    }
+    if (notifyActions) {
+      _actionSub = actionLog.actionEventStream.listen(_onActionExecuted);
+    }
+  }
+
+  void _onGloveStateChanged() {
+    if (_disposed || _gloveState == null) return;
+
+    if (_gloveState!.connectionStatus != _lastConnection) {
+      _lastConnection = _gloveState!.connectionStatus;
+      _onConnectionChanged(_lastConnection!);
+    }
+
+    if (_gloveState!.gestureDetected != _lastGesture) {
+      _lastGesture = _gloveState!.gestureDetected;
+      _onGestureDetected(_lastGesture);
     }
   }
 
@@ -176,6 +208,7 @@ class NotificationService {
 
   void _showNotificationSafe(int id, String channelId, String title, String body) {
     if (_disposed) return;
+    final cfg = _channels[channelId] ?? _channels[_actionsChannelId]!;
     try {
       _plugin.show(
         id,
@@ -184,20 +217,10 @@ class NotificationService {
         NotificationDetails(
           android: AndroidNotificationDetails(
             channelId,
-            channelId == _gestureChannelId
-                ? _gestureChannelName
-                : channelId == _connectionChannelId
-                    ? _connectionChannelName
-                    : _actionsChannelName,
+            cfg.name,
             channelDescription: null,
-            importance: channelId == _gestureChannelId
-                ? Importance.high
-                : channelId == _connectionChannelId
-                    ? Importance.defaultImportance
-                    : Importance.low,
-            priority: channelId == _gestureChannelId
-                ? Priority.high
-                : Priority.defaultPriority,
+            importance: cfg.importance,
+            priority: cfg.priority,
           ),
           iOS: const DarwinNotificationDetails(
             presentAlert: true,
@@ -213,15 +236,8 @@ class NotificationService {
 
   void dispose() {
     _disposed = true;
-    try {
-      _gestureSub?.cancel();
-    } catch (_) {}
-    try {
-      _connectionSub?.cancel();
-    } catch (_) {}
-    try {
-      _actionSub?.cancel();
-    } catch (_) {}
+    _gloveState?.removeListener(_onGloveStateChanged);
+    _actionSub?.cancel();
     try {
       _plugin.cancelAll();
     } catch (_) {}

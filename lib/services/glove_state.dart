@@ -12,9 +12,6 @@ class GloveState extends ChangeNotifier {
 
   ConnectionStatus _connectionStatus = ConnectionStatus.disconnected;
   ConnectionStatus get connectionStatus => _connectionStatus;
-  final StreamController<ConnectionStatus> _connectionStatusCtrl =
-      StreamController<ConnectionStatus>.broadcast();
-  Stream<ConnectionStatus> get connectionStatusStream => _connectionStatusCtrl.stream;
 
   bool _dataFlowing = false;
   bool get dataFlowing => _dataFlowing;
@@ -27,9 +24,6 @@ class GloveState extends ChangeNotifier {
 
   GestureDetectedEvent? _gestureDetected;
   GestureDetectedEvent? get gestureDetected => _gestureDetected;
-  final StreamController<GestureDetectedEvent?> _gestureCtrl =
-      StreamController<GestureDetectedEvent?>.broadcast();
-  Stream<GestureDetectedEvent?> get gestureDetectedStream => _gestureCtrl.stream;
 
   String _currentMode = 'GLOBAL';
   String get currentMode => _currentMode;
@@ -72,12 +66,10 @@ class GloveState extends ChangeNotifier {
       switch (type) {
         case 'connecting':
           _connectionStatus = ConnectionStatus.connecting;
-          if (!_connectionStatusCtrl.isClosed) _connectionStatusCtrl.add(_connectionStatus);
           notifyListeners();
           return;
         case 'connected':
           _connectionStatus = ConnectionStatus.connected;
-          if (!_connectionStatusCtrl.isClosed) _connectionStatusCtrl.add(_connectionStatus);
           _retryAttempt = 0;
           _waitingForDevice = false;
           _cancelWaitingTimer();
@@ -95,14 +87,12 @@ class GloveState extends ChangeNotifier {
           return;
         case 'reconnecting':
           _connectionStatus = ConnectionStatus.reconnecting;
-          if (!_connectionStatusCtrl.isClosed) _connectionStatusCtrl.add(_connectionStatus);
           _retryAttempt = (data['attempt'] as int?) ?? 0;
           _maxRetries = (data['maxRetries'] as int?) ?? 10;
           notifyListeners();
           return;
         case 'disconnected':
           _connectionStatus = ConnectionStatus.disconnected;
-          if (!_connectionStatusCtrl.isClosed) _connectionStatusCtrl.add(_connectionStatus);
           _dataFlowing = false;
           _waitingForDevice = false;
           _cancelWaitingTimer();
@@ -111,7 +101,6 @@ class GloveState extends ChangeNotifier {
           return;
         case 'error':
           _connectionStatus = ConnectionStatus.error;
-          if (!_connectionStatusCtrl.isClosed) _connectionStatusCtrl.add(_connectionStatus);
           _telemetry = null;
           _dataFlowing = false;
           notifyListeners();
@@ -122,7 +111,6 @@ class GloveState extends ChangeNotifier {
 
     if (isGestureDetected(data)) {
       _gestureDetected = GestureDetectedEvent.fromJson(data);
-      if (!_gestureCtrl.isClosed) _gestureCtrl.add(_gestureDetected);
       notifyListeners();
       return;
     }
@@ -206,8 +194,6 @@ class GloveState extends ChangeNotifier {
     _sub?.cancel();
     _dataTimer?.cancel();
     _cancelWaitingTimer();
-    if (!_connectionStatusCtrl.isClosed) _connectionStatusCtrl.close();
-    if (!_gestureCtrl.isClosed) _gestureCtrl.close();
     super.dispose();
   }
 }

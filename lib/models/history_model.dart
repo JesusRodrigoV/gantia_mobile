@@ -34,6 +34,18 @@ class HistoryReading {
       timestamp: DateTime.tryParse(json['timestamp'] as String? ?? '') ?? DateTime.now(),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'accel_x': accelX,
+        'accel_y': accelY,
+        'accel_z': accelZ,
+        'gyro_x': gyroX,
+        'gyro_y': gyroY,
+        'gyro_z': gyroZ,
+        'flex_index': flexIndex,
+        'flex_middle': flexMiddle,
+        'timestamp': timestamp.toIso8601String(),
+      };
 }
 
 class HistoryActionEntry {
@@ -60,11 +72,12 @@ class HistoryActionEntry {
       timestamp: (json['timestamp'] as num?)?.toInt() ?? 0,
     );
   }
-}
 
-class HistoryResponse<T> {
-  final List<T> data;
-  final int total;
-
-  const HistoryResponse({required this.data, required this.total});
+  Map<String, dynamic> toJson() => {
+        'action': action,
+        if (actionValue != null) 'action_value': actionValue,
+        'target': target,
+        'status': status,
+        'timestamp': timestamp,
+      };
 }

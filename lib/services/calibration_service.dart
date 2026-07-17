@@ -47,4 +47,21 @@ class CalibrationService extends ChangeNotifier with ApiServiceMixin {
       return entry;
     });
   }
+
+  Future<bool> hasCalibration() async {
+    try {
+      await _api.get('/config/absolute-pointer/calibration');
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> saveCalibration(Map<String, dynamic> corners, int screenWidth, int screenHeight) async {
+    await _api.put('/config/absolute-pointer/calibration', body: {
+      'corners': corners,
+      'screen_width': screenWidth,
+      'screen_height': screenHeight,
+    });
+  }
 }

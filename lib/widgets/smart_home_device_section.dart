@@ -34,7 +34,7 @@ class DeviceErrorBanner extends StatelessWidget {
 }
 
 class SmartHomeDeviceSection extends StatefulWidget {
-  final List<LightDevice> devices;
+  final List<DeviceState> devices;
   final String? error;
   final Future<bool> Function(int index, bool on) onToggle;
   final Future<bool> Function(int index, int value) onBrightness;

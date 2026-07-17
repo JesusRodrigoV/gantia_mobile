@@ -21,19 +21,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      ref.read(mouseConfigServiceProvider).getConfig();
-      ref.read(targetServiceProvider).getTarget();
+    Future.microtask(() async {
+      try {
+        await ref.read(mouseConfigServiceProvider).getConfig();
+      } catch (e) {
+        debugPrint('[SettingsScreen] getConfig error: $e');
+      }
+      try {
+        await ref.read(targetServiceProvider).getTarget();
+      } catch (e) {
+        debugPrint('[SettingsScreen] getTarget error: $e');
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final authService = ref.watch(authServiceProvider);
     final themeService = ref.watch(themeServiceProvider);
     final mouseSvc = ref.watch(mouseConfigServiceProvider);
     final targetSvc = ref.watch(targetServiceProvider);
-    final gloveState = ref.watch(gloveStateProvider);
 
     return Scaffold(
       backgroundColor: context.surface50,
@@ -59,11 +65,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   _appearanceCard(themeService),
                   _sensitivityCard(),
                   _mouseCard(mouseSvc),
-                  _contextTargetCard(gloveState, targetSvc),
+                  _contextTargetCard(targetSvc),
                   const BtScannerSection(),
                   _aboutCard(),
                   const SizedBox(height: Spacing.sm),
-                  _logoutButton(authService),
+                  _logoutButton(),
                   const SizedBox(height: Spacing.xxl),
                 ],
               ),
@@ -123,7 +129,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _contextTargetCard(GloveState gloveState, TargetService svc) {
+  Widget _contextTargetCard(TargetService svc) {
+    final currentMode = ref.watch(gloveStateProvider.select((s) => s.currentMode));
     const targets = ['auto', 'pico_w', 'mobile'];
     const targetLabels = {'auto': 'Automático', 'pico_w': 'Pico W (PC)', 'mobile': 'Móvil'};
 
@@ -136,7 +143,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Text('Modo activo:', style: TextStyle(fontSize: 13, color: context.surface700)),
             const Spacer(),
             DropdownButton<String>(
-              value: contexts.contains(gloveState.currentMode) ? gloveState.currentMode : 'GLOBAL',
+              value: contexts.contains(currentMode) ? currentMode : 'GLOBAL',
               underline: const SizedBox(),
               items: contexts.map((c) => DropdownMenuItem(
                 value: c, child: Text(getContextLabel(c)))).toList(),
@@ -187,7 +194,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _logoutButton(AuthService authService) {
+  Widget _logoutButton() {
+    final authService = ref.read(authServiceProvider);
     return GantiaButton(
       label: 'Cerrar sesión',
       icon: Icons.logout,

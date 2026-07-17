@@ -10,6 +10,11 @@ class LearnSession {
       samplesCollected: (json['samples_collected'] as num?)?.toInt() ?? 0,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'samples_collected': samplesCollected,
+      };
 }
 
 class LearnAnalysis {
@@ -33,4 +38,11 @@ class LearnAnalysis {
       middleState: (json['middle_state'] as num?)?.toInt() ?? 0,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'movement': movement,
+        'orientation': orientation,
+        'index_state': indexState,
+        'middle_state': middleState,
+      };
 }

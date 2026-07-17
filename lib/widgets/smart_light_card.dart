@@ -7,7 +7,7 @@ import 'gantia_button.dart';
 import 'settings_card.dart';
 
 class SmartLightCard extends StatefulWidget {
-  final LightDevice device;
+  final DeviceState device;
   final Future<bool> Function(bool isOn) onToggle;
   final Future<bool> Function(int brightness) onBrightness;
   final VoidCallback onRemove;

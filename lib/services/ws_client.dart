@@ -78,16 +78,56 @@ class WsClient {
   void _establishConnection() {
     if (_disposed) return;
     if (_connectionAttemptState == _ConnectionAttemptState.connecting) return;
-    _connectionAttemptState = _ConnectionAttemptState.connecting;
+    if (!_validateToken()) return;
 
+    _connectionAttemptState = _ConnectionAttemptState.connecting;
+    _clearReconnectTimer();
+    _startConnectionTimeout();
+    _safeAdd({'\$type': 'connecting'});
+
+    try {
+      _channel = WebSocketChannel.connect(_buildUri());
+      _channel!.ready.then((_) {
+        if (_disposed) return;
+        _resetRetryState();
+      }).catchError((Object error) {
+        if (_disposed) return;
+        debugPrint('[WsClient] ready error: $error');
+        _onConnectionFailed();
+      });
+
+      _channel!.stream.listen(
+        _onStreamData,
+        onError: (Object error) {
+          if (_disposed) return;
+          debugPrint('[WsClient] stream error: $error');
+          _onConnectionFailed();
+        },
+        onDone: _onStreamDone,
+        cancelOnError: false,
+      );
+    } catch (e) {
+      debugPrint('[WsClient] connect exception: $e');
+      _onConnectionFailed();
+    }
+  }
+
+  bool _validateToken() {
     final token = _authService.token;
     if (token == null || token.isEmpty || !_authService.isAuthenticated) {
       _authService.logout();
       _finishAttempt();
-      return;
+      return false;
     }
+    return true;
+  }
 
-    _clearReconnectTimer();
+  Uri _buildUri() {
+    final token = _authService.token!;
+    return Uri.parse('$_wsUrl/ws/dashboard?token=${Uri.encodeQueryComponent(token)}');
+  }
+
+  void _startConnectionTimeout() {
     _connectionTimer = Timer(connectionTimeout, () {
       if (_disposed) return;
       _safeAdd({'\$type': 'error'});
@@ -95,73 +135,51 @@ class WsClient {
       _finishAttempt();
       if (_shouldBeConnected) _scheduleReconnect();
     });
+  }
 
-    _safeAdd({'\$type': 'connecting'});
+  void _onConnectionFailed() {
+    _finishAttempt();
+    _closeChannel();
+    _safeAdd({'\$type': 'error'});
+    if (_shouldBeConnected) _scheduleReconnect();
+  }
 
+  void _onStreamData(dynamic data) {
+    if (_disposed) return;
+    if (data is! String) {
+      debugPrint('[WsClient] ignoring non-text frame: ${data.runtimeType}');
+      return;
+    }
     try {
-      _channel = WebSocketChannel.connect(Uri.parse('$_wsUrl/ws/dashboard?token=$token'));
+      final parsed = jsonDecode(data) as Map<String, dynamic>;
 
-      _channel!.ready.then((_) {
-        if (_disposed) return;
-        _resetRetryState();
-      }).catchError((Object error) {
-        debugPrint('[WsClient] ready error: $error');
-        if (_disposed) return;
-        _finishAttempt();
-        _closeChannel();
-        _safeAdd({'\$type': 'error'});
-        if (_shouldBeConnected) _scheduleReconnect();
-      });
+      if (parsed['type'] == 'pong') {
+        _clearPongTimer();
+        return;
+      }
 
-      _channel!.stream.listen(
-        (data) {
-          if (_disposed) return;
-          try {
-            final parsed = jsonDecode(data as String) as Map<String, dynamic>;
+      if (parsed['type'] == 'ping') {
+        send({'type': 'pong'});
+        return;
+      }
 
-            if (parsed['type'] == 'pong') {
-              _clearPongTimer();
-              return;
-            }
+      _safeAdd(parsed);
+    } catch (_) {}
+  }
 
-            if (parsed['type'] == 'ping') {
-              send({'type': 'pong'});
-              return;
-            }
-
-            _safeAdd(parsed);
-          } catch (_) {}
-        },
-        onError: (Object error) {
-          debugPrint('[WsClient] stream error: $error');
-          if (_disposed) return;
-          _finishAttempt();
-          _closeChannel();
-          _safeAdd({'\$type': 'error'});
-          if (_shouldBeConnected) _scheduleReconnect();
-        },
-        onDone: () {
-          if (_disposed) return;
-          final closeCode = _channel?.closeCode;
-          if (closeCode == 1008) {
-            debugPrint('[WsClient] Token rechazado por el servidor — cerrando sesión');
-            _shouldBeConnected = false;
-            _authService.logout();
-          }
-          _finishAttempt();
-          _clearPingTimer();
-          _safeAdd({'\$type': 'disconnected'});
-          if (_shouldBeConnected && _authService.isAuthenticated) {
-            _scheduleReconnect();
-          }
-        },
-        cancelOnError: false,
-      );
-    } catch (e) {
-      debugPrint('[WsClient] connect exception: $e');
-      _finishAttempt();
-      _safeAdd({'\$type': 'error'});
-      if (_shouldBeConnected) _scheduleReconnect();
+  void _onStreamDone() {
+    if (_disposed) return;
+    final closeCode = _channel?.closeCode;
+    if (closeCode == 1008) {
+      debugPrint('[WsClient] Token rechazado por el servidor — cerrando sesión');
+      _shouldBeConnected = false;
+      _authService.logout();
+    }
+    _finishAttempt();
+    _clearPingTimer();
+    _safeAdd({'\$type': 'disconnected'});
+    if (_shouldBeConnected && _authService.isAuthenticated) {
+      _scheduleReconnect();
     }
   }
 

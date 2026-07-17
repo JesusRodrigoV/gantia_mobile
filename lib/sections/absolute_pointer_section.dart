@@ -27,12 +27,8 @@ class _AbsolutePointerSectionState extends ConsumerState<AbsolutePointerSection>
   }
 
   Future<void> _checkCalibration() async {
-    try {
-      await ref.read(apiServiceProvider).get('/config/absolute-pointer/calibration');
-      if (mounted) setState(() => _calibrationExists = true);
-    } catch (_) {
-      if (mounted) setState(() => _calibrationExists = false);
-    }
+    final exists = await ref.read(calibrationServiceProvider).hasCalibration();
+    if (mounted) setState(() => _calibrationExists = exists);
   }
 
   @override

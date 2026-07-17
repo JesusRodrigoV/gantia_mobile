@@ -8,12 +8,13 @@ import 'ws_client.dart';
 class RecordingService extends ChangeNotifier {
   final WsClient _client;
   StreamSubscription<Map<String, dynamic>>? _sub;
+  bool _disposed = false;
 
   bool _recording = false;
   bool get recording => _recording;
 
   final List<MacroStep> _capturedSteps = [];
-  List<MacroStep> get capturedSteps => _capturedSteps;
+  List<MacroStep> get capturedSteps => List.unmodifiable(_capturedSteps);
 
   RecordingService(this._client) {
     _sub = _client.messages.listen(
@@ -23,6 +24,7 @@ class RecordingService extends ChangeNotifier {
   }
 
   void _handleRawMessage(Map<String, dynamic> data) {
+    if (_disposed) return;
     if (data.containsKey('\$type')) return;
     if (data['action'] != 'action_triggered') return;
     if (!_recording) return;
@@ -60,6 +62,7 @@ class RecordingService extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     _sub?.cancel();
     super.dispose();
   }

@@ -6,37 +6,35 @@ import 'glove_state.dart';
 import 'action_log.dart';
 
 class WidgetService {
-  StreamSubscription<GestureDetectedEvent?>? _gestureSub;
-  StreamSubscription<ConnectionStatus>? _connectionSub;
   StreamSubscription<ActionEvent?>? _actionSub;
+  GloveState? _gloveState;
   bool _disposed = false;
 
   static const String _widgetProviderName = 'GantiaWidgetProvider';
 
   Future<void> init() async {
-    // Android does not need an app group ID
     if (defaultTargetPlatform == TargetPlatform.iOS) {
-      // Set an app group ID for iOS if needed for widget data sharing
     }
   }
 
   void listenTo(GloveState gloveState, ActionLog actionLog) {
     if (_disposed) return;
-    try {
-      _gestureSub?.cancel();
-      _connectionSub?.cancel();
-      _actionSub?.cancel();
+    _actionSub?.cancel();
 
-      _gestureSub = gloveState.gestureDetectedStream.listen(_onEvent, onError: (Object e) => debugPrint('[WidgetService] gesture stream error: $e'));
-      _connectionSub = gloveState.connectionStatusStream.listen(_onEvent, onError: (Object e) => debugPrint('[WidgetService] connection stream error: $e'));
-      _actionSub = actionLog.actionEventStream.listen(_onEvent, onError: (Object e) => debugPrint('[WidgetService] action stream error: $e'));
-      _updateFromState(gloveState, actionLog);
-    } catch (e) {
-      debugPrint('[WidgetService] listenTo error: $e');
-    }
+    _gloveState = gloveState;
+    gloveState.addListener(_onGloveStateChanged);
+
+    _actionSub = actionLog.actionEventStream
+        .listen((_) { _updateWidget(); }, onError: (Object e) => debugPrint('[WidgetService] action stream error: $e'));
+    _updateFromState(gloveState, actionLog);
   }
 
-  void _onEvent([_]) {
+  void _onGloveStateChanged() {
+    if (_disposed) return;
+    _updateWidget();
+  }
+
+  void _updateWidget() {
     if (_disposed) return;
     try {
       HomeWidget.updateWidget(
@@ -96,14 +94,7 @@ class WidgetService {
 
   void dispose() {
     _disposed = true;
-    try {
-      _gestureSub?.cancel();
-    } catch (_) {}
-    try {
-      _connectionSub?.cancel();
-    } catch (_) {}
-    try {
-      _actionSub?.cancel();
-    } catch (_) {}
+    _gloveState?.removeListener(_onGloveStateChanged);
+    _actionSub?.cancel();
   }
 }

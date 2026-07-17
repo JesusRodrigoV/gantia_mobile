@@ -33,7 +33,7 @@ class ApiService {
 
   Future<dynamic> _execute(Future<http.Response> Function() request) async {
     try {
-      final response = await request();
+      final response = await request().timeout(const Duration(seconds: 30));
       if (response.statusCode == 401) {
         throw UnauthorizedException();
       }
@@ -79,6 +79,14 @@ class ApiService {
     return _execute(() => _client.delete(
           Uri.parse('$_baseUrl$path'),
           headers: _headers(),
+        ));
+  }
+
+  Future<dynamic> rawPost(String url, {Map<String, Object?>? body, Map<String, String>? headers}) async {
+    return _execute(() => _client.post(
+          Uri.parse(url),
+          headers: headers ?? {'Content-Type': 'application/json'},
+          body: body != null ? jsonEncode(body) : null,
         ));
   }
 

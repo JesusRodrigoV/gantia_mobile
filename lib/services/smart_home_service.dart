@@ -1,9 +1,9 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
+import 'api_service.dart';
+import 'api_mixin.dart';
 
-class SmartHomeService extends ChangeNotifier {
-  final http.Client _client;
+class SmartHomeService extends ChangeNotifier with ApiServiceMixin {
+  final ApiService _api;
 
   String? _lastError;
   String? _lastDeviceUrl;
@@ -13,7 +13,7 @@ class SmartHomeService extends ChangeNotifier {
   String? get lastDeviceUrl => _lastDeviceUrl;
   bool get commandInProgress => _commandInProgress;
 
-  SmartHomeService({http.Client? client}) : _client = client ?? http.Client();
+  SmartHomeService(this._api);
 
   void clearError() {
     if (_lastError != null) {
@@ -29,28 +29,17 @@ class SmartHomeService extends ChangeNotifier {
     _commandInProgress = true;
     notifyListeners();
 
-    try {
-      final response = await _client.post(
-        Uri.parse(url),
-        headers: headers ?? {'Content-Type': 'application/json'},
-        body: jsonEncode(body),
-      );
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        _commandInProgress = false;
-        notifyListeners();
-        return true;
-      }
-      _lastError = 'Error HTTP ${response.statusCode}';
-      _commandInProgress = false;
-      notifyListeners();
-      return false;
-    } catch (e) {
+    final result = await execute(() => _api.rawPost(url, body: body, headers: headers));
+    _commandInProgress = false;
+
+    if (result == null) {
       _lastError = 'No se pudo conectar al dispositivo';
-      _commandInProgress = false;
-      debugPrint('[SmartHome] error: $e');
       notifyListeners();
       return false;
     }
+
+    notifyListeners();
+    return true;
   }
 
   Future<bool> lightOn(String url, {Map<String, String>? headers}) async {
@@ -66,11 +55,5 @@ class SmartHomeService extends ChangeNotifier {
       'command': 'brightness',
       'value': brightness.clamp(0, 100),
     }, headers: headers);
-  }
-
-  @override
-  void dispose() {
-    _client.close();
-    super.dispose();
   }
 }

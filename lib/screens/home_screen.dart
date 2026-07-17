@@ -9,7 +9,8 @@ import '../widgets/gantia_header.dart';
 import '../widgets/gesture_flash.dart';
 import '../widgets/home_connection_card.dart';
 import '../widgets/home_health_card.dart';
-import '../widgets/live_chart.dart';
+import '../models/action_message.dart';
+import '../widgets/sensor_chart.dart';
 import '../widgets/neuromorphic_card.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -69,11 +70,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     HomeConnectionCard(gloveState: gloveState),
                     const SizedBox(height: Spacing.md),
                     if (gloveState.dataFlowing && gloveState.telemetryBuffer.length >= 2) ...[
-                      _chartCard(LiveChartType.accelerometer, 'Acelerómetro', gloveState),
+                      _chartCard(SensorType.accelerometer, gloveState),
                       const SizedBox(height: Spacing.md),
-                      _chartCard(LiveChartType.gyroscope, 'Giroscopio', gloveState),
+                      _chartCard(SensorType.gyroscope, gloveState),
                       const SizedBox(height: Spacing.md),
-                      _chartCard(LiveChartType.flexion, 'Flexión', gloveState),
+                      _chartCard(SensorType.flexion, gloveState),
                       const SizedBox(height: Spacing.md),
                     ],
                     _actionLogCard(),
@@ -97,12 +98,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _chartCard(LiveChartType type, String label, GloveState gloveState) {
+  Widget _chartCard(SensorType type, GloveState gloveState) {
     return NeuromorphicCard(
       showAccentLine: false,
       padding: const EdgeInsets.all(Spacing.md),
-      child: LiveChart(type: type, data: gloveState.telemetryBuffer),
+      child: SensorChart(
+        sensorType: type,
+        lines: _extractLiveLines(type, gloveState.telemetryBuffer),
+        showTitle: true,
+        animated: true,
+      ),
     );
+  }
+
+  List<List<double>> _extractLiveLines(SensorType type, List<GloveTelemetry> data) {
+    return switch (type) {
+      SensorType.accelerometer => [
+        data.map((e) => e.accelX).toList(),
+        data.map((e) => e.accelY).toList(),
+        data.map((e) => e.accelZ).toList(),
+      ],
+      SensorType.gyroscope => [
+        data.map((e) => e.gyroX).toList(),
+        data.map((e) => e.gyroY).toList(),
+        data.map((e) => e.gyroZ).toList(),
+      ],
+      SensorType.flexion => [
+        data.map((e) => e.flexIndex.toDouble()).toList(),
+        data.map((e) => e.flexMiddle.toDouble()).toList(),
+      ],
+    };
   }
 
   Widget _actionLogCard() {
