@@ -93,7 +93,7 @@ class SettingsScreen extends ConsumerWidget {
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
+              MaterialPageRoute<void>(
                 builder: (_) => SectionScreen(
                   icon: icon,
                   title: title,
