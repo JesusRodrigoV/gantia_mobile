@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers.dart';
 import '../theme/app_colors.dart';
 import '../theme/context_extensions.dart';
+import '../theme/spacing.dart';
 
 class GantiaBottomNav extends ConsumerWidget {
   const GantiaBottomNav({super.key});
@@ -13,7 +14,7 @@ class GantiaBottomNav extends ConsumerWidget {
     final bg = context.surface0;
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      margin: const EdgeInsets.fromLTRB(Spacing.md, 0, Spacing.md, Spacing.md),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(25),

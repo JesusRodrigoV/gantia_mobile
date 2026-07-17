@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/context_extensions.dart';
 import '../theme/shadows.dart';
+import '../theme/spacing.dart';
 
 class GantiaButton extends StatelessWidget {
   final String label;
@@ -53,7 +54,7 @@ class GantiaButton extends StatelessWidget {
           foregroundColor: fgColor,
           elevation: 0,
           shadowColor: Colors.transparent,
-          padding: padding ?? const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          padding: padding ?? const EdgeInsets.symmetric(horizontal: Spacing.sm, vertical: Spacing.xs),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         child: isLoading
@@ -70,7 +71,7 @@ class GantiaButton extends StatelessWidget {
                 children: [
                   if (icon != null) ...[
                     Icon(icon, size: 16),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: Spacing.xxs),
                   ],
                   Flexible(
                     child: Text(

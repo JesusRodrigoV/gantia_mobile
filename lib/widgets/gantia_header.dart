@@ -136,7 +136,7 @@ class _ModeBadge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(Icons.category, size: 14, color: AppColors.primary500),
-          const SizedBox(width: 4),
+          const SizedBox(width: Spacing.xxs),
           Text(
             mode,
             style: TextStyle(

@@ -42,7 +42,12 @@ class SectionScreen extends StatelessWidget {
           ],
         ),
       ),
-      body: SafeArea(child: SingleChildScrollView(child: child)),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(Spacing.md),
+          child: child,
+        ),
+      ),
     );
   }
 }

@@ -38,7 +38,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(Spacing.md, Spacing.md, Spacing.md, 0),
+              padding: const EdgeInsets.fromLTRB(Spacing.md, Spacing.md, Spacing.md, Spacing.xs),
               child: Row(
                 children: [
                   const Icon(Icons.history, color: AppColors.primary500, size: 28),

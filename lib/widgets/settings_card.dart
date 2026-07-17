@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/context_extensions.dart';
 import '../theme/shadows.dart';
+import '../theme/spacing.dart';
 
 class SettingsCard extends StatelessWidget {
   final String title;
@@ -21,14 +22,14 @@ class SettingsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: Spacing.md),
       decoration: BoxDecoration(
         color: context.surface50,
         borderRadius: BorderRadius.circular(16),
         boxShadow: GantiaShadows.inset(context.surface900, context.surface0),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(Spacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -36,7 +37,7 @@ class SettingsCard extends StatelessWidget {
               children: [
                 if (icon != null) ...[
                   Icon(icon, size: 18, color: AppColors.primary500),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: Spacing.xs),
                 ],
                 Text(
                   title,
@@ -59,7 +60,7 @@ class SettingsCard extends StatelessWidget {
                 ),
               ),
             ],
-            const SizedBox(height: 16),
+            const SizedBox(height: Spacing.md),
             child,
           ],
         ),

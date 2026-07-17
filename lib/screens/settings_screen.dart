@@ -200,26 +200,19 @@ class _AppearanceBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeService = ref.watch(themeServiceProvider);
-    return Padding(
-      padding: const EdgeInsets.all(Spacing.md),
-      child: Column(
+    return SettingsCard(
+      icon: Icons.palette,
+      title: 'Tema',
+      description: 'Alternar entre tema claro y oscuro',
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          SettingsCard(
-            icon: Icons.palette,
-            title: 'Tema',
-            description: 'Alternar entre tema claro y oscuro',
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(themeService.isDarkMode ? 'Modo Oscuro' : 'Modo Claro',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.surface800)),
-                Switch(
-                  value: themeService.isDarkMode,
-                  onChanged: (_) => themeService.toggleTheme(),
-                  activeThumbColor: AppColors.primary500,
-                ),
-              ],
-            ),
+          Text(themeService.isDarkMode ? 'Modo Oscuro' : 'Modo Claro',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.surface800)),
+          Switch(
+            value: themeService.isDarkMode,
+            onChanged: (_) => themeService.toggleTheme(),
+            activeThumbColor: AppColors.primary500,
           ),
         ],
       ),
@@ -232,14 +225,11 @@ class _SensitivityBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return const Padding(
-      padding: EdgeInsets.all(Spacing.md),
-      child: SettingsCard(
-        icon: Icons.tune,
-        title: 'Sensibilidad',
-        description: 'Ajustá la sensibilidad de cada control del guante',
-        child: SensitivitySliders(),
-      ),
+    return const SettingsCard(
+      icon: Icons.tune,
+      title: 'Sensibilidad',
+      description: 'Ajustá la sensibilidad de cada control del guante',
+      child: SensitivitySliders(),
     );
   }
 }
@@ -269,28 +259,21 @@ class _MouseConfigBodyState extends ConsumerState<_MouseConfigBody> {
     final svc = ref.watch(mouseConfigServiceProvider);
     final cfg = svc.config;
 
-    return Padding(
-      padding: const EdgeInsets.all(Spacing.md),
-      child: Column(
-        children: [
-          SettingsCard(
-            icon: Icons.mouse,
-            title: 'Mouse',
-            description: 'Invertí la dirección del cursor',
-            child: svc.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : Column(
-                    children: [
-                      _toggleRow(Icons.swap_horiz, 'Invertir Balanceo (Roll)',
-                        cfg?['invert_roll'] == true, (v) => svc.updateConfig(invertRoll: v)),
-                      const SizedBox(height: Spacing.xs),
-                      _toggleRow(Icons.swap_vert, 'Invertir Inclinación (Pitch)',
-                        cfg?['invert_pitch'] == true, (v) => svc.updateConfig(invertPitch: v)),
-                    ],
-                  ),
-          ),
-        ],
-      ),
+    return SettingsCard(
+      icon: Icons.mouse,
+      title: 'Mouse',
+      description: 'Invertí la dirección del cursor',
+      child: svc.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                _toggleRow(Icons.swap_horiz, 'Invertir Balanceo (Roll)',
+                  cfg?['invert_roll'] == true, (v) => svc.updateConfig(invertRoll: v)),
+                const SizedBox(height: Spacing.xs),
+                _toggleRow(Icons.swap_vert, 'Invertir Inclinación (Pitch)',
+                  cfg?['invert_pitch'] == true, (v) => svc.updateConfig(invertPitch: v)),
+              ],
+            ),
     );
   }
 
@@ -320,45 +303,38 @@ class _ContextTargetBody extends ConsumerWidget {
     const targets = ['auto', 'pico_w', 'mobile'];
     const targetLabels = {'auto': 'Automático', 'pico_w': 'Pico W (PC)', 'mobile': 'Móvil'};
 
-    return Padding(
-      padding: const EdgeInsets.all(Spacing.md),
+    return SettingsCard(
+      icon: Icons.share,
+      title: 'Contexto y Destino',
       child: Column(
         children: [
-          SettingsCard(
-            icon: Icons.share,
-            title: 'Contexto y Destino',
-            child: Column(
-              children: [
-                Row(children: [
-                  Text('Modo activo:', style: TextStyle(fontSize: 13, color: context.surface700)),
-                  const Spacer(),
-                  DropdownButton<String>(
-                    value: contexts.contains(currentMode) ? currentMode : 'GLOBAL',
-                    underline: const SizedBox(),
-                    items: contexts.map((c) => DropdownMenuItem(
-                      value: c, child: Text(getContextLabel(c)))).toList(),
-                    onChanged: (v) {
-                      if (v != null) ref.read(gloveStateProvider).changeMode(v);
-                    },
-                  ),
-                ]),
-                const Divider(height: Spacing.lg),
-                Row(children: [
-                  Text('Destino acciones:', style: TextStyle(fontSize: 13, color: context.surface700)),
-                  const Spacer(),
-                  DropdownButton<String>(
-                    value: targets.contains(targetSvc.target) ? targetSvc.target! : 'auto',
-                    underline: const SizedBox(),
-                    items: targets.map((t) => DropdownMenuItem(
-                      value: t, child: Text(targetLabels[t] ?? t))).toList(),
-                    onChanged: targetSvc.isLoading ? null : (v) {
-                      if (v != null) ref.read(targetServiceProvider).setTarget(v);
-                    },
-                  ),
-                ]),
-              ],
+          Row(children: [
+            Text('Modo activo:', style: TextStyle(fontSize: 13, color: context.surface700)),
+            const Spacer(),
+            DropdownButton<String>(
+              value: contexts.contains(currentMode) ? currentMode : 'GLOBAL',
+              underline: const SizedBox(),
+              items: contexts.map((c) => DropdownMenuItem(
+                value: c, child: Text(getContextLabel(c)))).toList(),
+              onChanged: (v) {
+                if (v != null) ref.read(gloveStateProvider).changeMode(v);
+              },
             ),
-          ),
+          ]),
+          const Divider(height: Spacing.lg),
+          Row(children: [
+            Text('Destino acciones:', style: TextStyle(fontSize: 13, color: context.surface700)),
+            const Spacer(),
+            DropdownButton<String>(
+              value: targets.contains(targetSvc.target) ? targetSvc.target! : 'auto',
+              underline: const SizedBox(),
+              items: targets.map((t) => DropdownMenuItem(
+                value: t, child: Text(targetLabels[t] ?? t))).toList(),
+              onChanged: targetSvc.isLoading ? null : (v) {
+                if (v != null) ref.read(targetServiceProvider).setTarget(v);
+              },
+            ),
+          ]),
         ],
       ),
     );
