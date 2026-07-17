@@ -1,3 +1,4 @@
+import 'dart:developer' as dev;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -155,16 +156,27 @@ class _GestureConfigSectionState extends ConsumerState<GestureConfigSection> {
   }
 
   Widget _buildErrorState(String error, VoidCallback onRetry) {
+    dev.log('[GestureConfigSection] $error');
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: Spacing.md),
       child: Column(
         children: [
-          Icon(Icons.error_outline, color: AppColors.red500, size: 32),
-          const SizedBox(height: Spacing.xs),
+          Icon(Icons.cloud_off, color: AppColors.amber600, size: 32),
+          const SizedBox(height: Spacing.sm),
           Text(
-            error,
+            'No se pudieron cargar las configuraciones',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: context.surface500),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: context.surface700,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Verificá la conexión e intentá de nuevo.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: context.surface500),
           ),
           const SizedBox(height: Spacing.sm),
           GantiaButton(

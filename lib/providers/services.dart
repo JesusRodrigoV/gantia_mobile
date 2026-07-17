@@ -40,7 +40,7 @@ final learningServiceProvider = ChangeNotifierProvider.autoDispose<LearningServi
   return LearningService(api);
 });
 
-final historyServiceProvider = ChangeNotifierProvider.autoDispose<HistoryService>((ref) {
+final historyServiceProvider = ChangeNotifierProvider<HistoryService>((ref) {
   final api = ref.watch(apiServiceProvider);
   return HistoryService(api);
 });

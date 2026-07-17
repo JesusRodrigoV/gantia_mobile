@@ -51,12 +51,13 @@ class HistoryService extends ChangeNotifier with ApiServiceMixin {
       final query = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
       final path = '/actions/history${query.isNotEmpty ? '?$query' : ''}';
 
-      final data = await _api.get(path);
-      final list = (data as List)
+      final data = await _api.get(path) as Map<String, dynamic>;
+      final rawList = (data['data'] as List?) ?? [];
+      final list = rawList
           .map((e) => HistoryActionEntry.fromJson(e as Map<String, dynamic>))
           .toList();
       _actions = list;
-      _totalActions = list.length;
+      _totalActions = (data['total'] as num?)?.toInt() ?? list.length;
       return list;
     })) ?? [];
   }

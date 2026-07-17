@@ -1,3 +1,4 @@
+import 'dart:developer' as dev;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/history_model.dart';
@@ -131,13 +132,24 @@ class _HistoryActionsTabState extends ConsumerState<HistoryActionsTab> {
   }
 
   Widget _buildError(String err, VoidCallback onRetry) {
+    dev.log('[HistoryActionsTab] $err');
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(Spacing.xl),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Icon(Icons.error_outline, size: 48, color: AppColors.red500),
+          const Icon(Icons.cloud_off, size: 48, color: AppColors.amber600),
           const SizedBox(height: Spacing.md),
-          Text(err, textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: context.surface700)),
+          Text(
+            'No se pudieron cargar las acciones',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: context.surface700),
+          ),
+          const SizedBox(height: Spacing.xs),
+          Text(
+            'Verificá la conexión e intentá de nuevo.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: context.surface500),
+          ),
           const SizedBox(height: Spacing.lg),
           GantiaButton(label: 'Reintentar', icon: Icons.refresh, onPressed: onRetry),
         ]),

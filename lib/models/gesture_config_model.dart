@@ -75,7 +75,7 @@ class MacroStep {
   factory MacroStep.fromJson(Map<String, dynamic> json) {
     return MacroStep(
       action: json['action'] as String? ?? '',
-      value: json['value'] as String?,
+      value: json['value']?.toString(),
     );
   }
 
@@ -145,8 +145,8 @@ class GestureConfig {
       orientation: json['orientation'] as String? ?? 'ANY',
       indexState: (json['index_state'] as num?)?.toInt() ?? 0,
       middleState: (json['middle_state'] as num?)?.toInt() ?? 0,
-      actionKey: json['action_key'] as String? ?? '',
-      actionValue: json['action_value'] as String?,
+      actionKey: json['action_key']?.toString() ?? '',
+      actionValue: json['action_value']?.toString(),
       context: json['context'] as String? ?? 'GLOBAL',
     );
   }

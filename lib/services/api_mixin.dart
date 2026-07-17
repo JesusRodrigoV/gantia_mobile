@@ -2,17 +2,25 @@ import 'package:flutter/foundation.dart';
 import 'api_service.dart';
 
 mixin ApiServiceMixin on ChangeNotifier {
+  bool _disposed = false;
   bool _isLoading = false;
   String? _error;
 
   bool get isLoading => _isLoading;
   String? get error => _error;
 
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
   Future<T?> execute<T>(
     Future<T?> Function() call, {
     String unauthorizedMessage = 'No autorizado',
     String networkMessage = 'No se pudo conectar al servidor',
   }) async {
+    if (_disposed) return null;
     _isLoading = true;
     _error = null;
     notifyListeners();
