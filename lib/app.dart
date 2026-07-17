@@ -24,11 +24,7 @@ class GantiaApp extends ConsumerWidget {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      home: AnimatedTheme(
-        data: isDarkMode ? AppTheme.dark() : AppTheme.light(),
-        duration: const Duration(milliseconds: 400),
-        child: const _AuthGate(),
-      ),
+      home: const _AuthGate(),
     );
   }
 }

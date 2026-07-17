@@ -72,16 +72,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     HomeConnectionCard(gloveState: gloveState),
                     const SizedBox(height: Spacing.md),
                     if (gloveState.dataFlowing && gloveState.telemetryBuffer.length >= 2) ...[
-                      RepaintBoundary(child: _chartCard(SensorType.accelerometer, gloveState)),
+                      const _ChartCard(type: SensorType.accelerometer),
                       const SizedBox(height: Spacing.md),
-                      RepaintBoundary(child: _chartCard(SensorType.gyroscope, gloveState)),
+                      const _ChartCard(type: SensorType.gyroscope),
                       const SizedBox(height: Spacing.md),
-                      RepaintBoundary(child: _chartCard(SensorType.flexion, gloveState)),
-                      const SizedBox(height: Spacing.md),
-                      RepaintBoundary(child: _chartCard(SensorType.flexion, gloveState)),
+                      const _ChartCard(type: SensorType.flexion),
                       const SizedBox(height: Spacing.md),
                     ],
-                    RepaintBoundary(child: _actionLogCard()),
+                    RepaintBoundary(child: _ActionLogCard()),
                     const SizedBox(height: Spacing.md),
                     HomeDeviceInfo(
                       gloveState: gloveState,
@@ -101,21 +99,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
+}
 
-  Widget _chartCard(SensorType type, GloveState gloveState) {
-    return NeuromorphicCard(
-      showAccentLine: false,
-      padding: const EdgeInsets.all(Spacing.md),
-      child: SensorChart(
-        sensorType: type,
-        lines: _extractLiveLines(type, gloveState.telemetryBuffer),
-        showTitle: true,
-        animated: true,
+class _ChartCard extends ConsumerWidget {
+  const _ChartCard({required this.type});
+
+  final SensorType type;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final buffer = ref.watch(gloveStateProvider.select((s) => s.telemetryBuffer));
+    final lines = _extractLines(type, buffer);
+    return RepaintBoundary(
+      child: NeuromorphicCard(
+        showAccentLine: false,
+        padding: const EdgeInsets.all(Spacing.md),
+        child: SensorChart(
+          sensorType: type,
+          lines: lines,
+          showTitle: true,
+          animated: true,
+        ),
       ),
     );
   }
 
-  List<List<double>> _extractLiveLines(SensorType type, List<GloveTelemetry> data) {
+  static List<List<double>> _extractLines(SensorType type, List<GloveTelemetry> data) {
     return switch (type) {
       SensorType.accelerometer => [
         data.map((e) => e.accelX).toList(),
@@ -133,19 +142,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ],
     };
   }
+}
 
-  Widget _actionLogCard() {
+class _ActionLogCard extends ConsumerWidget {
+  const _ActionLogCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final actions = ref.watch(actionLogProvider).recentActions;
-    return NeuromorphicCard(
-      padding: const EdgeInsets.all(Spacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('ACCIONES RECIENTES',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: AppColors.primary600)),
-          const SizedBox(height: Spacing.sm),
-          ActionLog(actions: actions),
-        ],
+    return RepaintBoundary(
+      child: NeuromorphicCard(
+        padding: const EdgeInsets.all(Spacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('ACCIONES RECIENTES',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: AppColors.primary600)),
+            const SizedBox(height: Spacing.sm),
+            ActionLog(actions: actions),
+          ],
+        ),
       ),
     );
   }
