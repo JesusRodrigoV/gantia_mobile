@@ -7,69 +7,65 @@ import '../theme/context_extensions.dart';
 import '../theme/spacing.dart';
 import '../widgets/bt_scanner_section.dart';
 import '../widgets/gantia_button.dart';
+import '../widgets/neuromorphic_card.dart';
 import '../widgets/sensitivity_sliders.dart';
 import '../widgets/settings_card.dart';
+import 'section_screen.dart';
 
-class SettingsScreen extends ConsumerStatefulWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
-  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  @override
-  void initState() {
-    super.initState();
-    Future.microtask(() async {
-      try {
-        await ref.read(mouseConfigServiceProvider).getConfig();
-      } catch (e) {
-        debugPrint('[SettingsScreen] getConfig error: $e');
-      }
-      try {
-        await ref.read(targetServiceProvider).getTarget();
-      } catch (e) {
-        debugPrint('[SettingsScreen] getTarget error: $e');
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final themeService = ref.watch(themeServiceProvider);
-    final mouseSvc = ref.watch(mouseConfigServiceProvider);
-    final targetSvc = ref.watch(targetServiceProvider);
-
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: context.surface50,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(Spacing.md, Spacing.md, Spacing.md, Spacing.xs),
-              child: Row(
-                children: [
-                  const Icon(Icons.settings, color: AppColors.primary500, size: 28),
-                  const SizedBox(width: Spacing.xs),
-                  Text('Ajustes',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: context.surface800)),
-                ],
-              ),
-            ),
+            _buildHeader(context),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
                 children: [
-                  _appearanceCard(themeService),
-                  _sensitivityCard(),
-                  _mouseCard(mouseSvc),
-                  _contextTargetCard(targetSvc),
-                  const BtScannerSection(),
-                  _aboutCard(),
+                  _menuItem(
+                    context,
+                    icon: Icons.palette,
+                    title: 'Apariencia',
+                    subtitle: 'Alternar entre tema claro y oscuro',
+                    child: const _AppearanceBody(),
+                  ),
+                  _menuItem(
+                    context,
+                    icon: Icons.tune,
+                    title: 'Sensibilidad',
+                    subtitle: 'Ajustá la sensibilidad de cada control del guante',
+                    child: const _SensitivityBody(),
+                  ),
+                  _menuItem(
+                    context,
+                    icon: Icons.mouse,
+                    title: 'Mouse',
+                    subtitle: 'Configuración de puntero',
+                    child: const _MouseConfigBody(),
+                  ),
+                  _menuItem(
+                    context,
+                    icon: Icons.share,
+                    title: 'Contexto y Destino',
+                    subtitle: 'Modo activo y destino de acciones',
+                    child: const _ContextTargetBody(),
+                  ),
+                  _menuItem(
+                    context,
+                    icon: Icons.bluetooth,
+                    title: 'Bluetooth',
+                    subtitle: 'Conectá un parlante Bluetooth',
+                    child: const BtScannerSection(),
+                  ),
+                  _aboutCard(context),
                   const SizedBox(height: Spacing.sm),
-                  _logoutButton(),
+                  _logoutButton(context, ref),
                   const SizedBox(height: Spacing.xxl),
                 ],
               ),
@@ -80,121 +76,98 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _appearanceCard(ThemeService themeService) {
-    return SettingsCard(
-      icon: Icons.palette,
-      title: 'Apariencia',
-      description: 'Alternar entre tema claro y oscuro',
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(themeService.isDarkMode ? 'Modo Oscuro' : 'Modo Claro',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.surface800)),
-          Switch(
-            value: themeService.isDarkMode,
-            onChanged: (_) => themeService.toggleTheme(),
-            activeThumbColor: AppColors.primary500,
+  Widget _menuItem(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Widget child,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: Spacing.sm),
+      child: NeuromorphicCard(
+        showAccentLine: false,
+        padding: EdgeInsets.zero,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => SectionScreen(
+                  icon: icon,
+                  title: title,
+                  child: child,
+                ),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Spacing.md,
+                vertical: Spacing.md,
+              ),
+              child: Row(
+                children: [
+                  Icon(icon, size: 22, color: AppColors.primary500),
+                  const SizedBox(width: Spacing.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: context.surface800,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: context.surface500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, size: 20, color: context.surface400),
+                ],
+              ),
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _sensitivityCard() {
-    return SettingsCard(
-      icon: Icons.tune,
-      title: 'Sensibilidad',
-      description: 'Ajustá la sensibilidad de cada control del guante',
-      child: const SensitivitySliders(),
-    );
-  }
-
-  Widget _mouseCard(MouseConfigService svc) {
-    final cfg = svc.config;
-    return SettingsCard(
-      icon: Icons.mouse,
-      title: 'Mouse',
-      description: 'Invertí la dirección del cursor',
-      child: svc.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                _toggleRow(Icons.swap_horiz, 'Invertir Balanceo (Roll)',
-                  cfg?['invert_roll'] == true, (v) => svc.updateConfig(invertRoll: v)),
-                const SizedBox(height: Spacing.xs),
-                _toggleRow(Icons.swap_vert, 'Invertir Inclinación (Pitch)',
-                  cfg?['invert_pitch'] == true, (v) => svc.updateConfig(invertPitch: v)),
-              ],
-            ),
-    );
-  }
-
-  Widget _contextTargetCard(TargetService svc) {
-    final currentMode = ref.watch(gloveStateProvider.select((s) => s.currentMode));
-    const targets = ['auto', 'pico_w', 'mobile'];
-    const targetLabels = {'auto': 'Automático', 'pico_w': 'Pico W (PC)', 'mobile': 'Móvil'};
-
-    return SettingsCard(
-      icon: Icons.share,
-      title: 'Contexto y Destino',
-      child: Column(
-        children: [
-          Row(children: [
-            Text('Modo activo:', style: TextStyle(fontSize: 13, color: context.surface700)),
-            const Spacer(),
-            DropdownButton<String>(
-              value: contexts.contains(currentMode) ? currentMode : 'GLOBAL',
-              underline: const SizedBox(),
-              items: contexts.map((c) => DropdownMenuItem(
-                value: c, child: Text(getContextLabel(c)))).toList(),
-              onChanged: (v) {
-                if (v != null) ref.read(gloveStateProvider).changeMode(v);
-              },
-            ),
-          ]),
-          const Divider(height: Spacing.lg),
-          Row(children: [
-            Text('Destino acciones:', style: TextStyle(fontSize: 13, color: context.surface700)),
-            const Spacer(),
-            DropdownButton<String>(
-              value: targets.contains(svc.target) ? svc.target! : 'auto',
-              underline: const SizedBox(),
-              items: targets.map((t) => DropdownMenuItem(
-                value: t, child: Text(targetLabels[t] ?? t))).toList(),
-              onChanged: svc.isLoading ? null : (v) {
-                if (v != null) ref.read(targetServiceProvider).setTarget(v);
-              },
-            ),
-          ]),
-        ],
-      ),
-    );
-  }
-
-  Widget _toggleRow(IconData icon, String label, bool value, ValueChanged<bool> onChanged) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+  Widget _buildHeader(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(Spacing.md, Spacing.md, Spacing.md, Spacing.xs),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: context.surface600),
+          const Icon(Icons.settings, color: AppColors.primary500, size: 28),
           const SizedBox(width: Spacing.xs),
-          Expanded(child: Text(label, style: TextStyle(fontSize: 13, color: context.surface700))),
-          Switch(value: value, onChanged: onChanged, activeThumbColor: AppColors.primary500),
+          Text('Ajustes',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: context.surface800)),
         ],
       ),
     );
   }
 
-  Widget _aboutCard() {
+  Widget _aboutCard(BuildContext context) {
     return SettingsCard(
       icon: Icons.info,
       title: 'Acerca de',
+      description: 'Versión de la aplicación',
       child: Text('Gantia Mobile v0.1.0',
         style: TextStyle(fontSize: 13, color: context.surface600)),
     );
   }
 
-  Widget _logoutButton() {
+  Widget _logoutButton(BuildContext context, WidgetRef ref) {
     final authService = ref.read(authServiceProvider);
     return GantiaButton(
       label: 'Cerrar sesión',
@@ -217,6 +190,172 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           await authService.logout();
         }
       },
+    );
+  }
+}
+
+class _AppearanceBody extends ConsumerWidget {
+  const _AppearanceBody();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeService = ref.watch(themeServiceProvider);
+    return Padding(
+      padding: const EdgeInsets.all(Spacing.md),
+      child: Column(
+        children: [
+          SettingsCard(
+            icon: Icons.palette,
+            title: 'Tema',
+            description: 'Alternar entre tema claro y oscuro',
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(themeService.isDarkMode ? 'Modo Oscuro' : 'Modo Claro',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.surface800)),
+                Switch(
+                  value: themeService.isDarkMode,
+                  onChanged: (_) => themeService.toggleTheme(),
+                  activeThumbColor: AppColors.primary500,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SensitivityBody extends ConsumerWidget {
+  const _SensitivityBody();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return const Padding(
+      padding: EdgeInsets.all(Spacing.md),
+      child: SensitivitySliders(),
+    );
+  }
+}
+
+class _MouseConfigBody extends ConsumerStatefulWidget {
+  const _MouseConfigBody();
+
+  @override
+  ConsumerState<_MouseConfigBody> createState() => _MouseConfigBodyState();
+}
+
+class _MouseConfigBodyState extends ConsumerState<_MouseConfigBody> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      try {
+        ref.read(mouseConfigServiceProvider).getConfig();
+      } catch (e) {
+        debugPrint('[MouseConfigBody] getConfig error: $e');
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final svc = ref.watch(mouseConfigServiceProvider);
+    final cfg = svc.config;
+
+    return Padding(
+      padding: const EdgeInsets.all(Spacing.md),
+      child: Column(
+        children: [
+          SettingsCard(
+            icon: Icons.mouse,
+            title: 'Mouse',
+            description: 'Invertí la dirección del cursor',
+            child: svc.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : Column(
+                    children: [
+                      _toggleRow(Icons.swap_horiz, 'Invertir Balanceo (Roll)',
+                        cfg?['invert_roll'] == true, (v) => svc.updateConfig(invertRoll: v)),
+                      const SizedBox(height: Spacing.xs),
+                      _toggleRow(Icons.swap_vert, 'Invertir Inclinación (Pitch)',
+                        cfg?['invert_pitch'] == true, (v) => svc.updateConfig(invertPitch: v)),
+                    ],
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _toggleRow(IconData icon, String label, bool value, ValueChanged<bool> onChanged) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: context.surface600),
+          const SizedBox(width: Spacing.xs),
+          Expanded(child: Text(label, style: TextStyle(fontSize: 13, color: context.surface700))),
+          Switch(value: value, onChanged: onChanged, activeThumbColor: AppColors.primary500),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContextTargetBody extends ConsumerWidget {
+  const _ContextTargetBody();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentMode = ref.watch(gloveStateProvider.select((s) => s.currentMode));
+    final targetSvc = ref.watch(targetServiceProvider);
+
+    const targets = ['auto', 'pico_w', 'mobile'];
+    const targetLabels = {'auto': 'Automático', 'pico_w': 'Pico W (PC)', 'mobile': 'Móvil'};
+
+    return Padding(
+      padding: const EdgeInsets.all(Spacing.md),
+      child: Column(
+        children: [
+          SettingsCard(
+            icon: Icons.share,
+            title: 'Contexto y Destino',
+            child: Column(
+              children: [
+                Row(children: [
+                  Text('Modo activo:', style: TextStyle(fontSize: 13, color: context.surface700)),
+                  const Spacer(),
+                  DropdownButton<String>(
+                    value: contexts.contains(currentMode) ? currentMode : 'GLOBAL',
+                    underline: const SizedBox(),
+                    items: contexts.map((c) => DropdownMenuItem(
+                      value: c, child: Text(getContextLabel(c)))).toList(),
+                    onChanged: (v) {
+                      if (v != null) ref.read(gloveStateProvider).changeMode(v);
+                    },
+                  ),
+                ]),
+                const Divider(height: Spacing.lg),
+                Row(children: [
+                  Text('Destino acciones:', style: TextStyle(fontSize: 13, color: context.surface700)),
+                  const Spacer(),
+                  DropdownButton<String>(
+                    value: targets.contains(targetSvc.target) ? targetSvc.target! : 'auto',
+                    underline: const SizedBox(),
+                    items: targets.map((t) => DropdownMenuItem(
+                      value: t, child: Text(targetLabels[t] ?? t))).toList(),
+                    onChanged: targetSvc.isLoading ? null : (v) {
+                      if (v != null) ref.read(targetServiceProvider).setTarget(v);
+                    },
+                  ),
+                ]),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

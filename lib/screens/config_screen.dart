@@ -11,6 +11,8 @@ import '../sections/import_export_section.dart';
 import '../sections/learn_section.dart';
 import '../sections/sync_reset_section.dart';
 import '../sections/test_mode_section.dart';
+import '../widgets/neuromorphic_card.dart';
+import 'section_screen.dart';
 
 class ConfigScreen extends ConsumerWidget {
   const ConfigScreen({super.key});
@@ -28,18 +30,127 @@ class ConfigScreen extends ConsumerWidget {
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
                 children: [
-                  const GestureConfigSection(),
-                  const CalibrationSection(),
-                  const AbsolutePointerSection(),
-                  const TestModeSection(),
-                  const ImportExportSection(),
-                  const SyncResetSection(),
-                  const LearnSection(),
+                  _menuItem(
+                    context,
+                    icon: Icons.gesture,
+                    title: 'Gestos Configurados',
+                    subtitle: 'Acciones asignadas a cada gesto manual',
+                    child: const GestureConfigSection(),
+                  ),
+                  _menuItem(
+                    context,
+                    icon: Icons.tune,
+                    title: 'Calibración',
+                    subtitle: 'Ajuste de sensores del guante',
+                    child: const CalibrationSection(),
+                  ),
+                  _menuItem(
+                    context,
+                    icon: Icons.near_me,
+                    title: 'Puntero Absoluto',
+                    subtitle: 'Mapeo de inclinación para puntero',
+                    child: const AbsolutePointerSection(),
+                  ),
+                  _menuItem(
+                    context,
+                    icon: Icons.science,
+                    title: 'Modo Prueba',
+                    subtitle: 'Telemetría en vivo del guante',
+                    child: const TestModeSection(),
+                  ),
+                  _menuItem(
+                    context,
+                    icon: Icons.file_download,
+                    title: 'Importar / Exportar',
+                    subtitle: 'Exportar o importar configuraciones',
+                    child: const ImportExportSection(),
+                  ),
+                  _menuItem(
+                    context,
+                    icon: Icons.sync,
+                    title: 'Sincronización',
+                    subtitle: 'Sincronizar o restablecer configuraciones',
+                    child: const SyncResetSection(),
+                  ),
+                  _menuItem(
+                    context,
+                    icon: Icons.school,
+                    title: 'Aprender Gesto',
+                    subtitle: 'Asistente de aprendizaje de gestos',
+                    child: const LearnSection(),
+                  ),
                   const SizedBox(height: Spacing.xxl),
                 ],
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _menuItem(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Widget child,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: Spacing.sm),
+      child: NeuromorphicCard(
+        showAccentLine: false,
+        padding: EdgeInsets.zero,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => SectionScreen(
+                  icon: icon,
+                  title: title,
+                  child: child,
+                ),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Spacing.md,
+                vertical: Spacing.md,
+              ),
+              child: Row(
+                children: [
+                  Icon(icon, size: 22, color: AppColors.primary500),
+                  const SizedBox(width: Spacing.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: context.surface800,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: context.surface500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, size: 20, color: context.surface400),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );

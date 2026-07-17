@@ -131,8 +131,8 @@ class _MainShellState extends ConsumerState<_MainShell> {
       const HomeScreen(),
       const ConfigScreen(),
       const HistoryScreen(),
-      const SettingsScreen(),
       const SmartHomeScreen(),
+      const SettingsScreen(),
     ];
 
     return Scaffold(
