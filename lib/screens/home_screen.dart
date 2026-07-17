@@ -52,12 +52,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            GantiaHeader(
-              scrolled: _scrolled,
-              onLogout: () async {
-                ref.read(wsClientProvider).disconnect();
-                await ref.read(authServiceProvider).logout();
-              },
+            RepaintBoundary(
+              child: GantiaHeader(
+                scrolled: _scrolled,
+                onLogout: () async {
+                  ref.read(wsClientProvider).disconnect();
+                  await ref.read(authServiceProvider).logout();
+                },
+              ),
             ),
             Expanded(
               child: SingleChildScrollView(
@@ -70,14 +72,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     HomeConnectionCard(gloveState: gloveState),
                     const SizedBox(height: Spacing.md),
                     if (gloveState.dataFlowing && gloveState.telemetryBuffer.length >= 2) ...[
-                      _chartCard(SensorType.accelerometer, gloveState),
+                      RepaintBoundary(child: _chartCard(SensorType.accelerometer, gloveState)),
                       const SizedBox(height: Spacing.md),
-                      _chartCard(SensorType.gyroscope, gloveState),
+                      RepaintBoundary(child: _chartCard(SensorType.gyroscope, gloveState)),
                       const SizedBox(height: Spacing.md),
-                      _chartCard(SensorType.flexion, gloveState),
+                      RepaintBoundary(child: _chartCard(SensorType.flexion, gloveState)),
+                      const SizedBox(height: Spacing.md),
+                      RepaintBoundary(child: _chartCard(SensorType.flexion, gloveState)),
                       const SizedBox(height: Spacing.md),
                     ],
-                    _actionLogCard(),
+                    RepaintBoundary(child: _actionLogCard()),
                     const SizedBox(height: Spacing.md),
                     HomeDeviceInfo(
                       gloveState: gloveState,

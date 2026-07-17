@@ -79,8 +79,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 decoration: BoxDecoration(
                   color: context.surface0,
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: GantiaShadows.inset(
-                      context.surface900, context.surface0),
+                  boxShadow: GantiaShadows.inset(Theme.of(context).brightness),
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,

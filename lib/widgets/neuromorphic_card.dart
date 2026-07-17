@@ -30,7 +30,7 @@ class NeuromorphicCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(borderRadius),
-        boxShadow: GantiaShadows.inset(context.surface900, context.surface0),
+        boxShadow: GantiaShadows.inset(Theme.of(context).brightness),
       ),
       child: Stack(
         children: [
@@ -80,7 +80,7 @@ class NeuromorphicCardInset extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.surface100,
         borderRadius: BorderRadius.circular(borderRadius),
-        boxShadow: GantiaShadows.insetSm(context.surface900, context.surface0),
+        boxShadow: GantiaShadows.insetSm(Theme.of(context).brightness),
       ),
       child: Padding(
         padding: padding ?? const EdgeInsets.all(12),

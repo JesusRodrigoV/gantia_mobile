@@ -74,10 +74,6 @@ class _GestureFlashState extends State<GestureFlash>
     return isDark ? AppColors.surfaceDark800 : AppColors.surfaceLight800;
   }
 
-  bool _getIsDark(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark;
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_current == null) return const SizedBox.shrink();
@@ -109,9 +105,7 @@ class _GestureFlashState extends State<GestureFlash>
   }
 
   Widget _buildCard(BuildContext context) {
-    final isDark = _getIsDark(context);
-    final surface900 = isDark ? AppColors.surfaceDark900 : AppColors.surfaceLight900;
-    final surface0 = isDark ? AppColors.surfaceDark0 : AppColors.surfaceLight0;
+    final brightness = Theme.of(context).brightness;
 
     return Semantics(
       label: 'Gesto detectado: ${_current!.gesture} → ${getActionLabel(_current!.action)}',
@@ -123,7 +117,7 @@ class _GestureFlashState extends State<GestureFlash>
             decoration: BoxDecoration(
               color: _bgColor(context),
               borderRadius: BorderRadius.circular(14),
-              boxShadow: GantiaShadows.elevated(surface900, surface0),
+              boxShadow: GantiaShadows.elevated(brightness),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,

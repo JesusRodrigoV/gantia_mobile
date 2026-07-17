@@ -42,10 +42,7 @@ class GantiaFormField extends StatelessWidget {
           decoration: BoxDecoration(
             color: context.surface50,
             borderRadius: BorderRadius.circular(12),
-            boxShadow: GantiaShadows.insetSm(
-              context.surface900,
-              context.surface0,
-            ),
+            boxShadow: GantiaShadows.insetSm(Theme.of(context).brightness),
           ),
           child: TextFormField(
             controller: controller,
