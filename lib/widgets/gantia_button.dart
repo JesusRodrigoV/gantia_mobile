@@ -93,10 +93,7 @@ class GantiaButton extends StatelessWidget {
       return Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
-          boxShadow: GantiaShadows.elevated(
-            context.surface900,
-            context.surface0,
-          ),
+          boxShadow: GantiaShadows.elevated(Theme.of(context).brightness),
         ),
         child: button,
       );

@@ -29,7 +29,7 @@ class GantiaHeader extends ConsumerWidget {
         color: context.surface0,
         borderRadius: BorderRadius.circular(25),
         boxShadow: [
-          ...GantiaShadows.elevated(context.surface900, context.surface0),
+          ...GantiaShadows.elevated(Theme.of(context).brightness),
           if (scrolled)
             BoxShadow(
               color: AppColors.primary500.withAlpha(20),

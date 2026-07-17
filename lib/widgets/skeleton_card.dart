@@ -51,7 +51,7 @@ class _SkeletonCardState extends State<SkeletonCard>
         decoration: BoxDecoration(
           color: context.surface50,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: GantiaShadows.inset(context.surface900, context.surface0),
+          boxShadow: GantiaShadows.inset(Theme.of(context).brightness),
         ),
         child: Padding(
           padding: const EdgeInsets.all(16),

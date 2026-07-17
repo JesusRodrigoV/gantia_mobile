@@ -24,7 +24,11 @@ class GantiaApp extends ConsumerWidget {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      home: const _AuthGate(),
+      home: AnimatedTheme(
+        data: isDarkMode ? AppTheme.dark() : AppTheme.light(),
+        duration: const Duration(milliseconds: 400),
+        child: const _AuthGate(),
+      ),
     );
   }
 }
@@ -128,16 +132,16 @@ class _MainShellState extends ConsumerState<_MainShell> {
   Widget build(BuildContext context) {
     final currentIndex = ref.watch(bottomNavIndexProvider);
     final pages = <Widget>[
-      const HomeScreen(),
-      const ConfigScreen(),
-      const HistoryScreen(),
-      const SmartHomeScreen(),
-      const SettingsScreen(),
+      const RepaintBoundary(child: HomeScreen()),
+      const RepaintBoundary(child: ConfigScreen()),
+      const RepaintBoundary(child: HistoryScreen()),
+      const RepaintBoundary(child: SmartHomeScreen()),
+      const RepaintBoundary(child: SettingsScreen()),
     ];
 
     return Scaffold(
       body: IndexedStack(index: currentIndex, children: pages),
-      bottomNavigationBar: const GantiaBottomNav(),
+      bottomNavigationBar: const RepaintBoundary(child: GantiaBottomNav()),
     );
   }
 }

@@ -5,7 +5,7 @@ import 'app_colors.dart';
 class AppTheme {
   AppTheme._();
 
-  static ThemeData light() => _base(
+  static final ThemeData _lightTheme = _build(
     colorScheme: AppColors.lightScheme(),
     surface0: AppColors.surfaceLight0,
     surface50: AppColors.surfaceLight50,
@@ -19,7 +19,7 @@ class AppTheme {
     surface900: AppColors.surfaceLight900,
   );
 
-  static ThemeData dark() => _base(
+  static final ThemeData _darkTheme = _build(
     colorScheme: AppColors.darkScheme(),
     surface0: AppColors.surfaceDark0,
     surface50: AppColors.surfaceDark50,
@@ -33,10 +33,13 @@ class AppTheme {
     surface900: AppColors.surfaceDark900,
   );
 
+  static ThemeData light() => _lightTheme;
+  static ThemeData dark() => _darkTheme;
+
   static final TextTheme _fontUi = GoogleFonts.cormorantGaramondTextTheme();
   static final TextStyle? _labelSmall = GoogleFonts.notoSansTextTheme().labelSmall;
 
-  static ThemeData _base({
+  static ThemeData _build({
     required ColorScheme colorScheme,
     required Color surface0,
     required Color surface50,
