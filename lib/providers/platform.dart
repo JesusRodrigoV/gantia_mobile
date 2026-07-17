@@ -5,7 +5,9 @@ import '../services/notification_service.dart';
 import '../services/widget_service.dart';
 
 final btServiceProvider = ChangeNotifierProvider<BtService>((ref) {
-  return BtService();
+  final service = BtService();
+  ref.onDispose(() => service.dispose());
+  return service;
 });
 
 final themeServiceProvider = ChangeNotifierProvider<ThemeService>((ref) {

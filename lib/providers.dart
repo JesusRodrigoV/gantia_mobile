@@ -11,6 +11,7 @@ export 'services/server_config_service.dart';
 export 'services/glove_state.dart';
 export 'services/action_log.dart';
 export 'services/bt_service.dart';
+export 'services/media_action_handler.dart';
 export 'services/theme_service.dart';
 export 'services/smart_home_service.dart';
 export 'services/gesture_config_service.dart';

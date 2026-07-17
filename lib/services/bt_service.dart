@@ -1,108 +1,69 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_classic_bluetooth/flutter_classic_bluetooth.dart';
+import 'package:flutter/services.dart';
 
 class BtService extends ChangeNotifier {
-  final FlutterClassicBluetooth _bluetooth = FlutterClassicBluetooth();
-  BtcConnection? _connection;
+  static const _channel = MethodChannel('com.example.gantia_mobile/media_control');
+  static const _eventChannel = EventChannel('com.example.gantia_mobile/bt_events');
 
+  String? _deviceName;
+  String? _deviceAddress;
   bool _isConnected = false;
-  String? _connectedDevice;
-  List<BtcDevice> _availableDevices = [];
-  String? _error;
-  bool _isScanning = false;
+  StreamSubscription? _eventSub;
 
+  String? get deviceName => _deviceName;
+  String? get deviceAddress => _deviceAddress;
   bool get isConnected => _isConnected;
-  String? get connectedDevice => _connectedDevice;
-  List<BtcDevice> get availableDevices => List.unmodifiable(_availableDevices);
-  String? get error => _error;
-  bool get isScanning => _isScanning;
+  bool get canSendCommands => _isConnected;
 
-  void clearError() {
-    if (_error != null) {
-      _error = null;
+  /// Mantiene compatibilidad con la API anterior
+  String? get connectedDevice => _deviceName ?? _deviceAddress;
+
+  BtService() {
+    _eventSub = _eventChannel.receiveBroadcastStream().listen(_onEvent);
+  }
+
+  void _onEvent(dynamic event) {
+    if (event is Map) {
+      _deviceName = event['name'] as String?;
+      _deviceAddress = event['address'] as String?;
+      _isConnected = event['connected'] as bool? ?? false;
       notifyListeners();
     }
   }
 
-  Future<void> scanDevices() async {
-    _isScanning = true;
-    _error = null;
-    notifyListeners();
+  Future<void> playPause() => _invoke('playPause');
+  Future<void> next() => _invoke('next');
+  Future<void> prev() => _invoke('prev');
+  Future<void> volumeUp() => _invoke('volumeUp');
+  Future<void> volumeDown() => _invoke('volumeDown');
+  Future<void> mute() => _invoke('mute');
 
+  Future<void> _invoke(String method) async {
     try {
-      final devices = await _bluetooth.scan(timeout: const Duration(seconds: 8));
-      _availableDevices = devices;
+      await _channel.invokeMethod<dynamic>(method);
     } catch (e) {
-      _error = 'Error al escanear dispositivos BT';
-      debugPrint('[BtService] scan error: $e');
-    } finally {
-      _isScanning = false;
-      notifyListeners();
+      debugPrint('[BtService] $method error: $e');
     }
   }
 
-  Future<bool> connect(String deviceAddress) async {
-    _error = null;
-    notifyListeners();
-
+  Future<void> refresh() async {
     try {
-      final connection = await _bluetooth.connect(address: deviceAddress);
-      _connection = connection;
-      _isConnected = true;
-      _connectedDevice = deviceAddress;
-      notifyListeners();
-
-      connection.stateStream.listen((state) {
-        if (state == BtcConnectionState.disconnected) {
-          _isConnected = false;
-          _connectedDevice = null;
-          _connection = null;
-          notifyListeners();
-        }
-      });
-
-      return true;
+      final result = await _channel.invokeMethod<Map>('getConnectedDevice');
+      if (result != null) {
+        _deviceName = result['name'] as String?;
+        _deviceAddress = result['address'] as String?;
+        _isConnected = result['connected'] as bool? ?? false;
+        notifyListeners();
+      }
     } catch (e) {
-      _error = 'No se pudo conectar al dispositivo';
-      debugPrint('[BtService] connect error: $e');
-      notifyListeners();
-    }
-    return false;
-  }
-
-  Future<void> disconnect() async {
-    try {
-      await _connection?.finish();
-      _connection?.dispose();
-    } catch (e) {
-      debugPrint('[BtService] disconnect error: $e');
-    } finally {
-      _connection = null;
-      _isConnected = false;
-      _connectedDevice = null;
-      notifyListeners();
+      debugPrint('[BtService] refresh error: $e');
     }
   }
 
-  Future<void> playPause() => _sendCommand('playPause');
-  Future<void> next() => _sendCommand('next');
-  Future<void> prev() => _sendCommand('prev');
-  Future<void> volumeUp() => _sendCommand('volumeUp');
-  Future<void> volumeDown() => _sendCommand('volumeDown');
-  Future<void> mute() => _sendCommand('mute');
-
-  Future<void> _sendCommand(String command) async {
-    if (!_isConnected || _connection == null) {
-      _error = 'No hay dispositivo conectado';
-      notifyListeners();
-      return;
-    }
-    try {
-      await _connection!.output.writeLine(command);
-    } catch (e) {
-      _error = 'Error al ejecutar comando';
-      debugPrint('[BtService] $command error: $e');
-      notifyListeners();
-    }
+  @override
+  void dispose() {
+    _eventSub?.cancel();
+    super.dispose();
   }
 }

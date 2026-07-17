@@ -10,6 +10,7 @@ import 'screens/smart_home_screen.dart';
 import 'screens/config_screen.dart';
 import 'screens/history_screen.dart';
 import 'widgets/gantia_bottom_nav.dart';
+import 'services/media_action_handler.dart';
 
 class GantiaApp extends ConsumerWidget {
   const GantiaApp({super.key});
@@ -95,6 +96,7 @@ class _MainShell extends ConsumerStatefulWidget {
 
 class _MainShellState extends ConsumerState<_MainShell> {
   bool _shellDisposed = false;
+  MediaActionHandler? _mediaActionHandler;
 
   @override
   void initState() {
@@ -114,11 +116,18 @@ class _MainShellState extends ConsumerState<_MainShell> {
 
     final widgetService = ref.read(widgetServiceProvider);
     widgetService.listenTo(gloveState, actionLog);
+
+    final btService = ref.read(btServiceProvider);
+    btService.refresh();
+
+    final client = ref.read(wsClientProvider);
+    _mediaActionHandler = MediaActionHandler(client, btService);
   }
 
   @override
   void dispose() {
     _shellDisposed = true;
+    _mediaActionHandler?.dispose();
     try { ref.read(notificationServiceProvider).dispose(); } catch (_) {}
     try { ref.read(widgetServiceProvider).dispose(); } catch (_) {}
     super.dispose();
