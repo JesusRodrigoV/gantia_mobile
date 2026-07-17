@@ -30,28 +30,37 @@ class SyncResetSection extends ConsumerWidget {
                 ),
               ),
             )
-          : Row(
+          : Column(
               children: [
-                Expanded(
-                  child: GantiaButton(
-                    label: 'Sync desde Supabase',
-                    icon: Icons.cloud_sync,
-                    variant: GantiaButtonVariant.default_,
-                    onPressed: () => service.refreshFromSupabase(),
-                  ),
+                GantiaButton(
+                  label: 'Sync desde Supabase',
+                  icon: Icons.cloud_sync,
+                  variant: GantiaButtonVariant.default_,
+                  expanded: true,
+                  onPressed: () => _syncFromSupabase(context, ref, service),
                 ),
-                const SizedBox(width: Spacing.sm),
-                Expanded(
-                  child: GantiaButton(
-                    label: 'Reset a Defaults',
-                    icon: Icons.restart_alt,
-                    variant: GantiaButtonVariant.danger,
-                    onPressed: () => _confirmReset(context, ref, service),
-                  ),
+                const SizedBox(height: Spacing.sm),
+                GantiaButton(
+                  label: 'Reset a Defaults',
+                  icon: Icons.restart_alt,
+                  variant: GantiaButtonVariant.danger,
+                  expanded: true,
+                  onPressed: () => _confirmReset(context, ref, service),
                 ),
               ],
             ),
     );
+  }
+
+  Future<void> _syncFromSupabase(
+    BuildContext context,
+    WidgetRef ref,
+    GestureConfigService service,
+  ) async {
+    final success = await service.refreshFromSupabase();
+    if (!context.mounted) return;
+    _showResult(context, success, service.error,
+        'Configuraciones sincronizadas correctamente');
   }
 
   Future<void> _confirmReset(
@@ -87,7 +96,24 @@ class SyncResetSection extends ConsumerWidget {
       ),
     );
     if (confirm == true) {
-      await service.resetToDefaults();
+      final success = await service.resetToDefaults();
+      if (!context.mounted) return;
+      _showResult(context, success, service.error,
+          'Configuraciones restablecidas correctamente');
     }
+  }
+
+  void _showResult(
+    BuildContext context,
+    bool success,
+    String? error,
+    String successMessage,
+  ) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(success ? successMessage : error ?? 'Error desconocido'),
+        backgroundColor: success ? AppColors.green500 : AppColors.red500,
+      ),
+    );
   }
 }

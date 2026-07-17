@@ -72,12 +72,15 @@ class GantiaButton extends StatelessWidget {
                     Icon(icon, size: 16),
                     const SizedBox(width: 6),
                   ],
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 1,
+                  Flexible(
+                    child: Text(
+                      label,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1,
+                      ),
                     ),
                   ),
                 ],

@@ -9,7 +9,6 @@ import '../services/history_service.dart';
 import '../services/target_service.dart';
 import '../services/recording_service.dart';
 import 'auth.dart';
-import 'glove.dart';
 
 final smartHomeServiceProvider = ChangeNotifierProvider.autoDispose<SmartHomeService>((ref) {
   final api = ref.watch(apiServiceProvider);
