@@ -75,7 +75,7 @@ class GantiaHeader extends ConsumerWidget {
               _ModeBadge(mode: gloveState.currentMode),
 
             IconButton(
-              onPressed: themeService.toggleTheme,
+              onPressed: () => ref.read(themeServiceProvider).toggleTheme(),
               icon: Icon(
                 isDarkMode ? Icons.light_mode : Icons.dark_mode,
                 size: 20,

@@ -34,7 +34,7 @@ class AppTheme {
   );
 
   static final TextTheme _fontUi = GoogleFonts.cormorantGaramondTextTheme();
-  static final TextStyle _labelSmall = GoogleFonts.notoSansTextTheme().labelSmall;
+  static final TextStyle? _labelSmall = GoogleFonts.notoSansTextTheme().labelSmall;
 
   static ThemeData _base({
     required ColorScheme colorScheme,
@@ -54,21 +54,21 @@ class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: surface50,
       textTheme: TextTheme(
-        displayLarge: fontUi.displayLarge?.copyWith(color: surface800),
-        displayMedium: fontUi.displayMedium?.copyWith(color: surface800),
-        displaySmall: fontUi.displaySmall?.copyWith(color: surface800),
-        headlineLarge: fontUi.headlineLarge?.copyWith(color: surface800),
-        headlineMedium: fontUi.headlineMedium?.copyWith(color: surface800),
-        headlineSmall: fontUi.headlineSmall?.copyWith(color: surface800),
-        titleLarge: fontUi.titleLarge?.copyWith(color: surface800),
-        titleMedium: fontUi.titleMedium?.copyWith(color: surface800),
-        titleSmall: fontUi.titleSmall?.copyWith(color: surface800),
-        bodyLarge: fontUi.bodyLarge?.copyWith(color: surface800),
-        bodyMedium: fontUi.bodyMedium?.copyWith(color: surface800),
-        bodySmall: fontUi.bodySmall?.copyWith(color: surface700),
-        labelLarge: fontUi.labelLarge?.copyWith(color: surface800),
-        labelMedium: fontUi.labelMedium?.copyWith(color: surface600),
-        labelSmall: labelSmall?.copyWith(color: surface500),
+        displayLarge: _fontUi.displayLarge?.copyWith(color: surface800),
+        displayMedium: _fontUi.displayMedium?.copyWith(color: surface800),
+        displaySmall: _fontUi.displaySmall?.copyWith(color: surface800),
+        headlineLarge: _fontUi.headlineLarge?.copyWith(color: surface800),
+        headlineMedium: _fontUi.headlineMedium?.copyWith(color: surface800),
+        headlineSmall: _fontUi.headlineSmall?.copyWith(color: surface800),
+        titleLarge: _fontUi.titleLarge?.copyWith(color: surface800),
+        titleMedium: _fontUi.titleMedium?.copyWith(color: surface800),
+        titleSmall: _fontUi.titleSmall?.copyWith(color: surface800),
+        bodyLarge: _fontUi.bodyLarge?.copyWith(color: surface800),
+        bodyMedium: _fontUi.bodyMedium?.copyWith(color: surface800),
+        bodySmall: _fontUi.bodySmall?.copyWith(color: surface700),
+        labelLarge: _fontUi.labelLarge?.copyWith(color: surface800),
+        labelMedium: _fontUi.labelMedium?.copyWith(color: surface600),
+        labelSmall: _labelSmall?.copyWith(color: surface500),
       ),
       cardTheme: CardThemeData(
         color: surface50,
