@@ -1,18 +1,19 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_classic_bluetooth/flutter_classic_bluetooth.dart';
 
 class BtService extends ChangeNotifier {
-  static const _channel = MethodChannel('gantia_bt');
+  final FlutterClassicBluetooth _bluetooth = FlutterClassicBluetooth();
+  BtcConnection? _connection;
 
   bool _isConnected = false;
   String? _connectedDevice;
-  List<String> _availableDevices = [];
+  List<BtcDevice> _availableDevices = [];
   String? _error;
   bool _isScanning = false;
 
   bool get isConnected => _isConnected;
   String? get connectedDevice => _connectedDevice;
-  List<String> get availableDevices => List.unmodifiable(_availableDevices);
+  List<BtcDevice> get availableDevices => List.unmodifiable(_availableDevices);
   String? get error => _error;
   bool get isScanning => _isScanning;
 
@@ -29,10 +30,8 @@ class BtService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await _channel.invokeMethod('scanDevices');
-      if (result is List) {
-        _availableDevices = result.cast<String>();
-      }
+      final devices = await _bluetooth.scan(timeout: const Duration(seconds: 8));
+      _availableDevices = devices;
     } catch (e) {
       _error = 'Error al escanear dispositivos BT';
       debugPrint('[BtService] scan error: $e');
@@ -42,22 +41,29 @@ class BtService extends ChangeNotifier {
     }
   }
 
-  Future<bool> connect(String deviceId) async {
+  Future<bool> connect(String deviceAddress) async {
     _error = null;
     notifyListeners();
 
     try {
-      final result = await _channel.invokeMethod('connect', {'deviceId': deviceId});
-      if (result == true) {
-        _isConnected = true;
-        _connectedDevice = deviceId;
-        notifyListeners();
-        return true;
-      }
-      _error = 'No se pudo conectar a $deviceId';
+      final connection = await _bluetooth.connect(address: deviceAddress);
+      _connection = connection;
+      _isConnected = true;
+      _connectedDevice = deviceAddress;
       notifyListeners();
+
+      connection.stateStream.listen((state) {
+        if (state == BtcConnectionState.disconnected) {
+          _isConnected = false;
+          _connectedDevice = null;
+          _connection = null;
+          notifyListeners();
+        }
+      });
+
+      return true;
     } catch (e) {
-      _error = 'Error al conectar: ${e.toString()}';
+      _error = 'No se pudo conectar al dispositivo';
       debugPrint('[BtService] connect error: $e');
       notifyListeners();
     }
@@ -65,35 +71,38 @@ class BtService extends ChangeNotifier {
   }
 
   Future<void> disconnect() async {
-    _error = null;
-    notifyListeners();
-
     try {
-      await _channel.invokeMethod('disconnect');
+      await _connection?.finish();
+      _connection?.dispose();
+    } catch (e) {
+      debugPrint('[BtService] disconnect error: $e');
+    } finally {
+      _connection = null;
       _isConnected = false;
       _connectedDevice = null;
       notifyListeners();
-    } catch (e) {
-      _error = 'Error al desconectar';
-      debugPrint('[BtService] disconnect error: $e');
-      notifyListeners();
     }
   }
 
-  Future<void> _sendCommand(String method, String label) async {
+  Future<void> playPause() => _sendCommand('playPause');
+  Future<void> next() => _sendCommand('next');
+  Future<void> prev() => _sendCommand('prev');
+  Future<void> volumeUp() => _sendCommand('volumeUp');
+  Future<void> volumeDown() => _sendCommand('volumeDown');
+  Future<void> mute() => _sendCommand('mute');
+
+  Future<void> _sendCommand(String command) async {
+    if (!_isConnected || _connection == null) {
+      _error = 'No hay dispositivo conectado';
+      notifyListeners();
+      return;
+    }
     try {
-      await _channel.invokeMethod(method);
+      await _connection!.output.writeLine(command);
     } catch (e) {
-      _error = 'Error al ejecutar $label';
-      debugPrint('[BtService] $method error: $e');
+      _error = 'Error al ejecutar comando';
+      debugPrint('[BtService] $command error: $e');
       notifyListeners();
     }
   }
-
-  Future<void> playPause() => _sendCommand('playPause', 'play/pausa');
-  Future<void> next() => _sendCommand('next', 'siguiente');
-  Future<void> prev() => _sendCommand('prev', 'anterior');
-  Future<void> volumeUp() => _sendCommand('volumeUp', 'subir volumen');
-  Future<void> volumeDown() => _sendCommand('volumeDown', 'bajar volumen');
-  Future<void> mute() => _sendCommand('mute', 'silenciar');
 }

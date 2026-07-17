@@ -76,8 +76,10 @@ class BtScannerSection extends ConsumerWidget {
             const SizedBox(height: Spacing.xs),
             ...btService.availableDevices.map((d) => ListTile(
               dense: true,
-              title: Text(d, style: const TextStyle(fontSize: 13)),
-              trailing: GantiaButton(label: 'Conectar', onPressed: () => btService.connect(d)),
+              title: Text(d.displayName.isNotEmpty ? d.displayName : d.address,
+                style: const TextStyle(fontSize: 13)),
+              subtitle: Text(d.address, style: TextStyle(fontSize: 11, color: context.surface400)),
+              trailing: GantiaButton(label: 'Conectar', onPressed: () => btService.connect(d.address)),
             )),
           ],
         ],
