@@ -54,7 +54,6 @@ class SensorChart extends StatelessWidget {
   final bool showTitle;
   final double height;
   final bool animated;
-  final bool isDark;
 
   const SensorChart({
     super.key,
@@ -64,13 +63,14 @@ class SensorChart extends StatelessWidget {
     this.showTitle = false,
     this.height = 140,
     this.animated = false,
-    this.isDark = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final dataPoints = lines.isNotEmpty ? lines.first.length : 0;
 
+    final theme = context.findAncestorWidgetOfExactType<Theme>();
+    final isDark = theme?.data.brightness == Brightness.dark;
     final gridColor = isDark ? const Color(0xFF3a3732) : const Color(0xFFd4cec4);
     final axisTextColor = isDark ? const Color(0xFF5c5850) : const Color(0xFF9c9588);
     const textColor = Color(0xFF7d776b);

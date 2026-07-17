@@ -110,7 +110,6 @@ class _ChartCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final buffer = ref.watch(gloveStateProvider.select((s) => s.telemetryBuffer));
     final lines = _extractLines(type, buffer);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return RepaintBoundary(
       child: NeuromorphicCard(
         showAccentLine: false,
@@ -120,7 +119,6 @@ class _ChartCard extends ConsumerWidget {
           lines: lines,
           showTitle: true,
           animated: true,
-          isDark: isDark,
         ),
       ),
     );
