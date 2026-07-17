@@ -234,7 +234,12 @@ class _SensitivityBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return const Padding(
       padding: EdgeInsets.all(Spacing.md),
-      child: SensitivitySliders(),
+      child: SettingsCard(
+        icon: Icons.tune,
+        title: 'Sensibilidad',
+        description: 'Ajustá la sensibilidad de cada control del guante',
+        child: SensitivitySliders(),
+      ),
     );
   }
 }
