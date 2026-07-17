@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../theme/app_colors.dart';
-import '../theme/context_extensions.dart';
 import '../theme/spacing.dart';
 
 enum SensorType { accelerometer, gyroscope, flexion }
@@ -70,6 +69,13 @@ class SensorChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final dataPoints = lines.isNotEmpty ? lines.first.length : 0;
 
+    final theme = context.getInheritedWidgetOfExactType<Theme>();
+    final isDark = theme?.data.brightness == Brightness.dark;
+
+    final gridColor = isDark ? const Color(0xFF3a3732) : const Color(0xFFd4cec4);
+    final axisTextColor = isDark ? const Color(0xFF5c5850) : const Color(0xFF9c9588);
+    const textColor = Color(0xFF7d776b);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -96,7 +102,7 @@ class SensorChart extends StatelessWidget {
                         : 'Esperando datos...',
                     style: TextStyle(
                       fontSize: 12,
-                      color: context.surface500,
+                      color: textColor,
                       fontStyle: FontStyle.italic,
                     ),
                   ),
@@ -107,7 +113,7 @@ class SensorChart extends StatelessWidget {
                       show: true,
                       drawVerticalLine: false,
                       getDrawingHorizontalLine: (value) => FlLine(
-                        color: context.surface200,
+                        color: gridColor,
                         strokeWidth: 0.5,
                       ),
                     ),
@@ -120,7 +126,7 @@ class SensorChart extends StatelessWidget {
                             v.toStringAsFixed(v.abs() > 10 ? 0 : 1),
                             style: TextStyle(
                               fontSize: 9,
-                              color: context.surface400,
+                              color: axisTextColor,
                             ),
                           ),
                         ),
@@ -137,7 +143,7 @@ class SensorChart extends StatelessWidget {
                                     v.toStringAsFixed(0),
                                     style: TextStyle(
                                       fontSize: 9,
-                                      color: context.surface400,
+                                      color: axisTextColor,
                                     ),
                                   ),
                                 ),
@@ -201,7 +207,7 @@ class SensorChart extends StatelessWidget {
                     e.value,
                     style: TextStyle(
                       fontSize: 10,
-                      color: context.surface500,
+                      color: textColor,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
