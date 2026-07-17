@@ -19,8 +19,8 @@ class ThemeService extends ChangeNotifier {
 
   Future<void> toggleTheme() async {
     _isDarkMode = !_isDarkMode;
+    notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_key, _isDarkMode ? 'dark' : 'light');
-    notifyListeners();
   }
 }

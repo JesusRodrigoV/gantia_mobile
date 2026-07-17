@@ -33,6 +33,9 @@ class AppTheme {
     surface900: AppColors.surfaceDark900,
   );
 
+  static final TextTheme _fontUi = GoogleFonts.cormorantGaramondTextTheme();
+  static final TextStyle _labelSmall = GoogleFonts.notoSansTextTheme().labelSmall;
+
   static ThemeData _base({
     required ColorScheme colorScheme,
     required Color surface0,
@@ -46,9 +49,6 @@ class AppTheme {
     required Color surface800,
     required Color surface900,
   }) {
-    final fontUi = GoogleFonts.cormorantGaramondTextTheme();
-    final labelSmall = GoogleFonts.notoSansTextTheme().labelSmall;
-
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,

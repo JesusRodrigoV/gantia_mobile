@@ -199,7 +199,7 @@ class _AppearanceBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeService = ref.watch(themeServiceProvider);
+    final isDarkMode = ref.watch(themeServiceProvider.select((s) => s.isDarkMode));
     return SettingsCard(
       icon: Icons.palette,
       title: 'Tema',
@@ -207,11 +207,11 @@ class _AppearanceBody extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(themeService.isDarkMode ? 'Modo Oscuro' : 'Modo Claro',
+          Text(isDarkMode ? 'Modo Oscuro' : 'Modo Claro',
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.surface800)),
           Switch(
-            value: themeService.isDarkMode,
-            onChanged: (_) => themeService.toggleTheme(),
+            value: isDarkMode,
+            onChanged: (_) => ref.read(themeServiceProvider).toggleTheme(),
             activeThumbColor: AppColors.primary500,
           ),
         ],

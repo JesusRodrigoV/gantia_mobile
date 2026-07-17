@@ -20,9 +20,8 @@ class GantiaHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeService = ref.watch(themeServiceProvider);
+    final isDarkMode = ref.watch(themeServiceProvider.select((s) => s.isDarkMode));
     final gloveState = ref.watch(gloveStateProvider);
-    final isDarkMode = themeService.isDarkMode;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.xs),

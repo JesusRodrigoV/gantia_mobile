@@ -16,14 +16,14 @@ class GantiaApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeService = ref.watch(themeServiceProvider);
+    final isDarkMode = ref.watch(themeServiceProvider.select((s) => s.isDarkMode));
 
     return MaterialApp(
       title: 'Gantia Mobile',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
-      themeMode: themeService.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
       home: const _AuthGate(),
     );
   }
