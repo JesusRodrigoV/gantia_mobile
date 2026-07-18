@@ -2,31 +2,19 @@ import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 
 @pragma('vm:entry-point')
-void backgroundServiceEntrypoint() {
-  final service = FlutterBackgroundService();
+void backgroundServiceEntrypoint(ServiceInstance service) {
+  if (service is AndroidServiceInstance) {
+    service.on('setAsForeground').listen((event) {
+      service.setAsForegroundService();
+    });
 
-  service.on('stop').listen((_) {
+    service.on('setAsBackground').listen((event) {
+      service.setAsBackgroundService();
+    });
+  }
+
+  service.on('stop').listen((event) {
     service.stopSelf();
-  });
-
-  service.setNotificationInfo(
-    title: 'Gantia',
-    content: 'Controlando parlante Bluetooth',
-  );
-
-  service.setForegroundHandler((onForeground) {
-    if (onForeground) {
-      service.setNotificationInfo(
-        title: 'Gantia',
-        content: 'Controlando parlante Bluetooth',
-      );
-    } else {
-      service.setNotificationInfo(
-        title: 'Gantia',
-        content: 'Funcionando en segundo plano',
-      );
-    }
-    service.updateNotification();
   });
 }
 
@@ -46,10 +34,18 @@ Future<void> initializeBackgroundService() async {
     ),
     iosConfiguration: IosConfiguration(
       autoStart: false,
-      onForeground: true,
-      onBackground: true,
+      onForeground: onStartIos,
+      onBackground: onIosBackground,
     ),
   );
 
   service.startService();
 }
+
+@pragma('vm:entry-point')
+Future<bool> onIosBackground(ServiceInstance service) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  return true;
+}
+
+void onStartIos(ServiceInstance service) {}
