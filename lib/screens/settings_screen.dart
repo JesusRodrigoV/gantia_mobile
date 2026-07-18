@@ -5,7 +5,7 @@ import '../providers.dart';
 import '../theme/app_colors.dart';
 import '../theme/context_extensions.dart';
 import '../theme/spacing.dart';
-import '../widgets/bt_scanner_section.dart';
+import '../widgets/bt_status_section.dart';
 import '../widgets/gantia_button.dart';
 import '../widgets/neuromorphic_card.dart';
 import '../widgets/sensitivity_sliders.dart';
@@ -61,7 +61,7 @@ class SettingsScreen extends ConsumerWidget {
                     icon: Icons.bluetooth,
                     title: 'Bluetooth',
                     subtitle: 'Conectá un parlante Bluetooth',
-                    child: const BtScannerSection(),
+                    child: const BtStatusSection(),
                   ),
                   _aboutCard(context),
                   const SizedBox(height: Spacing.sm),

@@ -6,8 +6,8 @@ import '../theme/context_extensions.dart';
 import '../theme/spacing.dart';
 import 'settings_card.dart';
 
-class BtScannerSection extends ConsumerWidget {
-  const BtScannerSection({super.key});
+class BtStatusSection extends ConsumerWidget {
+  const BtStatusSection({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -80,6 +80,42 @@ class BtScannerSection extends ConsumerWidget {
             'Al hacer un gesto de control multimedia, Gantia lo envía automáticamente '
             'al parlante o auricular conectado.',
             style: TextStyle(fontSize: 11, color: context.surface400),
+          ),
+          const SizedBox(height: Spacing.sm),
+          _BackgroundIndicator(),
+        ],
+      ),
+    );
+  }
+}
+
+class _BackgroundIndicator extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final active = ref.watch(backgroundServiceActiveProvider);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: Spacing.sm, vertical: Spacing.xs),
+      decoration: BoxDecoration(
+        color: active ? AppColors.primary500.withAlpha(12) : context.surface100,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            active ? Icons.brightness_1 : Icons.brightness_1_outlined,
+            size: 8,
+            color: active ? AppColors.primary500 : context.surface400,
+          ),
+          const SizedBox(width: Spacing.xs),
+          Text(
+            active ? 'Modo segundo plano activo' : 'Modo segundo plano inactivo',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: active ? AppColors.primary500 : context.surface400,
+            ),
           ),
         ],
       ),
