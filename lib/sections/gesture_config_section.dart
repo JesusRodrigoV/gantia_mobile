@@ -1,4 +1,3 @@
-import 'dart:developer' as dev;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -156,7 +155,9 @@ class _GestureConfigSectionState extends ConsumerState<GestureConfigSection> {
   }
 
   Widget _buildErrorState(String error, VoidCallback onRetry) {
-    dev.log('[GestureConfigSection] $error');
+    debugPrint('═══════════════════════════════════════');
+    debugPrint('❌ GestureConfigSection error: $error');
+    debugPrint('═══════════════════════════════════════');
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: Spacing.md),
       child: Column(
