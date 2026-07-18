@@ -45,9 +45,11 @@ class _AuthGateState extends ConsumerState<_AuthGate> {
     final auth = ref.read(authServiceProvider);
     auth.addListener(_onAuthChanged);
     if (auth.isAuthenticated) {
-      ref.read(wsClientProvider).connect();
-      initializeBackgroundService();
-      ref.read(backgroundServiceActiveProvider.notifier).state = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(wsClientProvider).connect();
+        initializeBackgroundService();
+        ref.read(backgroundServiceActiveProvider.notifier).state = true;
+      });
     }
   }
 
@@ -58,16 +60,19 @@ class _AuthGateState extends ConsumerState<_AuthGate> {
   }
 
   void _onAuthChanged() {
-    final auth = ref.read(authServiceProvider);
-    if (auth.isAuthenticated) {
-      ref.read(wsClientProvider).connect();
-      initializeBackgroundService();
-      ref.read(backgroundServiceActiveProvider.notifier).state = true;
-    } else {
-      ref.read(wsClientProvider).disconnect();
-      FlutterBackgroundService().invoke('stop');
-      ref.read(backgroundServiceActiveProvider.notifier).state = false;
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final auth = ref.read(authServiceProvider);
+      if (auth.isAuthenticated) {
+        ref.read(wsClientProvider).connect();
+        initializeBackgroundService();
+        ref.read(backgroundServiceActiveProvider.notifier).state = true;
+      } else {
+        ref.read(wsClientProvider).disconnect();
+        FlutterBackgroundService().invoke('stop');
+        ref.read(backgroundServiceActiveProvider.notifier).state = false;
+      }
+    });
   }
 
   @override
