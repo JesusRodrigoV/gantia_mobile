@@ -10,7 +10,6 @@ import 'screens/smart_home_screen.dart';
 import 'screens/config_screen.dart';
 import 'screens/history_screen.dart';
 import 'widgets/gantia_bottom_nav.dart';
-import 'services/media_action_handler.dart';
 
 class GantiaApp extends ConsumerWidget {
   const GantiaApp({super.key});
