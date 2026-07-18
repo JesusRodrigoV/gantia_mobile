@@ -301,7 +301,7 @@ class _ContextTargetBody extends ConsumerWidget {
     final targetSvc = ref.watch(targetServiceProvider);
 
     const targets = ['auto', 'pico_w', 'mobile'];
-    const targetLabels = {'auto': 'Automático', 'pico_w': 'Pico W (PC)', 'mobile': 'Móvil'};
+    const targetLabels = {'auto': 'Automático', 'pico_w': 'PC', 'mobile': 'Móvil'};
 
     return SettingsCard(
       icon: Icons.share,
