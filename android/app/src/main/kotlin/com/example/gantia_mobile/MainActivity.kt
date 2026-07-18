@@ -1,5 +1,6 @@
 package com.example.gantia_mobile
 
+import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothProfile
@@ -7,8 +8,12 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.media.AudioManager
+import android.os.Build
+import android.util.Log
 import android.view.KeyEvent
+import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
@@ -97,40 +102,54 @@ class MainActivity : FlutterActivity() {
             }
         })
 
-        registerReceiver(
-            btReceiver,
-            IntentFilter().apply {
-                addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
-                addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED)
-            }
-        )
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+            ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
+        ) {
+            registerReceiver(
+                btReceiver,
+                IntentFilter().apply {
+                    addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
+                    addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED)
+                }
+            )
+        }
 
         queryA2dpState()
     }
 
     private fun queryA2dpState() {
         val adapter = BluetoothAdapter.getDefaultAdapter() ?: return
-        adapter.getProfileProxy(
-            this,
-            object : BluetoothProfile.ServiceListener {
-                override fun onServiceConnected(profileId: Int, proxy: BluetoothProfile) {
-                    if (profileId == BluetoothProfile.A2DP) {
-                        val devices = proxy.connectedDevices
-                        if (devices.isNotEmpty()) {
-                            val device = devices[0]
-                            _connectedName = device.name
-                            _connectedAddress = device.address
-                            _isConnected = true
-                            emitEvent()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.w("MainActivity", "BLUETOOTH_CONNECT not granted — skipping A2DP query")
+            return
+        }
+        try {
+            adapter.getProfileProxy(
+                this,
+                object : BluetoothProfile.ServiceListener {
+                    override fun onServiceConnected(profileId: Int, proxy: BluetoothProfile) {
+                        if (profileId == BluetoothProfile.A2DP) {
+                            val devices = proxy.connectedDevices
+                            if (devices.isNotEmpty()) {
+                                val device = devices[0]
+                                _connectedName = device.name
+                                _connectedAddress = device.address
+                                _isConnected = true
+                                emitEvent()
+                            }
+                            adapter.closeProfileProxy(BluetoothProfile.A2DP, proxy)
                         }
-                        adapter.closeProfileProxy(BluetoothProfile.A2DP, proxy)
                     }
-                }
 
-                override fun onServiceDisconnected(profileId: Int) {}
-            },
-            BluetoothProfile.A2DP
-        )
+                    override fun onServiceDisconnected(profileId: Int) {}
+                },
+                BluetoothProfile.A2DP
+            )
+        } catch (e: SecurityException) {
+            Log.w("MainActivity", "Bluetooth permission denied for A2DP query", e)
+        }
     }
 
     private val btReceiver = object : BroadcastReceiver() {
