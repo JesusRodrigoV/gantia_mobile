@@ -27,7 +27,6 @@ Future<void> initializeBackgroundService() async {
       autoStart: false,
       autoStartOnBoot: false,
       isForegroundMode: true,
-      notificationChannelId: 'gantia_background',
       initialNotificationTitle: 'Gantia',
       initialNotificationContent: 'Controlando parlante Bluetooth',
       foregroundServiceNotificationId: 888,
