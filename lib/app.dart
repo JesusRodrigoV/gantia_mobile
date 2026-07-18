@@ -11,7 +11,6 @@ import 'screens/smart_home_screen.dart';
 import 'screens/config_screen.dart';
 import 'screens/history_screen.dart';
 import 'widgets/gantia_bottom_nav.dart';
-import 'services/media_action_handler.dart';
 import 'services/background_service.dart';
 
 class GantiaApp extends ConsumerWidget {
