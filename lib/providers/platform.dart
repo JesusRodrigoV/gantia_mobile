@@ -21,3 +21,5 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
 final widgetServiceProvider = Provider<WidgetService>((ref) {
   throw UnimplementedError('Must be overridden in main.dart');
 });
+
+final backgroundServiceActiveProvider = StateProvider<bool>((ref) => false);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
 import 'theme/app_theme.dart';
 import 'providers.dart';
 import 'screens/home_screen.dart';
@@ -11,6 +12,7 @@ import 'screens/config_screen.dart';
 import 'screens/history_screen.dart';
 import 'widgets/gantia_bottom_nav.dart';
 import 'services/media_action_handler.dart';
+import 'services/background_service.dart';
 
 class GantiaApp extends ConsumerWidget {
   const GantiaApp({super.key});
@@ -45,6 +47,8 @@ class _AuthGateState extends ConsumerState<_AuthGate> {
     auth.addListener(_onAuthChanged);
     if (auth.isAuthenticated) {
       ref.read(wsClientProvider).connect();
+      initializeBackgroundService();
+      ref.read(backgroundServiceActiveProvider.notifier).state = true;
     }
   }
 
@@ -58,8 +62,12 @@ class _AuthGateState extends ConsumerState<_AuthGate> {
     final auth = ref.read(authServiceProvider);
     if (auth.isAuthenticated) {
       ref.read(wsClientProvider).connect();
+      initializeBackgroundService();
+      ref.read(backgroundServiceActiveProvider.notifier).state = true;
     } else {
       ref.read(wsClientProvider).disconnect();
+      FlutterBackgroundService().invoke('stop');
+      ref.read(backgroundServiceActiveProvider.notifier).state = false;
     }
   }
 

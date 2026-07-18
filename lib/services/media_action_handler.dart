@@ -21,6 +21,9 @@ class MediaActionHandler {
     if (data.containsKey('\$type')) return;
 
     if (data['action'] == 'action_triggered') {
+      final target = data['target'] as String?;
+      if (target != null && target != 'mobile') return;
+
       final action = data['action_key'] as String? ?? '';
       _routeAction(action);
     }
