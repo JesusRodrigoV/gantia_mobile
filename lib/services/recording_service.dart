@@ -26,11 +26,20 @@ class RecordingService extends ChangeNotifier {
   void _handleRawMessage(Map<String, dynamic> data) {
     if (_disposed) return;
     if (data.containsKey('\$type')) return;
-    if (data['action'] != 'action_triggered') return;
     if (!_recording) return;
 
-    final actionKey = data['action_key'] as String? ?? '';
-    final actionValue = data['action_value'] as String?;
+    final String actionKey;
+    final String? actionValue;
+
+    if (data['action'] == 'action_triggered') {
+      actionKey = data['action_key'] as String? ?? '';
+      actionValue = data['action_value'] as String?;
+    } else if (data['action'] != null) {
+      actionKey = data['action'] as String? ?? '';
+      actionValue = data['action_value'] as String?;
+    } else {
+      return;
+    }
 
     _capturedSteps.add(MacroStep(
       action: actionKey,
