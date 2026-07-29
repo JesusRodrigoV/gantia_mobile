@@ -90,6 +90,7 @@ class WsClient {
       _channel!.ready.then((_) {
         if (_disposed) return;
         _resetRetryState();
+        send({'type': 'auth', 'token': _authService.token!});
       }).catchError((Object error) {
         if (_disposed) return;
         debugPrint('[WsClient] ready error: $error');
@@ -123,8 +124,7 @@ class WsClient {
   }
 
   Uri _buildUri() {
-    final token = _authService.token!;
-    return Uri.parse('$_wsUrl/ws/dashboard?token=${Uri.encodeQueryComponent(token)}');
+    return Uri.parse('$_wsUrl/ws/dashboard');
   }
 
   void _startConnectionTimeout() {
