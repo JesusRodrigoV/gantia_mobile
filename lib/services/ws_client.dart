@@ -124,7 +124,7 @@ class WsClient {
   }
 
   Uri _buildUri() {
-    return Uri.parse('$_wsUrl/ws/dashboard');
+    return Uri.parse('$_wsUrl/ws/mobile');
   }
 
   void _startConnectionTimeout() {
