@@ -100,6 +100,7 @@ class _HistoryReadingsTabState extends ConsumerState<HistoryReadingsTab> {
               lines: _extractLines(_readings, _chartType),
               showTimeAxis: true,
               height: 220,
+              maxDataPoints: _limit,
             ),
             const SizedBox(height: Spacing.md),
             ..._readings.take(50).map(_buildRow),

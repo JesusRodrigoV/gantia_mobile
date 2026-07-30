@@ -54,6 +54,7 @@ class SensorChart extends StatelessWidget {
   final bool showTitle;
   final double height;
   final bool animated;
+  final int? maxDataPoints;
 
   const SensorChart({
     super.key,
@@ -63,6 +64,7 @@ class SensorChart extends StatelessWidget {
     this.showTitle = false,
     this.height = 140,
     this.animated = false,
+    this.maxDataPoints,
   });
 
   @override
@@ -160,7 +162,9 @@ class SensorChart extends StatelessWidget {
                     ),
                     borderData: FlBorderData(show: false),
                     minX: 0,
-                    maxX: (dataPoints - 1).toDouble(),
+                    maxX: maxDataPoints != null
+                        ? (maxDataPoints! - 1).toDouble()
+                        : (dataPoints - 1).toDouble(),
                     minY: sensorType.minY,
                     maxY: sensorType.maxY,
                     lineBarsData: _buildLines(),

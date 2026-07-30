@@ -104,6 +104,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 class _ChartCard extends ConsumerWidget {
   const _ChartCard({required this.type});
 
+  static const int _maxPoints = 150;
+
   final SensorType type;
 
   @override
@@ -118,7 +120,7 @@ class _ChartCard extends ConsumerWidget {
           sensorType: type,
           lines: lines,
           showTitle: true,
-          animated: true,
+          maxDataPoints: _maxPoints,
         ),
       ),
     );
