@@ -7,6 +7,7 @@ import '../widgets/gantia_button.dart';
 import '../widgets/gantia_form_field.dart';
 import '../widgets/gantia_scramble_text.dart';
 import '../widgets/password_visibility_icon.dart';
+import '../utils/snackbar_helper.dart';
 import '../widgets/server_config_dialog.dart';
 
 final _emailRegex = RegExp(r'^[\w\.-]+@[\w\.-]+\.\w{2,}$');
@@ -47,12 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (success) {
       widget.onLoginSuccess?.call();
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(widget.authService.error ?? 'Error al iniciar sesión'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      showErrorSnackBar(context, widget.authService.error ?? 'Error al iniciar sesión');
     }
   }
 
@@ -138,13 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             alignment: Alignment.centerRight,
                             child: TextButton(
                               onPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                        'Funcionalidad en desarrollo'),
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
+                                showInfoSnackBar(context, 'Funcionalidad en desarrollo');
                               },
                               child: Text(
                                 '¿Olvidaste tu contraseña?',

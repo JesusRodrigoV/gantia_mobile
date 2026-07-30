@@ -5,6 +5,8 @@ import '../providers.dart';
 import '../theme/app_colors.dart';
 import '../theme/context_extensions.dart';
 import '../theme/spacing.dart';
+import '../utils/error_message_mapper.dart';
+import '../utils/snackbar_helper.dart';
 import 'gantia_button.dart';
 
 class AbsCalibrationWizard extends ConsumerStatefulWidget {
@@ -292,14 +294,12 @@ class _AbsCalibrationWizardState extends ConsumerState<AbsCalibrationWizard> {
       );
       if (mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Calibración guardada')));
+        showSuccessSnackBar(context, 'Calibración guardada');
       }
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al guardar: $e'), backgroundColor: AppColors.red500));
+        showErrorSnackBar(context, mapErrorToMessage(e));
       }
     }
   }

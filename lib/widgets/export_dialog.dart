@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/context_extensions.dart';
 import '../theme/spacing.dart';
+import '../utils/snackbar_helper.dart';
 import 'gantia_button.dart';
 
 class ExportDialog extends StatelessWidget {
@@ -36,8 +37,7 @@ class ExportDialog extends StatelessWidget {
               icon: Icons.copy,
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: jsonContent));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Copiado al portapapeles')));
+                showSuccessSnackBar(context, 'Copiado al portapapeles');
               },
             ),
           ],

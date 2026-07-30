@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../utils/error_message_mapper.dart';
 import 'api_service.dart';
 
 mixin ApiServiceMixin on ChangeNotifier {
@@ -40,9 +41,10 @@ mixin ApiServiceMixin on ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return null;
-    } catch (e, _) {
+    } catch (e, stack) {
       debugPrint('[API] $e');
-      _error = e.toString();
+      debugPrint('[API] $stack');
+      _error = mapErrorToMessage(e);
       _isLoading = false;
       notifyListeners();
       return null;

@@ -7,6 +7,7 @@ import '../providers.dart';
 import '../theme/app_colors.dart';
 import '../theme/context_extensions.dart';
 import '../theme/spacing.dart';
+import '../utils/snackbar_helper.dart';
 import '../widgets/smart_home_device_section.dart';
 import '../widgets/smart_home_scene_section.dart';
 
@@ -139,7 +140,7 @@ class _SmartHomeScreenState extends ConsumerState<SmartHomeScreen> {
     }
     if (mounted) {
       _clearError();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Escena "${scene.name}" aplicada')));
+      showSuccessSnackBar(context, 'Escena "${scene.name}" aplicada');
     }
   }
 

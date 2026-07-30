@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../providers.dart';
-import '../theme/app_colors.dart';
 import '../theme/context_extensions.dart';
 import '../theme/spacing.dart';
+import '../utils/error_message_mapper.dart';
+import '../utils/snackbar_helper.dart';
 import 'gantia_button.dart';
 
 class ImportDialog extends StatefulWidget {
@@ -69,21 +70,16 @@ class _ImportDialogState extends State<ImportDialog> {
           onPressed: () async {
             final text = _controller.text.trim();
             if (text.isEmpty) return;
-            final messenger = ScaffoldMessenger.of(context);
-            final nav = Navigator.of(context);
             try {
               final decoded = jsonDecode(text);
               final configs = decoded is List
                   ? decoded.cast<Map<String, dynamic>>()
                   : [decoded as Map<String, dynamic>];
               await widget.service.importConfigs(configs);
-              if (nav.context.mounted) nav.pop();
+              if (mounted) Navigator.of(context).pop();
             } catch (e) {
               if (mounted) {
-                messenger.showSnackBar(SnackBar(
-                  content: Text('Error al importar: $e'),
-                  backgroundColor: AppColors.red500,
-                ));
+                showErrorSnackBar(context, mapErrorToMessage(e));
               }
             }
           },

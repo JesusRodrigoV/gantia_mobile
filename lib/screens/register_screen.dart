@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../theme/context_extensions.dart';
+import '../utils/snackbar_helper.dart';
 import '../theme/shadows.dart';
 import '../theme/spacing.dart';
 import '../widgets/gantia_button.dart';
@@ -54,12 +55,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (success && mounted) {
       widget.onRegisterSuccess?.call();
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(widget.authService.error ?? 'Error al registrarse'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      showErrorSnackBar(context, widget.authService.error ?? 'Error al registrarse');
     }
   }
 

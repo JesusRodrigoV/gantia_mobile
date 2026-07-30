@@ -6,6 +6,8 @@ import '../providers.dart';
 import '../theme/app_colors.dart';
 import '../theme/context_extensions.dart';
 import '../theme/spacing.dart';
+import '../utils/error_message_mapper.dart';
+import '../utils/snackbar_helper.dart';
 import 'gantia_button.dart';
 import 'history_action_card.dart';
 
@@ -41,7 +43,7 @@ class _HistoryActionsTabState extends ConsumerState<HistoryActionsTab> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        showErrorSnackBar(context, mapErrorToMessage(e));
       }
     }
   }
@@ -59,7 +61,7 @@ class _HistoryActionsTabState extends ConsumerState<HistoryActionsTab> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        showErrorSnackBar(context, mapErrorToMessage(e));
       }
     }
   }

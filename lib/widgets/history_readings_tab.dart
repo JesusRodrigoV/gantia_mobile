@@ -5,6 +5,7 @@ import '../providers.dart';
 import '../theme/app_colors.dart';
 import '../theme/context_extensions.dart';
 import '../theme/spacing.dart';
+import '../utils/error_message_mapper.dart';
 import 'gantia_button.dart';
 import 'sensor_chart.dart';
 
@@ -39,7 +40,7 @@ class _HistoryReadingsTabState extends ConsumerState<HistoryReadingsTab> {
       setState(() { _readings = result; _loading = false; });
     } catch (e) {
       if (!mounted) return;
-      setState(() { _loading = false; _error = e.toString(); });
+      setState(() { _loading = false; _error = mapErrorToMessage(e); });
     }
   }
 

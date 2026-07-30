@@ -19,6 +19,36 @@ void main() async {
     return true;
   };
 
+  // Set a default error widget builder for unhandled widget errors
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    debugPrint('[GLOBAL] ErrorWidget: ${details.exception}');
+    return Material(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: Colors.red),
+              const SizedBox(height: 16),
+              const Text(
+                'Ocurrió un error inesperado',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Cerrando la app y volviendo a abrirla puede solucionarlo.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  };
+
   await dotenv.load();
 
   final serverConfig = await ServerConfigService.load();

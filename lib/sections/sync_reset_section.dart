@@ -5,6 +5,7 @@ import '../providers.dart';
 import '../theme/app_colors.dart';
 import '../theme/context_extensions.dart';
 import '../theme/spacing.dart';
+import '../utils/snackbar_helper.dart';
 import '../widgets/gantia_button.dart';
 import '../widgets/settings_card.dart';
 
@@ -109,11 +110,10 @@ class SyncResetSection extends ConsumerWidget {
     String? error,
     String successMessage,
   ) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(success ? successMessage : error ?? 'Error desconocido'),
-        backgroundColor: success ? AppColors.green500 : AppColors.red500,
-      ),
-    );
+    if (success) {
+      showSuccessSnackBar(context, successMessage);
+    } else {
+      showErrorSnackBar(context, error ?? 'Error desconocido');
+    }
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
@@ -49,6 +50,8 @@ class ApiService {
       throw NetworkException('No se pudo conectar al servidor');
     } on http.ClientException {
       throw NetworkException('Error de conexión');
+    } on TimeoutException {
+      throw NetworkException('La conexión tardó demasiado. Verificá el servidor e intentá de nuevo.');
     }
   }
 
