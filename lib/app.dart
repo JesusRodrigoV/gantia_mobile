@@ -120,6 +120,9 @@ class _MainShellState extends ConsumerState<_MainShell> {
   }
 
   void _initServices() {
+    _mediaActionHandler?.dispose();
+    _mediaActionHandler = null;
+
     final gloveState = ref.read(gloveStateProvider);
     final actionLog = ref.read(actionLogProvider);
 
@@ -140,13 +143,21 @@ class _MainShellState extends ConsumerState<_MainShell> {
   void dispose() {
     _shellDisposed = true;
     _mediaActionHandler?.dispose();
-    try { ref.read(notificationServiceProvider).dispose(); } catch (_) {}
-    try { ref.read(widgetServiceProvider).dispose(); } catch (_) {}
+    _mediaActionHandler = null;
+    try { ref.read(notificationServiceProvider).stopListening(); } catch (_) {}
+    try { ref.read(widgetServiceProvider).stopListening(); } catch (_) {}
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<WsClient>(wsClientProvider, (previous, next) {
+      if (previous != null && previous != next) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _initServices();
+        });
+      }
+    });
     final currentIndex = ref.watch(bottomNavIndexProvider);
     final pages = <Widget>[
       const RepaintBoundary(child: HomeScreen()),

@@ -7,11 +7,19 @@ import 'auth_service.dart';
 
 enum _ConnectionAttemptState { idle, connecting }
 
+typedef WsChannelFactory = WebSocketChannel Function(Uri uri);
+
 class WsClient {
   final AuthService _authService;
+  final WsChannelFactory _channelFactory;
   String _wsUrl;
 
-  WsClient(this._authService, {required String wsUrl}) : _wsUrl = wsUrl;
+  WsClient(
+    this._authService, {
+    required String wsUrl,
+    WsChannelFactory? channelFactory,
+  })  : _wsUrl = wsUrl,
+        _channelFactory = channelFactory ?? ((uri) => WebSocketChannel.connect(uri));
 
   void setWsUrl(String url) {
     if (_wsUrl == url) return;
@@ -47,6 +55,7 @@ class WsClient {
 
   void connect() {
     if (_disposed) return;
+    if (isConnected) return;
     _shouldBeConnected = true;
     _establishConnection();
   }
@@ -86,25 +95,29 @@ class WsClient {
     _safeAdd({'\$type': 'connecting'});
 
     try {
-      _channel = WebSocketChannel.connect(_buildUri());
-      _channel!.ready.then((_) {
+      final channel = _channelFactory(_buildUri());
+      _channel = channel;
+      channel.ready.then((_) {
         if (_disposed) return;
+        if (_channel != channel) return;
         _resetRetryState();
         send({'type': 'auth', 'token': _authService.token!});
       }).catchError((Object error) {
         if (_disposed) return;
+        if (_channel != channel) return;
         debugPrint('[WsClient] ready error: $error');
         _onConnectionFailed();
       });
 
-      _channel!.stream.listen(
+      channel.stream.listen(
         _onStreamData,
         onError: (Object error) {
           if (_disposed) return;
+          if (_channel != channel) return;
           debugPrint('[WsClient] stream error: $error');
-          _onConnectionFailed();
+          _handleStreamError();
         },
-        onDone: _onStreamDone,
+        onDone: () => _onStreamDone(channel),
         cancelOnError: false,
       );
     } catch (e) {
@@ -130,15 +143,32 @@ class WsClient {
   void _startConnectionTimeout() {
     _connectionTimer = Timer(connectionTimeout, () {
       if (_disposed) return;
-      _safeAdd({'\$type': 'error'});
-      _closeChannel();
+      if (_connectionAttemptState != _ConnectionAttemptState.connecting) return;
       _finishAttempt();
+      _closeChannel();
+      _safeAdd({'\$type': 'error'});
       if (_shouldBeConnected) _scheduleReconnect();
     });
   }
 
   void _onConnectionFailed() {
+    if (_connectionAttemptState != _ConnectionAttemptState.connecting) return;
     _finishAttempt();
+    _closeChannel();
+    _safeAdd({'\$type': 'error'});
+    if (_shouldBeConnected) _scheduleReconnect();
+  }
+
+  /// A stream error while connected (state is idle) must also tear the
+  /// connection down; the `connecting` guard in [_onConnectionFailed] only
+  /// protects the handshake phase.
+  void _handleStreamError() {
+    if (_connectionAttemptState == _ConnectionAttemptState.connecting) {
+      _onConnectionFailed();
+      return;
+    }
+    _finishAttempt();
+    _clearPingTimer();
     _closeChannel();
     _safeAdd({'\$type': 'error'});
     if (_shouldBeConnected) _scheduleReconnect();
@@ -167,9 +197,10 @@ class WsClient {
     } catch (_) {}
   }
 
-  void _onStreamDone() {
+  void _onStreamDone(WebSocketChannel channel) {
     if (_disposed) return;
-    final closeCode = _channel?.closeCode;
+    if (_channel != channel) return;
+    final closeCode = channel.closeCode;
     if (closeCode == 1008) {
       debugPrint('[WsClient] Token rechazado por el servidor — cerrando sesión');
       _shouldBeConnected = false;
@@ -177,6 +208,7 @@ class WsClient {
     }
     _finishAttempt();
     _clearPingTimer();
+    _closeChannel();
     _safeAdd({'\$type': 'disconnected'});
     if (_shouldBeConnected && _authService.isAuthenticated) {
       _scheduleReconnect();
@@ -193,11 +225,6 @@ class WsClient {
     if (_disposed) return;
     _clearReconnectTimer();
     _reconnectAttempts++;
-    _safeAdd({
-      '\$type': 'reconnecting',
-      'attempt': _reconnectAttempts,
-      'maxRetries': maxRetries,
-    });
 
     if (_reconnectAttempts > maxRetries) {
       _safeAdd({
@@ -206,6 +233,12 @@ class WsClient {
       });
       return;
     }
+
+    _safeAdd({
+      '\$type': 'reconnecting',
+      'attempt': _reconnectAttempts,
+      'maxRetries': maxRetries,
+    });
 
     final delayMs = (baseReconnectDelay.inMilliseconds *
             pow(2, _reconnectAttempts - 1))
@@ -231,6 +264,8 @@ class WsClient {
         debugPrint('[WsClient] Pong timeout fired — closing channel');
         _clearPingTimer();
         _closeChannel();
+        _safeAdd({'\$type': 'disconnected'});
+        if (_shouldBeConnected) _scheduleReconnect();
       });
     });
   }

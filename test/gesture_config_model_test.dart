@@ -121,4 +121,85 @@ void main() {
       expect(data.steps, isEmpty);
     });
   });
+
+  group('GestureConfig', () {
+    final fullJson = {
+      'id': 'cfg-1',
+      'movement': 'SWIPE_UP',
+      'orientation': 'PALM_UP',
+      'index_state': 1,
+      'middle_state': 0,
+      'action_key': 'volume_up',
+      'action_value': '2',
+      'context': 'AUDIO',
+    };
+
+    test('fromJson parses all fields', () {
+      final config = GestureConfig.fromJson(fullJson);
+
+      expect(config.id, 'cfg-1');
+      expect(config.movement, 'SWIPE_UP');
+      expect(config.orientation, 'PALM_UP');
+      expect(config.indexState, 1);
+      expect(config.middleState, 0);
+      expect(config.actionKey, 'volume_up');
+      expect(config.actionValue, '2');
+      expect(config.context, 'AUDIO');
+    });
+
+    test('fromJson applies defaults for missing fields', () {
+      final config = GestureConfig.fromJson({'id': 'cfg-2'});
+
+      expect(config.movement, 'NONE');
+      expect(config.orientation, 'ANY');
+      expect(config.indexState, 0);
+      expect(config.middleState, 0);
+      expect(config.actionKey, '');
+      expect(config.actionValue, isNull);
+      expect(config.context, 'GLOBAL');
+    });
+
+    test('fromJson coerces numeric strings', () {
+      final config = GestureConfig.fromJson({
+        'id': 'cfg-3',
+        'action_key': 123,
+        'action_value': 42,
+      });
+
+      expect(config.actionKey, '123');
+      expect(config.actionValue, '42');
+    });
+
+    test('toJson serializes all fields', () {
+      final config = GestureConfig.fromJson(fullJson);
+      final json = config.toJson();
+
+      expect(json['id'], 'cfg-1');
+      expect(json['movement'], 'SWIPE_UP');
+      expect(json['action_key'], 'volume_up');
+      expect(json['action_value'], '2');
+      expect(json['context'], 'AUDIO');
+    });
+
+    test('toJson omits action_value when null', () {
+      final config = GestureConfig.fromJson({'id': 'cfg-4'});
+      final json = config.toJson();
+
+      expect(json['action_value'], isNull);
+    });
+
+    test('fromJson/toJson roundtrip preserves data', () {
+      final original = GestureConfig.fromJson(fullJson);
+      final restored = GestureConfig.fromJson(original.toJson());
+
+      expect(restored.id, original.id);
+      expect(restored.movement, original.movement);
+      expect(restored.orientation, original.orientation);
+      expect(restored.indexState, original.indexState);
+      expect(restored.middleState, original.middleState);
+      expect(restored.actionKey, original.actionKey);
+      expect(restored.actionValue, original.actionValue);
+      expect(restored.context, original.context);
+    });
+  });
 }

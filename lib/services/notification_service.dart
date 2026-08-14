@@ -8,7 +8,7 @@ import 'action_log.dart';
 typedef _ChannelConfig = ({String name, Importance importance, Priority priority});
 
 class NotificationService {
-  final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _plugin;
   StreamSubscription<ActionEvent?>? _actionSub;
   GloveState? _gloveState;
   bool _disposed = false;
@@ -18,6 +18,9 @@ class NotificationService {
 
   String? _initError;
   bool _initDone = false;
+
+  NotificationService({FlutterLocalNotificationsPlugin? plugin})
+      : _plugin = plugin ?? FlutterLocalNotificationsPlugin();
 
   String? get initError => _initError;
   bool get isOperational => _initDone && _initError == null;
@@ -126,6 +129,7 @@ class NotificationService {
   }) {
     if (_disposed) return;
     _actionSub?.cancel();
+    _gloveState?.removeListener(_onGloveStateChanged);
 
     _gloveState = gloveState;
     _lastConnection = gloveState.connectionStatus;
@@ -137,6 +141,13 @@ class NotificationService {
     if (notifyActions) {
       _actionSub = actionLog.actionEventStream.listen(_onActionExecuted);
     }
+  }
+
+  void stopListening() {
+    _gloveState?.removeListener(_onGloveStateChanged);
+    _gloveState = null;
+    _actionSub?.cancel();
+    _actionSub = null;
   }
 
   void _onGloveStateChanged() {
@@ -156,7 +167,7 @@ class NotificationService {
   void _onGestureDetected(GestureDetectedEvent? event) {
     if (_disposed || event == null) return;
     final actionLabel = getActionLabel(event.action);
-    _showNotificationSafe(
+    showNotificationSafe(
       _notificationIdGesture,
       _gestureChannelId,
       'Gesto: ${event.gesture}',
@@ -168,26 +179,29 @@ class NotificationService {
     if (_disposed) return;
     switch (status) {
       case ConnectionStatus.disconnected:
-        _showNotificationSafe(
+        showNotificationSafe(
           _notificationIdConnection,
           _connectionChannelId,
           'Guante desconectado',
           'Se perdió la conexión con el servidor',
         );
+        break;
       case ConnectionStatus.connected:
-        _showNotificationSafe(
+        showNotificationSafe(
           _notificationIdConnection,
           _connectionChannelId,
           'Guante conectado',
           'El guante está recibiendo datos',
         );
+        break;
       case ConnectionStatus.reconnecting:
-        _showNotificationSafe(
+        showNotificationSafe(
           _notificationIdConnection,
           _connectionChannelId,
           'Reconectando...',
           'Intentando restablecer la conexión',
         );
+        break;
       default:
         break;
     }
@@ -198,7 +212,7 @@ class NotificationService {
     final actionLabel = getActionLabel(event.action);
     final value = event.actionValue?.toString() ?? '';
     final body = value.isNotEmpty ? '$actionLabel: $value' : actionLabel;
-    _showNotificationSafe(
+    showNotificationSafe(
       _notificationIdAction,
       _actionsChannelId,
       'Acción ejecutada',
@@ -206,29 +220,33 @@ class NotificationService {
     );
   }
 
-  void _showNotificationSafe(int id, String channelId, String title, String body) {
+  void showNotificationSafe(int id, String channelId, String title, String body) {
     if (_disposed) return;
     final cfg = _channels[channelId] ?? _channels[_actionsChannelId]!;
     try {
-      _plugin.show(
-        id,
-        title,
-        body,
-        NotificationDetails(
-          android: AndroidNotificationDetails(
-            channelId,
-            cfg.name,
-            channelDescription: null,
-            importance: cfg.importance,
-            priority: cfg.priority,
-          ),
-          iOS: const DarwinNotificationDetails(
-            presentAlert: true,
-            presentBadge: true,
-            presentSound: true,
-          ),
-        ),
-      );
+      _plugin
+          .show(
+            id,
+            title,
+            body,
+            NotificationDetails(
+              android: AndroidNotificationDetails(
+                channelId,
+                cfg.name,
+                channelDescription: null,
+                importance: cfg.importance,
+                priority: cfg.priority,
+              ),
+              iOS: const DarwinNotificationDetails(
+                presentAlert: true,
+                presentBadge: true,
+                presentSound: true,
+              ),
+            ),
+          )
+          .catchError((Object e) {
+            debugPrint('[NotificationService] show error: $e');
+          });
     } catch (e) {
       debugPrint('[NotificationService] show error: $e');
     }
@@ -236,10 +254,11 @@ class NotificationService {
 
   void dispose() {
     _disposed = true;
-    _gloveState?.removeListener(_onGloveStateChanged);
-    _actionSub?.cancel();
+    stopListening();
     try {
-      _plugin.cancelAll();
+      _plugin.cancelAll().catchError((Object e) {
+        debugPrint('[NotificationService] cancelAll error: $e');
+      });
     } catch (_) {}
   }
 }

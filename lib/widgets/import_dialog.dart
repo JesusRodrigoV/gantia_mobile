@@ -76,11 +76,11 @@ class _ImportDialogState extends State<ImportDialog> {
                   ? decoded.cast<Map<String, dynamic>>()
                   : [decoded as Map<String, dynamic>];
               await widget.service.importConfigs(configs);
-              if (mounted) Navigator.of(context).pop();
+              if (!context.mounted) return;
+              Navigator.of(context).pop();
             } catch (e) {
-              if (mounted) {
-                showErrorSnackBar(context, mapErrorToMessage(e));
-              }
+              if (!context.mounted) return;
+              showErrorSnackBar(context, mapErrorToMessage(e));
             }
           },
         ),

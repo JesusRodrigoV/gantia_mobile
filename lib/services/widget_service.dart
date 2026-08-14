@@ -20,6 +20,7 @@ class WidgetService {
   void listenTo(GloveState gloveState, ActionLog actionLog) {
     if (_disposed) return;
     _actionSub?.cancel();
+    _gloveState?.removeListener(_onGloveStateChanged);
 
     _gloveState = gloveState;
     gloveState.addListener(_onGloveStateChanged);
@@ -27,6 +28,13 @@ class WidgetService {
     _actionSub = actionLog.actionEventStream
         .listen((_) { _updateWidget(); }, onError: (Object e) => debugPrint('[WidgetService] action stream error: $e'));
     _updateFromState(gloveState, actionLog);
+  }
+
+  void stopListening() {
+    _gloveState?.removeListener(_onGloveStateChanged);
+    _gloveState = null;
+    _actionSub?.cancel();
+    _actionSub = null;
   }
 
   void _onGloveStateChanged() {
@@ -75,11 +83,22 @@ class WidgetService {
     }
   }
 
-  String _statusLabel(GloveState gloveState) {
-    switch (gloveState.connectionStatus) {
+  String _statusLabel(GloveState gloveState) => statusLabelFor(
+        gloveState.connectionStatus,
+        dataFlowing: gloveState.dataFlowing,
+        waitingForDevice: gloveState.waitingForDevice,
+      );
+
+  @visibleForTesting
+  static String statusLabelFor(
+    ConnectionStatus status, {
+    required bool dataFlowing,
+    required bool waitingForDevice,
+  }) {
+    switch (status) {
       case ConnectionStatus.connected:
-        if (gloveState.dataFlowing) return 'Activo';
-        if (gloveState.waitingForDevice) return 'Esperando guante';
+        if (dataFlowing) return 'Activo';
+        if (waitingForDevice) return 'Esperando guante';
         return 'Conectado';
       case ConnectionStatus.connecting:
         return 'Conectando...';
@@ -94,7 +113,6 @@ class WidgetService {
 
   void dispose() {
     _disposed = true;
-    _gloveState?.removeListener(_onGloveStateChanged);
-    _actionSub?.cancel();
+    stopListening();
   }
 }

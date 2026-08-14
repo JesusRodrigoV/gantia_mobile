@@ -29,6 +29,7 @@ class ActionLog extends ChangeNotifier {
   void _handleRawMessage(Map<String, dynamic> data) {
     if (_disposed) return;
     if (data.containsKey('\$type')) return;
+    if (isGestureDetected(data)) return;
 
     if (isActionMessage(data)) {
       final evt = ActionEvent.fromJson(data);
